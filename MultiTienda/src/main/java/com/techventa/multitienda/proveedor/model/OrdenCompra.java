@@ -1,8 +1,11 @@
-package com.techventa.multitienda.admin.model;
+package com.techventa.multitienda.proveedor.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import com.techventa.multitienda.admin.model.Proveedor;
+import com.techventa.multitienda.admin.model.Tienda;
 
 @Entity
 @Table(name = "ordenes_compra")

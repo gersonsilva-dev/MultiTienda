@@ -3,6 +3,7 @@ package com.techventa.multitienda.almacenero.model;
 import com.techventa.multitienda.admin.model.Proveedor;
 import com.techventa.multitienda.admin.model.Tienda;
 import com.techventa.multitienda.admin.model.Usuario;
+import com.techventa.multitienda.proveedor.model.OrdenCompra;
 import com.techventa.multitienda.admin.model.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

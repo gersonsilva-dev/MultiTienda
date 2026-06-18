@@ -1,7 +1,9 @@
-package com.techventa.multitienda.admin.model;
+package com.techventa.multitienda.proveedor.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+
+import com.techventa.multitienda.admin.model.Producto;
 
 @Entity
 @Table(name = "detalle_orden_compra")

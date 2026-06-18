@@ -1,4 +1,4 @@
-package com.techventa.multitienda.admin.model;
+package com.techventa.multitienda.proveedor.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
