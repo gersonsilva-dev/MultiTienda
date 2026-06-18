@@ -2,6 +2,9 @@ package com.techventa.multitienda.admin.service;
 
 import com.techventa.multitienda.admin.dto.*;
 import com.techventa.multitienda.admin.repository.*;
+import com.techventa.multitienda.cajero.repository.DetalleVentaRepository;
+import com.techventa.multitienda.cajero.repository.VentaRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
@@ -48,7 +51,12 @@ public class ReporteService {
 
     // Top productos más vendidos
     public List<ReporteProductosDTO> topProductos(LocalDateTime inicio, LocalDateTime fin, Integer limit) {
-        List<Object[]> resultados = detalleVentaRepository.findTopProductos(inicio, fin, limit != null ? limit : 10);
+        List<Object[]> resultados = detalleVentaRepository.findTopProductos(inicio, fin);
+        
+        // Aplicar límite manualmente
+        if (limit != null && resultados.size() > limit) {
+            resultados = resultados.subList(0, limit);
+        }
         
         List<ReporteProductosDTO> reporte = new ArrayList<>();
         for (Object[] row : resultados) {

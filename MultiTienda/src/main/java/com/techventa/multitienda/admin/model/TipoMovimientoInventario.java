@@ -53,9 +53,4 @@ public class TipoMovimientoInventario {
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
     public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
     public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
-
-    @Override
-    public String toString() {
-        return "TipoMovimientoInventario{" + "idTipoMovimiento=" + idTipoMovimiento + ", nombreMovimiento='" + nombreMovimiento + '\'' + '}';
-    }
 }

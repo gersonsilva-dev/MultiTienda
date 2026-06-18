@@ -2,6 +2,8 @@ package com.techventa.multitienda.admin.service;
 
 import com.techventa.multitienda.admin.model.*;
 import com.techventa.multitienda.admin.repository.*;
+import com.techventa.multitienda.almacenero.model.InventarioTienda;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
