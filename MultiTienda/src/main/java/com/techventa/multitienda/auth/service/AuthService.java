@@ -18,11 +18,26 @@ public class AuthService {
     }
 
     public Usuario login(String correo, String password) {
+        // 1. Buscamos el usuario por correo
         Usuario usuario = usuarioRepository
                 .findByCorreoElectronico(correo)
                 .orElse(null);
 
+        // 2. Validación de existencia y contraseña
+        // Es fundamental verificar la contraseña ANTES de cualquier otra cosa
+        // para prevenir ataques de enumeración de usuarios.
         if (usuario == null || !passwordEncoder.matches(password, usuario.getContrasenaHash())) {
+            return null;
+        }
+
+        // 3. Validación de restricciones de negocio (las que estaban en tu SP)
+        // id_estado_usuario = 1 (ACTIVO) y activo = 1 (Verdadero)
+        boolean esEstadoValido = (usuario.getIdEstadoUsuario() != null && usuario.getIdEstadoUsuario() == 1);
+        boolean esActivo = Boolean.TRUE.equals(usuario.getActivo());
+
+        if (!esEstadoValido || !esActivo) {
+            // Aquí podrías incluso lanzar una excepción personalizada si quisieras 
+            // distinguir entre "Credenciales incorrectas" y "Cuenta suspendida"
             return null;
         }
 
