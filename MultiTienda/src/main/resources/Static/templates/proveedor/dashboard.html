@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>TechVenta Pro | Proveedor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<link rel="stylesheet" href="../../css/principal.css">
+<body>
+
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
+<div class="app-shell" id="appShell">
+
+  <!-- ═══════ SIDEBAR ═══════ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo-icon" id="logoIcon"><i class="fas fa-store"></i></div>
+      <span class="sidebar-logo-text" id="logoText">TechVenta Pro</span>
+      <span class="sidebar-logo-badge" id="roleBadge">Admin</span>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebarUser">
+        <div class="user-avatar ua-md" id="sidebarAvatar">AD</div>
+        <div class="sidebar-user-text">
+          <div class="sidebar-user-name" id="sidebarUserName">Alan Díaz</div>
+          <div class="sidebar-user-role" id="sidebarUserRole">Administrador</div>
+        </div>
+      </div>
+      <div class="sidebar-version" id="sidebarVersion">TechVenta Pro · v2.0</div>
+    </div>
+  </aside>
+
+  <!-- ═══════ MAIN WRAPPER ═══════ -->
+  <div class="main-wrapper">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="topbar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <div class="topbar-breadcrumb" id="topbarBc">
+        <i class="fas fa-home bc-home"></i>
+        <i class="fas fa-chevron-right bc-sep"></i>
+        <span class="bc-current" id="bcCurrent">Dashboard</span>
+      </div>
+
+      <div class="topbar-search">
+        <i class="fas fa-search s-icon"></i>
+        <input type="text" placeholder="Buscar en el sistema…" id="globalSearch">
+      </div>
+
+      <div class="topbar-actions">
+        <!-- Dark mode -->
+        <button class="t-btn" onclick="toggleDark()" title="Modo oscuro / claro" aria-label="Cambiar tema">
+          <i class="fas fa-moon" id="darkIcon"></i>
+        </button>
+
+        <!-- Notificaciones -->
+        <button class="t-btn" onclick="toggleNotif(event)" title="Notificaciones" aria-label="Notificaciones" id="notifBtn">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot" id="notifDot"></span>
+        </button>
+
+        <div class="topbar-divider"></div>
+
+        <!-- Perfil -->
+        <div class="topbar-profile" id="topbarProfile" onclick="toggleProfileDd(event)">
+          <div class="user-avatar ua-sm" id="topbarAvatar">AD</div>
+          <div class="tp-text">
+            <div class="tp-name" id="topbarName">Alan Díaz</div>
+            <div class="tp-role" id="topbarRole">Administrador</div>
+          </div>
+          <i class="fas fa-chevron-down tp-chevron"></i>
+
+          <div class="profile-dropdown" id="profileDd">
+            <div class="dd-item"><i class="fas fa-user"></i> Mi perfil</div>
+            <div class="dd-item"><i class="fas fa-cog"></i> Configuración</div>
+            <div class="dd-divider"></div>
+            <div class="dd-item danger" onclick="showToast('info','Sesión cerrada','Hasta pronto…')">
+              <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- NOTIF PANEL (fuera del topbar para z-index correcto) -->
+    <div class="notif-panel" id="notifPanel">
+      <div class="notif-header">
+        <span>Notificaciones</span>
+        <span class="notif-mark" onclick="markAllRead()">Marcar leídas</span>
+      </div>
+      <div class="notif-list" id="notifList"></div>
+      <div class="notif-footer">Ver todas</div>
+    </div>
+
+    <!-- CONTENT AREA (contenedor propio para que el loader solo cubra esta zona, no topbar/sidebar) -->
+    <div class="content-area" id="contentArea">
+
+      <!-- PAGE LOADER -->
+      <div class="page-loader" id="pageLoader">
+        <div class="loader-spinner"></div>
+      </div>
+
+      <!-- CONTENIDO DINÁMICO -->
+      <main class="main-content" id="mainContent">
+        <!-- Se inyecta por JS -->
+      </main>
+
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- MODAL CONFIRMACIÓN REUTILIZABLE -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title" id="confirmTitle">¿Confirmar acción?</div>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="closeModal('confirmModal')">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p id="confirmMsg" style="font-size:.82rem;color:var(--text-secondary);line-height:1.5">
+        Esta acción no se puede deshacer.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancelar</button>
+      <button class="btn btn-danger" id="confirmBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+<script>window.DEFAULT_ROLE = 'proveedor';</script>
+<script src="../../js/principal.js"></script>
+</body>
+</html>
