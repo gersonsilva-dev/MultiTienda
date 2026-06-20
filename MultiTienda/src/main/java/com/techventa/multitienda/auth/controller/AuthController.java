@@ -2,6 +2,9 @@ package com.techventa.multitienda.auth.controller;
 
 import com.techventa.multitienda.admin.model.Usuario;
 import com.techventa.multitienda.auth.service.AuthService;
+
+import jakarta.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,8 +28,9 @@ public class AuthController {
 
     @PostMapping("/login")
     public String login(
-            @RequestParam String email, // Asegúrate de que el name en tu HTML sea "email"
+            @RequestParam String email,
             @RequestParam String password,
+            HttpSession session, // Inyectamos la sesión aquí
             Model model) {
 
         Usuario usuario = authService.login(email, password);
@@ -36,6 +40,22 @@ public class AuthController {
             return "login";
         }
 
-        return "home"; // Vista a la que rediriges tras éxito
+        session.setAttribute("usuarioLogueado", usuario);
+
+        return "redirect:/dashboard"; // Usamos REDIRECT para limpiar la URL
+    }
+    
+    @GetMapping("/dashboard")
+    public String dashboard(HttpSession session, Model model) {
+        Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+        
+        // Si no hay usuario en sesión, obligar a ir al login
+        if (usuario == null) {
+            return "redirect:/login";
+        }
+        
+        // Ahora sí podemos acceder al rol sin miedo a que sea null
+        model.addAttribute("userRole", usuario.getRol().getNombreRol().toLowerCase());
+        return "dashboard"; 
     }
 }
