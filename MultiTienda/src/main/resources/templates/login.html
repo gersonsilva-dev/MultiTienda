@@ -500,4 +500,10 @@
 
 
 </body>
+
+
+<script th:inline="javascript">
+    /* Capturamos el rol enviado desde Spring Boot */
+    window.USER_ROLE = /*[[${userRole}]]*/ 'admin';
+</script>
 </html>

@@ -7,7 +7,7 @@
    Los colores, usuario y menú cambian automáticamente.   */
 
 const ROLES = {
-  admin: {
+  administrador: {
     label:'Admin', color:'#2563EB', colorHover:'#1D4ED8', sidebar:'#0D1B2E',
     name:'Alan Díaz', role:'Administrador Global', initials:'AD',
     nav:[
@@ -119,14 +119,13 @@ const NOTIFS = [
 
 /* ── INIT ──────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
-  // Dark mode guardado
-  if (localStorage.getItem('tvp-dark') === 'true') applyDark(false);
-  // Rol forzado por la página (window.DEFAULT_ROLE) > rol guardado > admin
-  const r = window.DEFAULT_ROLE || localStorage.getItem('tvp-role') || 'admin';
-  setRole(r);
-  buildNotifs();
-});
-
+	// Si window.USER_ROLE existe (inyectado por Thymeleaf), úsalo.
+	    // Si no, intenta obtenerlo de localStorage o pon 'admin' por defecto.
+	    const r = window.USER_ROLE || localStorage.getItem('tvp-role') || 'admin';
+	    
+	    setRole(r);
+	    buildNotifs();
+	});
 /* ── SET ROLE ──────────────────────────────────────────── */
 function setRole(role) {
   S.role = role;
@@ -222,29 +221,35 @@ function toggleGroup(gId) {
 }
 
 /* ── LOAD VIEW ─────────────────────────────────────────── */
-function loadView(viewName) {
-  S.view = viewName;
+/* ── LOAD VIEW MODIFICADO PARA FETCH ─────────────────────── */
+async function loadView(viewName) {
+    S.view = viewName;
 
-  // Actualizar activos
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.classList.toggle('active', el.getAttribute('data-view') === viewName);
-  });
-  document.querySelectorAll('.nav-sub-item').forEach(el => {
-    el.classList.toggle('active', el.getAttribute('data-view') === viewName);
-  });
+    // 1. Actualizar activos en el menú
+    document.querySelectorAll('.nav-item, .nav-sub-item').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-view') === viewName);
+    });
 
-  // Breadcrumb
-  const label = findLabel(viewName);
-  setText('bcCurrent', label);
+    // 2. Breadcrumb
+    setText('bcCurrent', findLabel(viewName));
 
-  // Loader + fade
-  showLoader();
-  setTimeout(() => {
-    const views = window.VIEWS || {};
-    const html = views[viewName] || defaultView(viewName);
-    document.getElementById('mainContent').innerHTML = html;
-    hideLoader();
-  }, 110);
+    // 3. Carga desde el Servidor
+    showLoader();
+    try {
+        // La URL coincide con tu @RequestMapping("/api/views") en el Controller
+        const response = await fetch(`/api/views/${viewName}`);
+        
+        if (!response.ok) throw new Error("No se pudo cargar la vista");
+        
+        const html = await response.text();
+        document.getElementById('mainContent').innerHTML = html;
+        
+    } catch (error) {
+        console.error("Error cargando vista:", error);
+        document.getElementById('mainContent').innerHTML = defaultView(viewName);
+    } finally {
+        hideLoader();
+    }
 }
 
 function findLabel(viewName) {
@@ -387,7 +392,7 @@ function openConfirm(title, msg, onOk) {
   setText('confirmMsg', msg);
   document.getElementById('confirmBtn').onclick = () => { onOk(); closeModal('confirmModal'); };
   document.getElementById('confirmModal').classList.add('open');
-}s
+}
 function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeAll(); closeModal('confirmModal'); }
