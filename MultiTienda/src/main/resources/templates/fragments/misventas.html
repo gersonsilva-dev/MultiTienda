@@ -1,0 +1,152 @@
+<div th:fragment="content" th:remove="tag">
+    <div class="full-view">
+        <div class="page-head">
+            <div>
+                <div class="pt">Mis ventas del día</div>
+                <div class="psub">Historial de ventas realizadas en tu turno</div>
+            </div>
+            <button class="btn btn-outline" onclick="actualizarVentas()"><i class="ti ti-refresh"></i> Actualizar</button>
+        </div>
+
+        <div class="kgrid">
+            <div class="kcard">
+                <div class="kl"><i class="ti ti-currency-dollar"></i>Total vendido</div>
+                <div class="kv" id="totalVendido">S/ 0.00</div>
+            </div>
+            <div class="kcard">
+                <div class="kl"><i class="ti ti-receipt"></i>Transacciones</div>
+                <div class="kv" id="numTransacciones">0</div>
+            </div>
+            <div class="kcard">
+                <div class="kl"><i class="ti ti-shopping-cart"></i>Ticket promedio</div>
+                <div class="kv" id="ticketPromedio">S/ 0.00</div>
+            </div>
+            <div class="kcard">
+                <div class="kl"><i class="ti ti-arrow-back"></i>Devoluciones</div>
+                <div class="kv" id="devolucionesHoy">0</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="ch">
+                <div class="ct">Ventas realizadas</div>
+                <div class="cb cb-ok" id="ventasHoyBadge">0 ventas</div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>N° Comprobante</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ventasTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">
+                                <i class="ti ti-inbox" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                                No hay ventas registradas en este turno
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pgn">
+                <div id="pageInfo">1–0 de 0</div>
+                <div class="pbtns">
+                    <button class="pbtn" onclick="paginaAnterior()"><i class="ti ti-chevron-left"></i></button>
+                    <button class="pbtn cur" id="paginaActual">1</button>
+                    <button class="pbtn" onclick="paginaSiguiente()"><i class="ti ti-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        let paginaActual = 1;
+        let totalPaginas = 1;
+
+        function actualizarVentas() {
+            showLoader();
+            
+            // Simulación de carga de datos
+            setTimeout(() => {
+                // Datos de ejemplo
+                const ventas = [
+                    { comprobante: '#4840', fecha: '01/06/2026 10:30', cliente: 'Cliente General', total: 'S/ 20.18', estado: 'Ok' },
+                    { comprobante: '#4839', fecha: '01/06/2026 09:15', cliente: 'María López', total: 'S/ 67.40', estado: 'Ok' },
+                    { comprobante: '#4838', fecha: '01/06/2026 08:45', cliente: 'Empresa Norte SAC', total: 'S/ 145.00', estado: 'Ok' },
+                ];
+
+                const tbody = document.getElementById('ventasTableBody');
+                if (ventas.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">
+                                <i class="ti ti-inbox" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                                No hay ventas registradas en este turno
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tbody.innerHTML = ventas.map(v => `
+                        <tr>
+                            <td style="color:var(--color-text-tertiary)">${v.comprobante}</td>
+                            <td>${v.fecha}</td>
+                            <td>${v.cliente}</td>
+                            <td>${v.total}</td>
+                            <td><div class="spill sp-ok"><span class="dot"></span>${v.estado}</div></td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Actualizar estadísticas
+                document.getElementById('totalVendido').textContent = 'S/ 232.58';
+                document.getElementById('numTransacciones').textContent = '3';
+                document.getElementById('ticketPromedio').textContent = 'S/ 77.53';
+                document.getElementById('devolucionesHoy').textContent = '0';
+                document.getElementById('ventasHoyBadge').textContent = '3 ventas';
+                document.getElementById('pageInfo').textContent = '1–3 de 3';
+
+                hideLoader();
+            }, 500);
+        }
+
+        function paginaAnterior() {
+            if (paginaActual > 1) {
+                paginaActual--;
+                document.getElementById('paginaActual').textContent = paginaActual;
+                actualizarVentas();
+            }
+        }
+
+        function paginaSiguiente() {
+            if (paginaActual < totalPaginas) {
+                paginaActual++;
+                document.getElementById('paginaActual').textContent = paginaActual;
+                actualizarVentas();
+            }
+        }
+
+        function showLoader() {
+            const loader = document.getElementById('pageLoader');
+            if (loader) loader.classList.add('visible');
+        }
+
+        function hideLoader() {
+            const loader = document.getElementById('pageLoader');
+            if (loader) loader.classList.remove('visible');
+        }
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            actualizarVentas();
+        });
+
+        /*]]>*/
+    </script>
+</div>

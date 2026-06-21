@@ -16,7 +16,6 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // Inyección de dependencias manual (sin Lombok)
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
@@ -30,7 +29,7 @@ public class AuthController {
     public String login(
             @RequestParam String email,
             @RequestParam String password,
-            HttpSession session, // Inyectamos la sesión aquí
+            HttpSession session,
             Model model) {
 
         Usuario usuario = authService.login(email, password);
@@ -42,19 +41,28 @@ public class AuthController {
 
         session.setAttribute("usuarioLogueado", usuario);
 
-        return "redirect:/dashboard"; // Usamos REDIRECT para limpiar la URL
+        // ============================================================
+        // REDIRECCIÓN SEGÚN ROL
+        // ============================================================
+        String rol = usuario.getRol().getNombreRol().toLowerCase();
+        
+        // SI ES CAJERO → va al POS (sin sidebar)
+        if ("cajero".equals(rol)) {
+            return "redirect:/api/views/apertura";
+        }
+        
+        // Para los demás roles → dashboard con sidebar
+        return "redirect:/dashboard";
     }
     
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
         Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
         
-        // Si no hay usuario en sesión, obligar a ir al login
         if (usuario == null) {
             return "redirect:/login";
         }
         
-        // Ahora sí podemos acceder al rol sin miedo a que sea null
         model.addAttribute("userRole", usuario.getRol().getNombreRol().toLowerCase());
         return "dashboard"; 
     }

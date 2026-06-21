@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>TechVenta Pro — POS</title>
+
+    <!-- ICONOS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <!-- FUENTES -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- CSS PRINCIPAL DEL POS -->
+    <style>
+        /* ============================================================ */
+        /* LAYOUT COMPLETO - ESTILOS DEL POS                            */
+        /* ============================================================ */
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        :root {
+            --color-background-primary: #FFFFFF;
+            --color-background-secondary: #F8FAFC;
+            --color-background-tertiary: #F1F5F9;
+            --color-text-primary: #0F172A;
+            --color-text-secondary: #475569;
+            --color-text-tertiary: #94A3B8;
+            --color-border-tertiary: #E2E8F0;
+            --color-background-success: #DCFCE7;
+            --color-text-success: #15803D;
+            --color-background-warning: #FEF3C7;
+            --color-text-warning: #B45309;
+            --color-background-danger: #FEE2E2;
+            --color-text-danger: #B91C1C;
+            --color-background-info: #DBEAFE;
+            --color-text-info: #1D4ED8;
+            --border-radius-md: 6px;
+            --border-radius-lg: 8px;
+        }
+
+        html,
+        body {
+            height: 100%;
+            background: var(--color-background-tertiary);
+        }
+
+        /* ========== SHELL ========== */
+        .shell {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--color-background-tertiary);
+            overflow: hidden;
+        }
+
+        /* ========== TOPBAR ========== */
+        .topbar {
+            height: 48px;
+            background: #0F172A;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .topbar-left .chip {
+            width: 22px;
+            height: 22px;
+            background: #16A34A;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .topbar-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .topbar-item i {
+            font-size: 13px;
+        }
+
+        .status-online {
+            color: #4ADE80;
+        }
+        .status-offline {
+            color: #EF4444;
+        }
+
+        /* Botón de logout */
+        .topbar-logout {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .topbar-logout:hover {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* ========== TAB BAR ========== */
+        .tab-bar {
+            display: flex;
+            background: #1E293B;
+            flex-shrink: 0;
+            padding: 0 8px;
+            gap: 2px;
+            overflow-x: auto;
+            z-index: 99;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            background: transparent;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .tab.active {
+            color: #fff;
+            border-bottom-color: #16A34A;
+        }
+
+        .tab i {
+            font-size: 14px;
+        }
+
+        .tab.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* ========== BODY ========== */
+        .body {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .content-area {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            background: var(--color-background-tertiary);
+        }
+
+        /* ========== SCROLL ========== */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--color-background-secondary);
+            border-radius: 99px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-border-tertiary);
+            border-radius: 99px;
+        }
+
+        /* ========== ANIMACIONES ========== */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page {
+            animation: fadeIn 0.2s ease;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .topbar-left {
+                font-size: 11px;
+            }
+            .topbar-item.hide-mobile {
+                display: none;
+            }
+            .tab span {
+                display: none;
+            }
+            .tab i {
+                font-size: 17px;
+            }
+            .tab {
+                padding: 10px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .topbar {
+                padding: 0 8px;
+            }
+            .topbar-right {
+                gap: 8px;
+            }
+            .topbar-item {
+                font-size: 9px;
+            }
+        }
+
+        /* ============================================================ */
+        /* APERTURA Y CIERRE - ESTILOS                                  */
+        /* ============================================================ */
+        .caja-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 16px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .caja-card {
+            background: var(--color-background-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .caja-card-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            background: var(--color-background-secondary);
+        }
+
+        .caja-card-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .caja-card-header h2 i {
+            color: #16A34A;
+        }
+        .caja-card-header h2 .ti-lock {
+            color: #DC2626;
+        }
+
+        .caja-card-body {
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .caja-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .caja-campo {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .caja-campo label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--color-text-tertiary);
+        }
+
+        .caja-campo input,
+        .caja-campo select,
+        .caja-campo textarea {
+            background: var(--color-background-secondary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            padding: 7px 12px;
+            font-size: 13px;
+            color: var(--color-text-primary);
+            width: 100%;
+        }
+
+        .caja-campo input:read-only {
+            font-weight: 500;
+        }
+
+        .caja-campo input:focus,
+        .caja-campo select:focus,
+        .caja-campo textarea:focus {
+            border-color: #16A34A;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.15);
+        }
+
+        .caja-resumen {
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .caja-resumen-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .caja-resumen-item .label {
+            font-size: 9px;
+            color: var(--color-text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .caja-resumen-item .value {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .caja-resumen-info {
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .caja-resumen-info .item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .caja-resumen-info .label {
+            font-size: 9px;
+            color: var(--color-text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .caja-resumen-info .value {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .caja-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+
+        .diferencia-box {
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .diferencia-box .label {
+            font-size: 10px;
+            color: var(--color-text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .diferencia-box .value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: var(--color-background-info);
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            border: 1px solid #93C5FD;
+        }
+
+        .info-box i {
+            font-size: 18px;
+            color: var(--color-text-info);
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .info-box .title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-info);
+        }
+
+        .info-box .sub {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .metodo-bar {
+            height: 4px;
+            background: var(--color-border-tertiary);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .metodo-bar .fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.5s ease;
+        }
+
+        /* ============================================================ */
+        /* BOTONES                                                       */
+        /* ============================================================ */
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px;
+            font-size: 13px;
+            border-radius: 99px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-success {
+            background: #16A34A;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #15803D;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border-tertiary) !important;
+        }
+        .btn-outline:hover {
+            background: var(--color-background-secondary);
+        }
+
+        .btn-danger {
+            background: #DC2626;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #B91C1C;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ============================================================ */
+        /* RESPONSIVE EXTRA                                             */
+        /* ============================================================ */
+        @media (max-width: 768px) {
+            .caja-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="shell">
+
+        <!-- ========== TOPBAR ========== -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="chip"><i class="ti ti-cash-register"></i></div>
+                TechVenta Pro — POS
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-item">
+                    <i class="ti ti-circle-filled" id="statusIcon"></i>
+                    <span id="statusText">Caja cerrada</span>
+                </div>
+                <div class="topbar-item">
+                    <i class="ti ti-user"></i>
+                    <span th:text="${usuario.nombres} + ' ' + ${usuario.apellidos}">Juan Pérez</span>
+                </div>
+                <div class="topbar-item hide-mobile">
+                    <i class="ti ti-building-store"></i>
+                    <span th:text="${usuario.tienda?.nombreTienda}">Tienda Norte</span>
+                </div>
+                <div class="topbar-item">
+                    <i class="ti ti-clock"></i>
+                    <span id="reloj">14:32</span>
+                </div>
+                <div class="topbar-item topbar-logout" onclick="cerrarSesion()" title="Cerrar sesión">
+                    <i class="ti ti-logout"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== TAB BAR ========== -->
+        <div class="tab-bar" id="tabBar">
+            <button class="tab active" data-page="apertura" onclick="irAPagina('apertura')">
+                <i class="ti ti-cash-register"></i><span>Apertura</span>
+            </button>
+            <button class="tab disabled" data-page="venta" onclick="irAPagina('venta')">
+                <i class="ti ti-shopping-cart"></i><span>Nueva venta</span>
+            </button>
+            <button class="tab disabled" data-page="misventas" onclick="irAPagina('misventas')">
+                <i class="ti ti-chart-bar"></i><span>Mis ventas</span>
+            </button>
+            <button class="tab disabled" data-page="devolucion" onclick="irAPagina('devolucion')">
+                <i class="ti ti-arrow-back"></i><span>Devolución</span>
+            </button>
+            <button class="tab disabled" data-page="cierre" onclick="irAPagina('cierre')">
+                <i class="ti ti-lock"></i><span>Cierre</span>
+            </button>
+        </div>
+
+        <!-- ========== CONTENIDO ========== -->
+        <div class="body">
+            <div class="content-area" id="contentArea">
+                <div th:replace="${content}"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT DEL LAYOUT                                        -->
+    <!-- ============================================================ -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        // ============================================================
+        // VARIABLES GLOBALES
+        // ============================================================
+
+        let cajaAbierta = false;
+        let paginaActual = 'apertura';
+
+        const statusText = document.getElementById('statusText');
+        const statusIcon = document.getElementById('statusIcon');
+        const tabs = document.querySelectorAll('.tab');
+
+        // ============================================================
+        // NAVEGACIÓN
+        // ============================================================
+
+        function irAPagina(pagina) {
+            // Validar acceso
+            if (!cajaAbierta && pagina !== 'apertura') {
+                alert('⚠️ Primero debes abrir la caja en "Apertura"');
+                return;
+            }
+            if (cajaAbierta && pagina === 'apertura') {
+                alert('⚠️ La caja ya está abierta. Ve a "Nueva venta"');
+                return;
+            }
+
+            // Redirigir al backend
+           window.location.href = '/views/' + pagina;
+        }
+
+        // ============================================================
+        // ACTUALIZAR ESTADO DE CAJA
+        // ============================================================
+
+        function actualizarEstadoCaja(abierta) {
+            cajaAbierta = abierta;
+
+            if (statusText) {
+                statusText.textContent = abierta ? 'Caja abierta' : 'Caja cerrada';
+                statusText.style.color = abierta ? '#4ADE80' : '#EF4444';
+            }
+
+            if (statusIcon) {
+                statusIcon.className = abierta ? 'ti ti-circle-filled status-online' : 'ti ti-circle-filled status-offline';
+            }
+
+            // Actualizar tabs
+            tabs.forEach(tab => {
+                const page = tab.dataset.page;
+                if (!abierta && page !== 'apertura') {
+                    tab.classList.add('disabled');
+                } else if (abierta && page === 'apertura') {
+                    tab.classList.add('disabled');
+                } else {
+                    tab.classList.remove('disabled');
+                }
+            });
+
+            // Marcar tab activo según página actual
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.page === paginaActual);
+            });
+        }
+
+        // ============================================================
+        // RELOJ
+        // ============================================================
+
+        function actualizarReloj() {
+            const el = document.getElementById('reloj');
+            if (!el) return;
+            const ahora = new Date();
+            const h = String(ahora.getHours()).padStart(2, '0');
+            const m = String(ahora.getMinutes()).padStart(2, '0');
+            el.textContent = h + ':' + m;
+        }
+
+        // ============================================================
+        // CERRAR SESIÓN
+        // ============================================================
+
+        function cerrarSesion() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                window.location.href = '/logout';
+            }
+        }
+
+        // ============================================================
+        // INICIALIZACIÓN
+        // ============================================================
+
+        function init() {
+            // Reloj
+            actualizarReloj();
+            setInterval(actualizarReloj, 30000);
+
+            // Detectar página actual desde URL
+            const path = window.location.pathname;
+            const pageMatch = path.match(/\/api\/views\/([a-zA-Z0-9]+)/);
+            if (pageMatch) {
+                paginaActual = pageMatch[1];
+            }
+
+            // Verificar estado de caja desde el backend
+            fetch('/api/caja/api/turno-activo')
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.turno) {
+                        actualizarEstadoCaja(true);
+                    } else {
+                        // Si no hay turno activo y no estamos en apertura, redirigir
+                        if (paginaActual !== 'apertura') {
+                            window.location.href = '/api/views/apertura';
+                        }
+                    }
+                })
+                .catch(() => {
+                    // Si hay error, asumir caja cerrada
+                    if (paginaActual !== 'apertura') {
+                        window.location.href = '/api/views/apertura';
+                    }
+                });
+
+            console.log('✅ Layout POS inicializado');
+        }
+
+        // Ejecutar cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        /*]]>*/
+    </script>
+
+</body>
+</html>

@@ -225,18 +225,17 @@ function toggleGroup(gId) {
 async function loadView(viewName) {
     S.view = viewName;
 
-    // 1. Actualizar activos en el menú
+    // Actualizar activos en el menú
     document.querySelectorAll('.nav-item, .nav-sub-item').forEach(el => {
         el.classList.toggle('active', el.getAttribute('data-view') === viewName);
     });
 
-    // 2. Breadcrumb
+    // Breadcrumb
     setText('bcCurrent', findLabel(viewName));
 
-    // 3. Carga desde el Servidor
+    // Carga desde el Servidor
     showLoader();
     try {
-        // La URL coincide con tu @RequestMapping("/api/views") en el Controller
         const response = await fetch(`/api/views/${viewName}`);
         
         if (!response.ok) throw new Error("No se pudo cargar la vista");
