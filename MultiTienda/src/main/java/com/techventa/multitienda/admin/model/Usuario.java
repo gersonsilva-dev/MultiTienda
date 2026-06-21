@@ -3,7 +3,6 @@ package com.techventa.multitienda.admin.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-
 @Entity
 @Table(name = "usuarios")
 public class Usuario {
@@ -41,6 +40,11 @@ public class Usuario {
     @ManyToOne
     @JoinColumn(name = "id_tienda")
     private Tienda tienda;
+
+    // 🔥🔥🔥 NUEVO: RELACIÓN CON CAJA 🔥🔥🔥
+    @ManyToOne
+    @JoinColumn(name = "id_caja")
+    private Caja caja;
 
     @Column(name = "id_estado_usuario")
     private Integer idEstadoUsuario;
@@ -149,6 +153,15 @@ public class Usuario {
         this.tienda = tienda;
     }
 
+    // 🔥🔥🔥 GETTER Y SETTER PARA CAJA 🔥🔥🔥
+    public Caja getCaja() {
+        return caja;
+    }
+
+    public void setCaja(Caja caja) {
+        this.caja = caja;
+    }
+
     public Integer getIdEstadoUsuario() {
         return idEstadoUsuario;
     }
@@ -189,6 +202,8 @@ public class Usuario {
                 ", apellidos='" + apellidos + '\'' +
                 ", correoElectronico='" + correoElectronico + '\'' +
                 ", rol=" + (rol != null ? rol.getNombreRol() : "null") +
+                ", tienda=" + (tienda != null ? tienda.getNombreTienda() : "null") +
+                ", caja=" + (caja != null ? caja.getNombreCaja() : "null") +
                 ", activo=" + activo +
                 '}';
     }
