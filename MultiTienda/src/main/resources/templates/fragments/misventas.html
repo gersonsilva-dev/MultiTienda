@@ -1,28 +1,916 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <div th:fragment="content" th:remove="tag">
-    <div class="misventas-container" style="max-width:800px;margin:0 auto;padding:20px 16px;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-        <div class="misventas-card" style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;width:100%;">
-            <div class="misventas-card-header" style="padding:14px 18px;border-bottom:1px solid #E2E8F0;background:#F8FAFC;">
-                <h2 style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;">
-                    <i class="ti ti-chart-bar" style="color:#2563EB;"></i> Mis Ventas
-                </h2>
-                <div style="font-size:12px;color:#94A3B8;margin-top:2px;">
-                    Historial de tus ventas realizadas
-                </div>
+    <style>
+        /* ============================================================ */
+        /* ESTILOS DE MIS VENTAS                                       */
+        /* ============================================================ */
+        .mv-container {
+            padding: 16px;
+            height: 100%;
+            overflow-y: auto;
+            background: var(--color-background-tertiary);
+        }
+
+        .mv-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .mv-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .mv-subtitle {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+            margin-top: 2px;
+        }
+
+        .mv-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 11px;
+            font-weight: 500;
+            background: var(--color-background-success);
+            color: var(--color-text-success);
+        }
+
+        /* ===== TARJETAS DE RESUMEN ===== */
+        .mv-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .mv-card {
+            background: var(--color-background-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            padding: 14px 16px;
+            transition: all 0.2s;
+        }
+
+        .mv-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transform: translateY(-2px);
+        }
+
+        .mv-card-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--color-text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .mv-card-label i {
+            font-size: 14px;
+        }
+
+        .mv-card-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            margin-top: 4px;
+        }
+
+        .mv-card-change {
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin-top: 4px;
+        }
+
+        .mv-card-change.up { color: var(--color-text-success); }
+        .mv-card-change.down { color: var(--color-text-danger); }
+        .mv-card-change.neutral { color: var(--color-text-tertiary); }
+
+        /* ===== TWO COLUMNS ===== */
+        .mv-two-col {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 12px;
+        }
+
+        /* ===== TABLA DE VENTAS ===== */
+        .mv-table-wrap {
+            background: var(--color-background-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+        }
+
+        .mv-table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            background: var(--color-background-secondary);
+        }
+
+        .mv-table-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mv-table-badge {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 99px;
+            background: var(--color-background-success);
+            color: var(--color-text-success);
+        }
+
+        .mv-table-scroll {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .mv-table-scroll::-webkit-scrollbar { width: 4px; }
+        .mv-table-scroll::-webkit-scrollbar-thumb { background: var(--color-border-tertiary); border-radius: 99px; }
+
+        .mv-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .mv-table th {
+            text-align: left;
+            padding: 8px 14px;
+            font-weight: 600;
+            color: var(--color-text-tertiary);
+            text-transform: uppercase;
+            font-size: 9px;
+            letter-spacing: 0.04em;
+            background: var(--color-background-secondary);
+            border-bottom: 1px solid var(--color-border-tertiary);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .mv-table td {
+            padding: 8px 14px;
+            border-bottom: 1px solid #F1F5F9;
+            color: var(--color-text-primary);
+        }
+
+        .mv-table tr:last-child td { border-bottom: none; }
+        .mv-table tr:hover td { background: var(--color-background-secondary); }
+
+        .mv-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 99px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .mv-status.ok {
+            background: var(--color-background-success);
+            color: var(--color-text-success);
+        }
+
+        .mv-status.pending {
+            background: var(--color-background-warning);
+            color: var(--color-text-warning);
+        }
+
+        .mv-status.cancel {
+            background: var(--color-background-danger);
+            color: var(--color-text-danger);
+        }
+
+        /* ===== ESTADO DE CAJA ===== */
+        .mv-caja-wrap {
+            background: var(--color-background-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+        }
+
+        .mv-caja-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            background: var(--color-background-secondary);
+        }
+
+        .mv-caja-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mv-caja-body {
+            padding: 14px 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .mv-caja-item {
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 10px 12px;
+        }
+
+        .mv-caja-item .label {
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--color-text-tertiary);
+        }
+
+        .mv-caja-item .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-top: 2px;
+        }
+
+        .mv-caja-item .value.danger { color: var(--color-text-danger); }
+        .mv-caja-item .value.success { color: var(--color-text-success); }
+
+        .mv-caja-actions {
+            padding: 0 16px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .mv-caja-actions .btn-cerrar {
+            padding: 10px;
+            border-radius: 99px;
+            border: none;
+            background: #0F172A;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .mv-caja-actions .btn-cerrar:hover {
+            background: #1E293B;
+        }
+
+        .mv-caja-actions .btn-cerrar:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .mv-caja-actions .btn-retiro {
+            padding: 8px;
+            border-radius: 99px;
+            border: 1px solid var(--color-border-tertiary);
+            background: transparent;
+            color: var(--color-text-secondary);
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .mv-caja-actions .btn-retiro:hover {
+            background: var(--color-background-secondary);
+        }
+
+        /* ===== PAGOS RECIBIDOS ===== */
+        .mv-pagos-wrap {
+            background: var(--color-background-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .mv-pagos-header {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            background: var(--color-background-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .mv-pagos-body {
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .mv-pago-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .mv-pago-row .pago-label {
+            color: var(--color-text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mv-pago-row .pago-label i { font-size: 14px; }
+        .mv-pago-row .pago-value { font-weight: 500; color: var(--color-text-primary); }
+
+        .mv-pago-bar {
+            height: 5px;
+            background: var(--color-background-secondary);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .mv-pago-bar .fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.5s ease;
+        }
+
+        .mv-empty {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--color-text-tertiary);
+        }
+
+        .mv-empty i {
+            font-size: 40px;
+            color: #CBD5E1;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .mv-empty p { font-size: 13px; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .mv-grid { grid-template-columns: repeat(2, 1fr); }
+            .mv-two-col { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .mv-grid { grid-template-columns: 1fr; }
+            .mv-caja-body { grid-template-columns: 1fr; }
+            .mv-table th, .mv-table td { font-size: 10px; padding: 6px 8px; }
+            .mv-header { flex-direction: column; }
+        }
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- CONTENIDO PRINCIPAL                                           -->
+    <!-- ============================================================ -->
+    <div class="mv-container">
+
+        <!-- HEADER -->
+        <div class="mv-header">
+            <div>
+                <div class="mv-title"><i class="ti ti-chart-bar" style="color:#16A34A;"></i> Mis ventas del día</div>
+                <div class="mv-subtitle">Historial, estado de caja y acciones de turno</div>
             </div>
-            <div class="misventas-card-body" style="padding:18px;">
-                <div class="alert alert-info" style="background:#DBEAFE;border-radius:6px;padding:12px 14px;display:flex;align-items:center;gap:10px;border:1px solid #93C5FD;">
-                    <i class="ti ti-info-circle" style="font-size:18px;color:#1D4ED8;"></i>
-                    <span style="font-size:13px;color:#1E293B;">✅ Página de Mis Ventas funcionando correctamente</span>
-                </div>
-                <div style="margin-top:16px;text-align:center;padding:30px;background:#F8FAFC;border-radius:6px;border:2px dashed #E2E8F0;">
-                    <i class="ti ti-chart-bar" style="font-size:48px;color:#94A3B8;"></i>
-                    <p style="margin-top:10px;color:#64748B;">Aquí irá el historial de ventas</p>
-                    <p style="font-size:12px;color:#94A3B8;">Próximamente...</p>
-                </div>
+            <div class="mv-badge">
+                <i class="ti ti-calendar"></i>
+                <span id="mvFecha">Cargando...</span>
             </div>
         </div>
+
+        <!-- ===== TARJETAS DE RESUMEN ===== -->
+        <div class="mv-grid" id="mvResumen">
+            <div class="mv-card">
+                <div class="mv-card-label"><i class="ti ti-currency-dollar" style="color:#16A34A;"></i> Total vendido</div>
+                <div class="mv-card-value" id="mvTotalVendido">S/ 0.00</div>
+                <div class="mv-card-change up"><i class="ti ti-trending-up"></i> <span id="mvCambioVentas">+0%</span> vs ayer</div>
+            </div>
+            <div class="mv-card">
+                <div class="mv-card-label"><i class="ti ti-receipt" style="color:#3B82F6;"></i> Transacciones</div>
+                <div class="mv-card-value" id="mvTransacciones">0</div>
+                <div class="mv-card-change up"><i class="ti ti-trending-up"></i> Hoy</div>
+            </div>
+            <div class="mv-card">
+                <div class="mv-card-label"><i class="ti ti-shopping-cart" style="color:#8B5CF6;"></i> Ticket promedio</div>
+                <div class="mv-card-value" id="mvTicketPromedio">S/ 0.00</div>
+                <div class="mv-card-change up"><i class="ti ti-trending-up"></i> <span id="mvCambioTicket">+S/ 0.00</span></div>
+            </div>
+            <div class="mv-card">
+                <div class="mv-card-label"><i class="ti ti-arrow-back" style="color:#EF4444;"></i> Devoluciones</div>
+                <div class="mv-card-value" id="mvDevoluciones">0</div>
+                <div class="mv-card-change neutral"><i class="ti ti-minus"></i> <span id="mvMontoDevuelto">S/ 0.00</span></div>
+            </div>
+        </div>
+
+        <!-- ===== TABLA + PANEL DERECHO ===== -->
+        <div class="mv-two-col">
+
+            <!-- TABLA DE VENTAS -->
+            <div class="mv-table-wrap">
+                <div class="mv-table-header">
+                    <div class="mv-table-title"><i class="ti ti-list"></i> Historial de ventas</div>
+                    <div class="mv-table-badge" id="mvCantidadVentas">0 ventas hoy</div>
+                </div>
+                <div class="mv-table-scroll" id="mvScroll">
+                    <table class="mv-table">
+                        <thead>
+                            <tr>
+                                <th style="width:55px;">N°</th>
+                                <th>Comprobante</th>
+                                <th style="width:60px;">Método</th>
+                                <th style="width:65px;">Total</th>
+                                <th style="width:70px;">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mvTableBody">
+                            <tr><td colspan="5">
+                                <div class="mv-empty">
+                                    <i class="ti ti-shopping-cart"></i>
+                                    <p>No hay ventas registradas hoy</p>
+                                </div>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PANEL DERECHO -->
+            <div style="display:flex;flex-direction:column;gap:12px;">
+
+                <!-- ESTADO DE CAJA -->
+                <div class="mv-caja-wrap">
+                    <div class="mv-caja-header">
+                        <div class="mv-caja-title"><i class="ti ti-cash-register"></i> Estado de caja</div>
+                        <div class="mv-badge" id="mvEstadoCaja" style="background:#DCFCE7;color:#15803D;">Abierta</div>
+                    </div>
+                    <div class="mv-caja-body" id="mvCajaBody">
+                        <div class="mv-caja-item">
+                            <div class="label">Fondo inicial</div>
+                            <div class="value" id="mvFondoInicial">S/ 0.00</div>
+                        </div>
+                        <div class="mv-caja-item">
+                            <div class="label">Efectivo actual</div>
+                            <div class="value" id="mvEfectivoActual">S/ 0.00</div>
+                        </div>
+                        <div class="mv-caja-item">
+                            <div class="label">Retiros</div>
+                            <div class="value danger" id="mvRetiros">S/ 0.00</div>
+                        </div>
+                        <div class="mv-caja-item">
+                            <div class="label">Diferencia</div>
+                            <div class="value success" id="mvDiferencia">S/ 0.00</div>
+                        </div>
+                    </div>
+                    <div class="mv-caja-actions">
+                        <button class="btn-cerrar" id="btnCerrarCaja" onclick="cerrarCaja()">
+                            <i class="ti ti-lock"></i> Cerrar caja del día
+                        </button>
+                        <button class="btn-retiro" onclick="solicitarRetiro()">
+                            <i class="ti ti-arrow-up-circle"></i> Solicitar retiro de caja
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PAGOS RECIBIDOS -->
+                <div class="mv-pagos-wrap">
+                    <div class="mv-pagos-header"><i class="ti ti-credit-card"></i> Pagos recibidos</div>
+                    <div class="mv-pagos-body" id="mvPagosBody">
+                        <div class="mv-pago-row">
+                            <span class="pago-label"><i class="ti ti-cash" style="color:#16A34A;"></i> Efectivo</span>
+                            <span class="pago-value" id="mvPagoEfectivo">S/ 0.00</span>
+                        </div>
+                        <div class="mv-pago-bar"><div class="fill" id="mvBarEfectivo" style="width:0%;background:#16A34A;"></div></div>
+                        <div class="mv-pago-row">
+                            <span class="pago-label"><i class="ti ti-credit-card" style="color:#3B82F6;"></i> Tarjeta</span>
+                            <span class="pago-value" id="mvPagoTarjeta">S/ 0.00</span>
+                        </div>
+                        <div class="mv-pago-bar"><div class="fill" id="mvBarTarjeta" style="width:0%;background:#3B82F6;"></div></div>
+                        <div class="mv-pago-row">
+                            <span class="pago-label"><i class="ti ti-device-mobile" style="color:#8B5CF6;"></i> Yape / Plin</span>
+                            <span class="pago-value" id="mvPagoDigital">S/ 0.00</span>
+                        </div>
+                        <div class="mv-pago-bar"><div class="fill" id="mvBarDigital" style="width:0%;background:#8B5CF6;"></div></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </div>
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT DE MIS VENTAS – VERSIÓN CORREGIDA                -->
+    <!-- ============================================================ -->
+	<script>
+	    // ================================================================
+	    // VARIABLES GLOBALES
+	    // ================================================================
+	    var ventasDelDia = [];
+	    var turnoActual = null;
+	    var userId = window.idUsuarioGlobal || 2;
+	    console.log('🆔 Usuario ID para Mis Ventas:', userId);
+
+	    // ================================================================
+	    // CARGAR DATOS PRINCIPALES
+	    // ================================================================
+	    function cargarMisVentas() {
+	        var fecha = new Date();
+	        var fechaEl = document.getElementById('mvFecha');
+	        if (fechaEl) {
+	            fechaEl.textContent = fecha.toLocaleDateString('es-PE', {
+	                weekday: 'long',
+	                day: 'numeric',
+	                month: 'long',
+	                year: 'numeric'
+	            });
+	        }
+	        cargarVentasDelDia();
+	        cargarEstadoCaja();
+	    }
+
+	    // ================================================================
+	    // CARGAR VENTAS DEL DÍA
+	    // ================================================================
+	    function cargarVentasDelDia() {
+	        if (!userId) {
+	            console.warn('⚠️ No hay userId para cargar ventas');
+	            return;
+	        }
+
+	        console.log('🔍 Buscando ventas para userId:', userId);
+
+	        var hoy = new Date().toISOString().split('T')[0];
+	        console.log('📅 Fecha de hoy (para filtro):', hoy);
+
+	        fetch('/ventas/cajero/' + userId)
+	            .then(function(response) {
+	                console.log('📡 Respuesta del servidor:', response.status);
+	                if (!response.ok) throw new Error('Error al cargar ventas: ' + response.status);
+	                return response.json();
+	            })
+	            .then(function(data) {
+	                console.log('📦 Total de ventas recibidas:', data.length);
+	                console.log('📋 Primera venta (ejemplo):', data[0]);
+
+	                // Mostrar todas las ventas (sin filtro)
+	                ventasDelDia = data;
+	                console.log('✅ Ventas a mostrar:', ventasDelDia.length);
+	                renderizarTabla(ventasDelDia);
+	                actualizarResumen(ventasDelDia);
+	            })
+	            .catch(function(error) {
+	                console.error('❌ Error al cargar ventas:', error);
+	                var tbody = document.getElementById('mvTableBody');
+	                if (tbody) {
+	                    tbody.innerHTML = '<tr><td colspan="5"><div class="mv-empty"><i class="ti ti-alert-circle"></i><p>Error al cargar ventas: ' + error.message + '</p></div></td></tr>';
+	                }
+	            });
+	    }
+
+	    // ================================================================
+	    // RENDERIZAR TABLA (CORREGIDA)
+	    // ================================================================
+	    function renderizarTabla(ventas) {
+	        var tbody = document.getElementById('mvTableBody');
+	        var contador = document.getElementById('mvCantidadVentas');
+
+	        if (!ventas || ventas.length === 0) {
+	            if (tbody) {
+	                tbody.innerHTML = '<tr><td colspan="5"><div class="mv-empty"><i class="ti ti-shopping-cart"></i><p>No hay ventas registradas hoy</p></div></td></tr>';
+	            }
+	            if (contador) contador.textContent = '0 ventas hoy';
+	            return;
+	        }
+
+	        if (contador) contador.textContent = ventas.length + ' ventas hoy';
+
+	        // Mapeo de estado a clases CSS
+	        var estadoClaseMap = {
+	            'COMPLETADO': 'ok',
+	            'SUSPENDIDO': 'pending',
+	            'CANCELADO': 'cancel',
+	            'REEMBOLSADO': 'cancel',
+	            'PENDIENTE_PAGO': 'pending'
+	        };
+
+	        tbody.innerHTML = ventas.map(function(v, index) {
+	            // Estado
+	            var estadoNombre = v.estadoVenta?.nombreEstado || 'Desconocido';
+	            var estadoClase = estadoClaseMap[estadoNombre] || 'pending';
+
+	            // Comprobante
+	            var comprobante = v.tipoComprobante?.nombreComprobante || 'Boleta';
+
+	            // Método de pago (si no viene, dejamos vacío)
+	            var metodo = v.metodoPago || '—';
+
+	            // Cliente: extraer nombre legible
+	            var cliente = '';
+	            if (v.cliente) {
+	                if (typeof v.cliente === 'object') {
+	                    cliente = v.cliente.nombres ? v.cliente.nombres + ' ' + (v.cliente.apellidos || '') : v.cliente.razonSocial || '';
+	                } else {
+	                    cliente = v.cliente;
+	                }
+	            }
+
+	            var numero = v.codigoVenta || '#' + String(index + 1).padStart(4, '0');
+
+	            return '<tr>' +
+	                '<td style="color:var(--color-text-tertiary);font-size:11px;">' + numero + '</td>' +
+	                '<td>' + comprobante + (cliente ? ' — ' + cliente : '') + '</td>' +
+	                '<td><span class="mv-pill">' + metodo + '</span></td>' +
+	                '<td style="font-weight:500;">S/ ' + (v.total || 0).toFixed(2) + '</td>' +
+	                '<td><span class="mv-status ' + estadoClase + '"><span class="dot"></span>' + estadoNombre + '</span></td>' +
+	                '</tr>';
+	        }).join('');
+	    }
+
+	    // ================================================================
+	    // ACTUALIZAR TARJETAS DE RESUMEN (CORREGIDA)
+	    // ================================================================
+	    function actualizarResumen(ventas) {
+	        var total = 0;
+	        var totalDevuelto = 0;
+	        var devoluciones = 0;
+
+	        ventas.forEach(function(v) {
+	            var monto = v.total || 0;
+	            var estadoNombre = v.estadoVenta?.nombreEstado || 'COMPLETADO';
+
+	            if (estadoNombre === 'COMPLETADO' || estadoNombre === 'SUSPENDIDO' || estadoNombre === 'PENDIENTE_PAGO') {
+	                total += monto;
+	            }
+	            if (estadoNombre === 'REEMBOLSADO') {
+	                devoluciones++;
+	                totalDevuelto += monto;
+	            }
+	        });
+
+	        var promedio = ventas.length > 0 ? total / ventas.length : 0;
+
+	        document.getElementById('mvTotalVendido').textContent = 'S/ ' + total.toFixed(2);
+	        document.getElementById('mvTransacciones').textContent = ventas.length;
+	        document.getElementById('mvTicketPromedio').textContent = 'S/ ' + promedio.toFixed(2);
+	        document.getElementById('mvDevoluciones').textContent = devoluciones;
+	        document.getElementById('mvMontoDevuelto').textContent = 'S/ ' + totalDevuelto.toFixed(2);
+	    }
+
+	    // ================================================================
+	    // CARGAR ESTADO DE CAJA (TURNO)
+	    // ================================================================
+	    function cargarEstadoCaja() {
+	        if (!userId) {
+	            console.warn('⚠️ No hay userId para cargar estado de caja');
+	            return;
+	        }
+
+	        fetch('/turnos-caja/usuario/' + userId + '/activo')
+	            .then(function(response) {
+	                if (response.status === 404) {
+	                    mostrarCajaCerrada();
+	                    return null;
+	                }
+	                if (!response.ok) throw new Error('Error al obtener turno');
+	                return response.json();
+	            })
+	            .then(function(data) {
+	                if (data && data.activo && data.turno) {
+	                    turnoActual = data.turno;
+	                    mostrarCajaAbierta(turnoActual);
+	                } else {
+	                    mostrarCajaCerrada();
+	                }
+	            })
+	            .catch(function(error) {
+	                console.error('❌ Error al cargar turno:', error);
+	                mostrarCajaCerrada();
+	            });
+	    }
+
+	    function mostrarCajaAbierta(turno) {
+	        var badge = document.getElementById('mvEstadoCaja');
+	        if (badge) {
+	            badge.textContent = 'Abierta ' + (turno.horaApertura || '08:00');
+	            badge.style.background = '#DCFCE7';
+	            badge.style.color = '#15803D';
+	        }
+
+	        document.getElementById('mvFondoInicial').textContent = 'S/ ' + (turno.fondoInicial || 0).toFixed(2);
+
+	        var efectivoActual = (turno.fondoInicial || 0) + (turno.totalVentasEfectivo || 0);
+	        document.getElementById('mvEfectivoActual').textContent = 'S/ ' + efectivoActual.toFixed(2);
+
+	        document.getElementById('mvRetiros').textContent = 'S/ 0.00';
+	        document.getElementById('mvDiferencia').textContent = 'S/ 0.00';
+
+	        var btnCerrar = document.getElementById('btnCerrarCaja');
+	        if (btnCerrar) btnCerrar.disabled = false;
+
+	        cargarPagos(turno);
+	    }
+
+	    function mostrarCajaCerrada() {
+	        var badge = document.getElementById('mvEstadoCaja');
+	        if (badge) {
+	            badge.textContent = 'Cerrada';
+	            badge.style.background = '#FEE2E2';
+	            badge.style.color = '#DC2626';
+	        }
+
+	        var campos = ['mvFondoInicial', 'mvEfectivoActual', 'mvRetiros', 'mvDiferencia'];
+	        campos.forEach(function(id) {
+	            var el = document.getElementById(id);
+	            if (el) el.textContent = 'S/ 0.00';
+	        });
+
+	        var btnCerrar = document.getElementById('btnCerrarCaja');
+	        if (btnCerrar) {
+	            btnCerrar.disabled = true;
+	            btnCerrar.innerHTML = '<i class="ti ti-lock"></i> Caja cerrada';
+	        }
+
+	        ['mvPagoEfectivo', 'mvPagoTarjeta', 'mvPagoDigital'].forEach(function(id) {
+	            var el = document.getElementById(id);
+	            if (el) el.textContent = 'S/ 0.00';
+	        });
+	        ['mvBarEfectivo', 'mvBarTarjeta', 'mvBarDigital'].forEach(function(id) {
+	            var el = document.getElementById(id);
+	            if (el) el.style.width = '0%';
+	        });
+	    }
+
+	    // ================================================================
+	    // CARGAR PAGOS RECIBIDOS
+	    // ================================================================
+	    function cargarPagos(turno) {
+	        var efectivo = turno.totalVentasEfectivo || 0;
+	        var tarjeta = turno.totalVentasTarjeta || 0;
+	        var yape = turno.totalVentasYape || 0;
+	        var plin = turno.totalVentasPlin || 0;
+	        var digital = yape + plin;
+	        var total = efectivo + tarjeta + digital;
+
+	        document.getElementById('mvPagoEfectivo').textContent = 'S/ ' + efectivo.toFixed(2);
+	        document.getElementById('mvPagoTarjeta').textContent = 'S/ ' + tarjeta.toFixed(2);
+	        document.getElementById('mvPagoDigital').textContent = 'S/ ' + digital.toFixed(2);
+
+	        if (total > 0) {
+	            document.getElementById('mvBarEfectivo').style.width = (efectivo / total * 100) + '%';
+	            document.getElementById('mvBarTarjeta').style.width = (tarjeta / total * 100) + '%';
+	            document.getElementById('mvBarDigital').style.width = (digital / total * 100) + '%';
+	        } else {
+	            document.getElementById('mvBarEfectivo').style.width = '0%';
+	            document.getElementById('mvBarTarjeta').style.width = '0%';
+	            document.getElementById('mvBarDigital').style.width = '0%';
+	        }
+	    }
+
+	    // ================================================================
+	    // CERRAR CAJA (TURNO)
+	    // ================================================================
+	    window.cerrarCaja = function() {
+	        if (!turnoActual || !turnoActual.idTurnoCaja) {
+	            mostrarToast('⚠️ No hay turno activo para cerrar', 'warning');
+	            return;
+	        }
+
+	        if (!confirm('¿Estás seguro de que deseas cerrar la caja?\nEsta acción no se puede deshacer.')) {
+	            return;
+	        }
+
+	        var fondoFinal = parseFloat(document.getElementById('mvEfectivoActual').textContent.replace('S/ ', '')) || 0;
+
+	        var btn = document.getElementById('btnCerrarCaja');
+	        var originalText = btn.innerHTML;
+	        btn.disabled = true;
+	        btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Cerrando...';
+
+	        fetch('/turnos-caja/' + turnoActual.idTurnoCaja + '/cerrar?fondoFinal=' + fondoFinal, {
+	            method: 'PUT',
+	            headers: { 'Content-Type': 'application/json' }
+	        })
+	        .then(function(response) {
+	            if (!response.ok) {
+	                return response.json().then(function(err) {
+	                    throw new Error(err.error || 'Error al cerrar turno');
+	                });
+	            }
+	            return response.json();
+	        })
+	        .then(function(data) {
+	            mostrarToast('✅ Caja cerrada correctamente', 'success');
+	            turnoActual = null;
+	            cargarEstadoCaja();
+	            if (window.actualizarEstadoCaja) {
+	                window.actualizarEstadoCaja(false);
+	            }
+	            cargarVentasDelDia();
+	        })
+	        .catch(function(error) {
+	            mostrarToast('❌ Error: ' + error.message, 'error');
+	            console.error('Error:', error);
+	        })
+	        .finally(function() {
+	            btn.disabled = false;
+	            btn.innerHTML = originalText;
+	        });
+	    };
+
+	    // ================================================================
+	    // SOLICITAR RETIRO DE CAJA
+	    // ================================================================
+	    window.solicitarRetiro = function() {
+	        var monto = prompt('💰 Ingresa el monto a retirar:', '100.00');
+	        if (!monto) return;
+	        if (isNaN(parseFloat(monto)) || parseFloat(monto) <= 0) {
+	            mostrarToast('⚠️ Ingresa un monto válido', 'warning');
+	            return;
+	        }
+	        var motivo = prompt('📝 Motivo del retiro:', 'Compra de insumos');
+	        if (!motivo) return;
+	        mostrarToast('📨 Solicitud enviada al supervisor', 'info');
+	    };
+
+	    // ================================================================
+	    // TOAST NOTIFICATIONS
+	    // ================================================================
+	    function mostrarToast(mensaje, tipo) {
+	        tipo = tipo || 'info';
+	        var container = document.getElementById('toastContainer');
+	        if (!container) {
+	            container = document.createElement('div');
+	            container.id = 'toastContainer';
+	            container.className = 'toast-container';
+	            document.body.appendChild(container);
+	        }
+
+	        var toast = document.createElement('div');
+	        toast.className = 'toast toast-' + tipo;
+	        toast.textContent = mensaje;
+	        container.appendChild(toast);
+
+	        setTimeout(function() {
+	            toast.style.opacity = '0';
+	            toast.style.transform = 'translateX(20px)';
+	            setTimeout(function() { toast.remove(); }, 300);
+	        }, 3000);
+	    }
+
+	    // ================================================================
+	    // INICIALIZACIÓN
+	    // ================================================================
+	    function inicializarMisVentas() {
+	        console.log('🔄 Inicializando Mis Ventas...');
+	        setTimeout(function() {
+	            cargarMisVentas();
+	        }, 100);
+	    }
+
+	    window.inicializarMisVentas = inicializarMisVentas;
+
+	    if (document.readyState === 'loading') {
+	        document.addEventListener('DOMContentLoaded', inicializarMisVentas);
+	    } else {
+	        inicializarMisVentas();
+	    }
+	</script>
 </div>
 </html>

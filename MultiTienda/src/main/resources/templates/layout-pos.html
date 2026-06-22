@@ -197,6 +197,36 @@
 
         .page { animation: fadeIn 0.2s ease; }
 
+        /* Toast notifications (global) */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 200px;
+        }
+        .toast-success { background: #16A34A; }
+        .toast-error { background: #EF4444; }
+        .toast-warning { background: #F59E0B; }
+        .toast-info { background: #3B82F6; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
         @media (max-width: 768px) {
             .topbar-left { font-size: 11px; }
             .topbar-item.hide-mobile { display: none; }
@@ -433,118 +463,202 @@
             </div>
         </div>
 
-		<!-- ========== TAB BAR ========== -->
-		<div class="tab-bar" id="tabBar">
-		    <!-- 🔥 Pestaña APERTURA - Solo visible si NO hay turno activo -->
-		    <button class="tab" id="tabApertura" data-page="apertura" onclick="cambiarVista('apertura')">
-		        <i class="ti ti-cash-register"></i><span>Apertura</span>
-		    </button>
-		    
-		    <!-- 🔥 Pestaña NUEVA VENTA - Siempre visible -->
-		    <button class="tab" id="tabVenta" data-page="venta" onclick="cambiarVista('venta')">
-		        <i class="ti ti-shopping-cart"></i><span>Nueva venta</span>
-		    </button>
-		    
-		    <!-- 🔥 Pestaña MIS VENTAS - Siempre visible -->
-		    <button class="tab" id="tabMisVentas" data-page="misventas" onclick="cambiarVista('misventas')">
-		        <i class="ti ti-chart-bar"></i><span>Mis ventas</span>
-		    </button>
-		    
-		    <!-- 🔥 Pestaña DEVOLUCIÓN - Siempre visible -->
-		    <button class="tab" id="tabDevolucion" data-page="devolucion" onclick="cambiarVista('devolucion')">
-		        <i class="ti ti-arrow-back"></i><span>Devolución</span>
-		    </button>
-		    
-		    <!-- 🔥 Pestaña CIERRE - Solo visible si HAY turno activo -->
-		    <button class="tab" id="tabCierre" data-page="cierre" onclick="cambiarVista('cierre')">
-		        <i class="ti ti-lock"></i><span>Cierre</span>
-		    </button>
-		</div>
+        <!-- ========== TAB BAR ========== -->
+        <div class="tab-bar" id="tabBar">
+            <button class="tab" id="tabApertura" data-page="apertura" onclick="cambiarVista('apertura')">
+                <i class="ti ti-cash-register"></i><span>Apertura</span>
+            </button>
+            <button class="tab active" id="tabVenta" data-page="venta" onclick="cambiarVista('venta')">
+                <i class="ti ti-shopping-cart"></i><span>Nueva venta</span>
+            </button>
+            <button class="tab" id="tabMisVentas" data-page="misventas" onclick="cambiarVista('misventas')">
+                <i class="ti ti-chart-bar"></i><span>Mis ventas</span>
+            </button>
+            <button class="tab" id="tabDevolucion" data-page="devolucion" onclick="cambiarVista('devolucion')">
+                <i class="ti ti-arrow-back"></i><span>Devolución</span>
+            </button>
+            <button class="tab" id="tabCierre" data-page="cierre" onclick="cambiarVista('cierre')">
+                <i class="ti ti-lock"></i><span>Cierre</span>
+            </button>
+        </div>
 
         <!-- ========== CONTENIDO ========== -->
         <div class="body">
-			<div class="content-area" id="contentArea">
-			    <div th:replace="~{fragments/__${viewName}__ :: content}"></div>
-			</div>
+            <div class="content-area" id="contentArea">
+                <div th:replace="~{fragments/__${viewName}__ :: content}"></div>
+            </div>
         </div>
 
     </div>
 
     <!-- ============================================================ -->
-    <!-- JAVASCRIPT DEL LAYOUT (CORREGIDO)                            -->
+    <!-- JAVASCRIPT DEL LAYOUT (COMPLETO Y CORREGIDO)                -->
     <!-- ============================================================ -->
     <script th:inline="javascript">
         /*<![CDATA[*/
 
-        // === FUNCIÓN DE NAVEGACIÓN (definida ANTES de cualquier otra cosa) ===
-		window.cambiarVista = function(pagina) {
-		    if (!cajaAbierta && pagina !== 'apertura') {
-		        alert('⚠️ Primero debes abrir la caja en "Apertura"');
-		        return;
-		    }
-		    if (cajaAbierta && pagina === 'apertura') {
-		        alert('⚠️ La caja ya está abierta. Ve a "Nueva venta"');
-		        return;
-		    }
-		    window.location.href = '/views/' + pagina;  // ✅ SIN /api
-		};
+        // === GUARDAR DATOS DEL USUARIO PARA REUTILIZAR ===
+        var usuarioGlobal = /*[[${usuario}]]*/ null;
+        var viewNameGlobal = /*[[${viewName}]]*/ 'venta';
 
-		// === VARIABLES ===
-		let cajaAbierta = false;
-		let paginaActual = 'apertura';
+        // === GUARDAR ID DEL USUARIO GLOBALMENTE ===
+        window.idUsuarioGlobal = null;
+        try {
+            window.idUsuarioGlobal = /*[[${usuario.idUsuario}]]*/ null;
+        } catch(e) {
+            console.warn('No se pudo obtener idUsuario');
+        }
+        console.log('ID Usuario global:', window.idUsuarioGlobal);
 
-		// Obtener elementos de las pestañas
-		const tabApertura = document.getElementById('tabApertura');
-		const tabVenta = document.getElementById('tabVenta');
-		const tabMisVentas = document.getElementById('tabMisVentas');
-		const tabDevolucion = document.getElementById('tabDevolucion');
-		const tabCierre = document.getElementById('tabCierre');
-		const tabs = document.querySelectorAll('.tab');
+        // === VARIABLES GLOBALES ===
+        let cajaAbierta = false;
+        let paginaActual = 'venta';
 
-		// Obtener ID de usuario de forma segura
-		let idUsuario = null;
-		try {
-		    idUsuario = /*[[${usuario.idUsuario}]]*/ null;
-		} catch(e) {
-		    console.warn('No se pudo obtener idUsuario');
-		}
-		console.log('ID Usuario:', idUsuario);
+        const tabApertura = document.getElementById('tabApertura');
+        const tabCierre = document.getElementById('tabCierre');
+        const tabs = document.querySelectorAll('.tab');
 
-		const statusText = document.getElementById('statusText');
-		const statusIcon = document.getElementById('statusIcon');
+        let idUsuario = null;
+        try {
+            idUsuario = /*[[${usuario.idUsuario}]]*/ null;
+        } catch(e) {
+            console.warn('No se pudo obtener idUsuario');
+        }
+        console.log('ID Usuario:', idUsuario);
 
-		// === ACTUALIZAR ESTADO DE CAJA ===
-		window.actualizarEstadoCaja = function(abierta) {
-		    cajaAbierta = abierta;
-		    
-		    // 1️⃣ Actualizar texto en la barra superior
-		    if (statusText) {
-		        statusText.textContent = abierta ? 'Caja abierta' : 'Caja cerrada';
-		        statusText.style.color = abierta ? '#4ADE80' : '#EF4444';
-		    }
-		    if (statusIcon) {
-		        statusIcon.className = abierta ? 'ti ti-circle-filled status-online' : 'ti ti-circle-filled status-offline';
-		    }
-		    
-		    // 2️⃣ Mostrar/ocultar pestañas según estado
-		    if (tabApertura) {
-		        tabApertura.style.display = abierta ? 'none' : 'flex';
-		    }
-		    if (tabCierre) {
-		        tabCierre.style.display = abierta ? 'flex' : 'none';
-		    }
-		    
-		    // 3️⃣ Todas las demás pestañas siempre visibles (excepto las ocultas)
-		    // Nueva venta, Mis ventas, Devolución siempre visibles
-		    
-		    // 4️⃣ Marcar pestaña activa
-		    tabs.forEach(tab => {
-		        const page = tab.dataset.page;
-		        if (tab.style.display !== 'none') {
-		            tab.classList.toggle('active', tab.dataset.page === paginaActual);
-		        }
-		    });
-		};
+        const statusText = document.getElementById('statusText');
+        const statusIcon = document.getElementById('statusIcon');
+
+        // === ACTUALIZAR ESTADO DE CAJA ===
+        window.actualizarEstadoCaja = function(abierta) {
+            cajaAbierta = abierta;
+            
+            if (statusText) {
+                statusText.textContent = abierta ? 'Caja abierta' : 'Caja cerrada';
+                statusText.style.color = abierta ? '#4ADE80' : '#EF4444';
+            }
+            if (statusIcon) {
+                statusIcon.className = abierta ? 'ti ti-circle-filled status-online' : 'ti ti-circle-filled status-offline';
+            }
+            
+            if (tabApertura) {
+                tabApertura.style.display = abierta ? 'none' : 'flex';
+            }
+            if (tabCierre) {
+                tabCierre.style.display = abierta ? 'flex' : 'none';
+            }
+            
+            // Actualizar pestañas visibles según estado
+            tabs.forEach(tab => {
+                const page = tab.dataset.page;
+                // Si la pestaña no está oculta, actualizar su clase active
+                if (tab.style.display !== 'none') {
+                    tab.classList.toggle('active', tab.dataset.page === paginaActual);
+                }
+            });
+        };
+
+        // === FUNCIÓN PARA ACTUALIZAR PESTAÑA ACTIVA ===
+        function actualizarPestanaActiva(pagina) {
+            paginaActual = pagina;
+            tabs.forEach(tab => {
+                const page = tab.dataset.page;
+                // Solo si la pestaña está visible
+                if (tab.style.display !== 'none') {
+                    tab.classList.toggle('active', page === pagina);
+                }
+            });
+        }
+
+        // === FUNCIÓN DE NAVEGACIÓN SIN RECARGA (AJAX) ===
+        window.cambiarVista = function(pagina) {
+            // Validaciones de caja
+            if (!cajaAbierta && pagina !== 'apertura') {
+                alert('⚠️ Primero debes abrir la caja en "Apertura"');
+                return;
+            }
+            if (cajaAbierta && pagina === 'apertura') {
+                alert('⚠️ La caja ya está abierta. Ve a "Nueva venta"');
+                return;
+            }
+
+            // 🔥 CARGAR FRAGMENTO CON AJAX
+            fetch('/views/' + pagina, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error al cargar la vista');
+                return response.text();
+            })
+            .then(html => {
+                // 🔥 REEMPLAZAR CONTENIDO
+                const contentArea = document.getElementById('contentArea');
+                contentArea.innerHTML = html;
+                
+                // 🔥 ACTUALIZAR URL
+                window.history.pushState({ pagina: pagina }, '', '/views/' + pagina);
+                
+                // 🔥 ACTUALIZAR PESTAÑA ACTIVA
+                actualizarPestanaActiva(pagina);
+                
+                // 🔥 EJECUTAR SCRIPTS DEL FRAGMENTO
+                const scripts = contentArea.querySelectorAll('script');
+                scripts.forEach(script => {
+                    if (script.textContent && !script.src) {
+                        try {
+                            eval(script.textContent);
+                        } catch (e) {
+                            console.warn('Error al ejecutar script del fragmento:', e);
+                        }
+                    }
+                });
+                
+                // 🔥 INICIALIZAR MÓDULOS ESPECÍFICOS SEGÚN LA PÁGINA
+                setTimeout(function() {
+                    if (pagina === 'venta') {
+                        if (typeof cargarDatosIniciales === 'function') {
+                            cargarDatosIniciales();
+                        }
+                        if (typeof renderizarCarrito === 'function') {
+                            renderizarCarrito();
+                        }
+                    } else if (pagina === 'misventas') {
+                        if (typeof window.inicializarMisVentas === 'function') {
+                            console.log('🔄 Inicializando Mis Ventas...');
+                            window.inicializarMisVentas();
+                        } else {
+                            console.warn('⚠️ función inicializarMisVentas no encontrada');
+                            // Intentar ejecutar directamente si está en el script del fragmento
+                            if (typeof inicializarMisVentas === 'function') {
+                                inicializarMisVentas();
+                            }
+                        }
+                    } else if (pagina === 'devolucion') {
+                        if (typeof window.inicializarDevolucion === 'function') {
+                            window.inicializarDevolucion();
+                        }
+                    } else if (pagina === 'apertura') {
+                        if (typeof window.inicializarApertura === 'function') {
+                            window.inicializarApertura();
+                        }
+                    } else if (pagina === 'cierre') {
+                        if (typeof window.inicializarCierre === 'function') {
+                            window.inicializarCierre();
+                        }
+                    }
+                }, 50);
+                
+                console.log('✅ Vista cargada:', pagina);
+            })
+            .catch(error => {
+                console.error('❌ Error al cargar vista:', error);
+                // Fallback: recargar la página
+                window.location.href = '/views/' + pagina;
+            });
+        };
+
         // === RELOJ ===
         function actualizarReloj() {
             const el = document.getElementById('reloj');
@@ -562,20 +676,38 @@
             }
         };
 
-        // === INICIALIZACIÓN ===
+        // === MANEJAR BOTÓN ATRÁS ===
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.pagina) {
+                cambiarVista(event.state.pagina);
+            }
+        });
+
+        // === INICIALIZACIÓN (CORREGIDA) ===
         function init() {
+            // Iniciar reloj
             actualizarReloj();
             setInterval(actualizarReloj, 30000);
 
+            // 🔥 DETECTAR PÁGINA ACTUAL DESDE LA URL
             const path = window.location.pathname;
             const pageMatch = path.match(/\/views\/([a-zA-Z0-9]+)/);
             if (pageMatch) {
                 paginaActual = pageMatch[1];
+            } else {
+                paginaActual = 'venta'; // por defecto
             }
+            console.log('📄 Página actual detectada:', paginaActual);
 
+            // 🔥 ACTUALIZAR PESTAÑA ACTIVA DESDE EL INICIO
+            tabs.forEach(tab => {
+                // Ocultar/mostrar según estado (se actualizará después)
+                tab.classList.toggle('active', tab.dataset.page === paginaActual);
+            });
+
+            // Verificar turno activo
             if (idUsuario) {
                 console.log('🔍 Verificando turno activo...');
-                // ✅ SIN /api
                 fetch('/turnos-caja/usuario/' + idUsuario + '/activo')
                     .then(response => {
                         if (response.ok) return response.json();
@@ -586,20 +718,21 @@
                         if (data && data.activo && data.turno) {
                             console.log('✅ Turno activo encontrado');
                             actualizarEstadoCaja(true);
+                            // Si estamos en apertura pero hay turno, redirigir a venta
                             if (paginaActual === 'apertura') {
-                                // ✅ SIN /api
                                 window.location.href = '/views/venta';
                             }
                         } else {
                             console.log('⚠️ No hay turno activo');
                             actualizarEstadoCaja(false);
+                            // Si no estamos en apertura, redirigir
                             if (paginaActual !== 'apertura') {
                                 window.location.href = '/views/apertura';
                             }
                         }
                     })
                     .catch(error => {
-                        console.error('❌ Error:', error);
+                        console.error('❌ Error al verificar turno:', error);
                         actualizarEstadoCaja(false);
                         if (paginaActual !== 'apertura') {
                             window.location.href = '/views/apertura';
@@ -609,9 +742,11 @@
                 console.warn('⚠️ No hay idUsuario');
                 window.location.href = '/login';
             }
-            console.log('✅ Layout POS inicializado');
+
+            console.log('✅ Layout POS inicializado correctamente');
         }
 
+        // Ejecutar inicialización
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);
         } else {
@@ -620,6 +755,9 @@
 
         /*]]>*/
     </script>
+	<!-- jsPDF para generar PDFs -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 </body>
 </html>

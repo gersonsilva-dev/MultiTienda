@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @Controller
 @RequestMapping("/views")
@@ -29,12 +30,14 @@ public class ViewFragmentController {
     @GetMapping("/{fragmento}")
     public String mostrarFragmento(@PathVariable String fragmento,
                                    HttpSession session,
-                                   Model model) {
+                                   Model model,
+                                   @RequestHeader(value = "X-Requested-With", required = false) String requestedWith) {
         Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
         if (usuario == null) {
             return "redirect:/login";
         }
 
+        // 🔥 SIEMPRE PASAR EL USUARIO Y VIEWNAME
         model.addAttribute("viewName", fragmento);
         model.addAttribute("usuario", usuario);
 
@@ -44,6 +47,12 @@ public class ViewFragmentController {
             model.addAttribute("turnos", turnoService.listarTodos());
         }
 
+        // 🔥 PARA AJAX, DEVOLVER EL FRAGMENTO CON LAS VARIABLES
+        if ("XMLHttpRequest".equals(requestedWith)) {
+            return "fragments/" + fragmento + " :: content";
+        }
+
+        // PARA PETICIÓN NORMAL, DEVOLVER EL LAYOUT COMPLETO
         return "layout-pos";
     }
 }

@@ -36,10 +36,13 @@ public class Producto {
     @JoinColumn(name = "id_unidad_medida", nullable = false)
     private UnidadMedida unidadMedida;
 
-    @Column(name = "precio_compra")
+    // ============================================================
+    // ⚠️ PRECIOS - SOLO UNA VEZ CADA UNO
+    // ============================================================
+    @Column(name = "precio_compra", precision = 12, scale = 2)
     private BigDecimal precioCompra;
 
-    @Column(name = "precio_venta")
+    @Column(name = "precio_venta", precision = 12, scale = 2)
     private BigDecimal precioVenta;
 
     @Column(name = "stock_minimo")
@@ -72,7 +75,9 @@ public class Producto {
         this.activo = true;
     }
 
-    // Getters y Setters
+    // ============================================================
+    // GETTERS Y SETTERS - UNO PARA CADA CAMPO
+    // ============================================================
     public Integer getIdProducto() {
         return idProducto;
     }
@@ -137,6 +142,9 @@ public class Producto {
         this.unidadMedida = unidadMedida;
     }
 
+    // ============================================================
+    // PRECIOS - UN GETTER Y UN SETTER PARA CADA UNO
+    // ============================================================
     public BigDecimal getPrecioCompra() {
         return precioCompra;
     }
@@ -207,6 +215,7 @@ public class Producto {
                 "idProducto=" + idProducto +
                 ", nombreProducto='" + nombreProducto + '\'' +
                 ", codigoBarras='" + codigoBarras + '\'' +
+                ", precioVenta=" + precioVenta +
                 ", activo=" + activo +
                 '}';
     }
