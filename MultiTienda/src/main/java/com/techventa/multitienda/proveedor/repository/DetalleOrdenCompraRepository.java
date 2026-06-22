@@ -9,6 +9,5 @@ import java.util.List;
 public interface DetalleOrdenCompraRepository extends JpaRepository<DetalleOrdenCompra, Integer> {
 
     List<DetalleOrdenCompra> findByOrdenCompra_IdOrden(Integer idOrden);
-
     List<DetalleOrdenCompra> findByProducto_IdProducto(Integer idProducto);
 }
