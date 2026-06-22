@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/mermas")
+@RequestMapping("/api/mermas")
 public class MermaController {
 
     @Autowired
@@ -41,14 +41,16 @@ public class MermaController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> eliminar(@PathVariable Integer id) {
         try {
-            if (mermaService.buscarPorId(id).isEmpty()) return ResponseEntity.notFound().build();
-            mermaService.eliminarLogico(id);
+            if (mermaService.buscarPorId(id).isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            mermaService.eliminarFisico(id);  // ← CAMBIADO
             Map<String, String> response = new HashMap<>();
-            response.put("mensaje", "Merma eliminada");
+            response.put("mensaje", "Merma eliminada correctamente");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
-            error.put("error", "Error: " + e.getMessage());
+            error.put("error", "Error al eliminar: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }

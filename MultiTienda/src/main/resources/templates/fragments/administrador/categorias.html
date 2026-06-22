@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Categorías</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">📂 Categorías de Productos</div>
+        <div class="page-subtitle">Gestiona las categorías de productos</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalCategoria()"><i class="fas fa-plus"></i> Nueva categoría</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Nombre</th><th>Nivel</th><th>Categoría Padre</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tablaCategorias">
+                <tr><td colspan="6" style="text-align:center;padding:40px;">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalCategoria">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalCategoriaTitle">Nueva Categoría</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalCategoria()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formCategoria">
+                <input type="hidden" id="categoriaId">
+                <div class="form-group">
+                    <label class="form-label">Nombre</label>
+                    <input class="form-control" id="catNombre" placeholder="Nombre de la categoría" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <input class="form-control" id="catDescripcion" placeholder="Descripción opcional">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Categoría Padre (opcional)</label>
+					<select class="form-control" id="catPadre">
+					    <option value="">Cargando...</option>
+					</select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalCategoria()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarCategoria()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let categoriasData = [];
+
+	function cargarSelectPadres() {
+	    return fetch('/api/categorias')
+	        .then(r => r.json())
+	        .then(d => {
+	            const select = document.getElementById('catPadre');
+	            let options = '<option value="">Ninguna (raíz)</option>';
+	            d.forEach(c => {
+	                options += `<option value="${c.idCategoria}">${c.nombreCategoria}</option>`;
+	            });
+	            select.innerHTML = options;
+	        })
+	        .catch(() => {
+	            document.getElementById('catPadre').innerHTML = '<option value="">Error al cargar</option>';
+	        });
+	}
+	
+    function cargarCategorias() {
+        fetch('/api/categorias')
+            .then(r => r.json())
+            .then(d => {
+                categoriasData = d;
+                const tbody = document.getElementById('tablaCategorias');
+                if (!d || d.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">No hay categorías</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = d.map(c => `
+                    <tr>
+                        <td>${c.idCategoria}</td>
+                        <td><strong>${c.nombreCategoria}</strong></td>
+                        <td>${c.nivel || 1}</td>
+                        <td>${c.categoriaPadre?.nombreCategoria || '—'}</td>
+                        <td><span class="badge ${c.activo ? 'badge-success' : 'badge-danger'}">${c.activo ? 'Activo' : 'Inactivo'}</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="editarCategoria(${c.idCategoria})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarCategoria(${c.idCategoria})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(() => document.getElementById('tablaCategorias').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
+    }
+
+	function abrirModalCategoria() {
+	    document.getElementById('modalCategoriaTitle').textContent = 'Nueva Categoría';
+	    document.getElementById('formCategoria').reset();
+	    document.getElementById('categoriaId').value = '';
+	    cargarSelectPadres();  // ← CARGAR DESDE BD
+	    document.getElementById('modalCategoria').classList.add('open');
+	}
+
+    function cerrarModalCategoria() { 
+        document.getElementById('modalCategoria').classList.remove('open'); 
+    }
+
+	async function editarCategoria(id) {
+	    const c = categoriasData.find(x => x.idCategoria === id);
+	    if (!c) {
+	        alert('Categoría no encontrada');
+	        return;
+	    }
+	    
+	    document.getElementById('modalCategoriaTitle').textContent = 'Editar Categoría';
+	    document.getElementById('categoriaId').value = c.idCategoria;
+	    document.getElementById('catNombre').value = c.nombreCategoria || '';
+	    document.getElementById('catDescripcion').value = c.descripcionCategoria || '';
+	    
+	    await cargarSelectPadres();
+	    
+	    if (c.categoriaPadre?.idCategoria) {
+	        document.getElementById('catPadre').value = c.categoriaPadre.idCategoria;
+	    } else {
+	        document.getElementById('catPadre').value = '';
+	    }
+	    
+	    document.getElementById('modalCategoria').classList.add('open');
+	}
+
+    function guardarCategoria() {
+        const id = document.getElementById('categoriaId').value;
+        const data = {
+            nombreCategoria: document.getElementById('catNombre').value,
+            descripcionCategoria: document.getElementById('catDescripcion').value
+        };
+        const padreId = document.getElementById('catPadre').value;
+        if (padreId) {
+            data.categoriaPadre = { idCategoria: parseInt(padreId) };
+        }
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/categorias/${id}` : '/api/categorias';
+        fetch(url, { 
+            method: method, 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(data) 
+        })
+        .then(r => {
+            if (!r.ok) {
+                return r.text().then(text => { throw new Error(text); });
+            }
+            return r.json();
+        })
+        .then(() => { 
+            cerrarModalCategoria(); 
+            cargarCategorias(); 
+            alert('✅ Categoría guardada correctamente');
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('❌ Error al guardar: ' + error.message);
+        });
+    }
+
+    function eliminarCategoria(id) {
+        if (!confirm('¿Eliminar esta categoría?')) return;
+        fetch(`/api/categorias/${id}`, { method: 'DELETE' })
+            .then(() => { 
+                cargarCategorias(); 
+                alert('✅ Categoría eliminada');
+            })
+            .catch(() => alert('❌ Error al eliminar'));
+    }
+
+    cargarCategorias();
+</script>
+</body>
+</html>

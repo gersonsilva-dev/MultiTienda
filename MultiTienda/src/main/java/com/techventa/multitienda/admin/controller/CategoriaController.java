@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/categorias")
+@RequestMapping("/api/categorias")
 public class CategoriaController {
 
     @Autowired
@@ -112,7 +112,7 @@ public class CategoriaController {
             if (existente.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            categoriaService.eliminarLogico(id);
+            categoriaService.eliminarFisico(id);  // ← CAMBIADO
             Map<String, String> response = new HashMap<>();
             response.put("mensaje", "Categoría eliminada correctamente");
             return ResponseEntity.ok(response);

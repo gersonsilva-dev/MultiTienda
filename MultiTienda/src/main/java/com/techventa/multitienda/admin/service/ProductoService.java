@@ -65,7 +65,7 @@ public class ProductoService {
         return productoRepository.save(producto);
     }
 
-    // Eliminar producto (borrado lógico)
+ // ANTES (borrado lógico)
     public void eliminarLogico(Integer id) {
         Optional<Producto> productoOpt = productoRepository.findById(id);
         if (productoOpt.isPresent()) {
@@ -75,7 +75,7 @@ public class ProductoService {
         }
     }
 
-    // Eliminar producto (borrado físico)
+    // AHORA (borrado físico)
     public void eliminarFisico(Integer id) {
         productoRepository.deleteById(id);
     }

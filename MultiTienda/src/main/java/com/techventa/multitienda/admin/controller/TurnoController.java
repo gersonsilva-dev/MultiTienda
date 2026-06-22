@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/turnos")
+@RequestMapping("/api/turnos")
 public class TurnoController {
 
     @Autowired

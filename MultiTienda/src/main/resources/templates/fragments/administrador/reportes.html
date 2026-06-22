@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportes</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        #reportesContainer {
+            padding: 24px;
+            background: white;
+            border-radius: 8px;
+        }
+        #reportesContainer .kpi-card {
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 14px 10px !important;
+            text-align: center;
+        }
+        #reportesContainer .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #reportesContainer .card-header {
+            background: #f8fafc;
+            padding: 10px 14px !important;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        #reportesContainer .card-body {
+            padding: 12px 14px !important;
+        }
+        #reportesContainer .card-title {
+            font-size: 0.75rem !important;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        #reportesContainer .kpi-value {
+            font-size: 1.4rem !important;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        #reportesContainer .kpi-label {
+            font-size: 0.6rem !important;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        #reportesContainer .grid-kpis {
+            display: grid;
+            grid-template-columns: repeat(6,1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        #reportesContainer .grid-graficos {
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 16px;
+        }
+        @media print {
+            #reportesContainer { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">📊 Reportes</div>
+        <div class="page-subtitle">Estadísticas y análisis del sistema</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-success" onclick="descargarPDF()">
+            <i class="fas fa-file-pdf"></i> Descargar PDF
+        </button>
+    </div>
+</div>
+
+<!-- Filtros de fecha -->
+<div class="card" style="margin-bottom:18px;">
+    <div class="card-header">
+        <div class="card-title">📅 Filtros</div>
+    </div>
+    <div class="card-body">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end;">
+            <div class="form-group">
+                <label class="form-label">Fecha Inicio</label>
+                <input class="form-control" id="fechaInicio" type="date" style="width:180px;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Fecha Fin</label>
+                <input class="form-control" id="fechaFin" type="date" style="width:180px;">
+            </div>
+            <button class="btn btn-primary" onclick="actualizarReportes()"><i class="fas fa-sync"></i> Actualizar</button>
+        </div>
+    </div>
+</div>
+
+<!-- CONTENEDOR DE REPORTES (para PDF) -->
+<div id="reportesContainer">
+
+    <!-- KPIs -->
+    <div class="grid-kpis">
+        <div class="kpi-card">
+            <div class="kpi-label">👤 Usuarios</div>
+            <div class="kpi-value" id="kpiUsuarios">0</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">🔐 Roles</div>
+            <div class="kpi-value" id="kpiRoles">0</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">🏪 Tiendas</div>
+            <div class="kpi-value" id="kpiTiendas">0</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">🧑 Clientes</div>
+            <div class="kpi-value" id="kpiClientes">0</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">📦 Productos</div>
+            <div class="kpi-value" id="kpiProductos">0</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">🚚 Proveedores</div>
+            <div class="kpi-value" id="kpiProveedores">0</div>
+        </div>
+    </div>
+
+    <!-- Gráficos (3 por fila) -->
+    <div class="grid-graficos">
+        <!-- 1. Incidencias -->
+        <div class="card">
+            <div class="card-header"><div class="card-title">⚠️ Incidencias por estado</div></div>
+            <div class="card-body"><canvas id="chartIncidencias" height="120"></canvas></div>
+        </div>
+
+        <!-- 2. Mermas -->
+        <div class="card">
+            <div class="card-header"><div class="card-title">🗑️ Mermas por motivo</div></div>
+            <div class="card-body"><canvas id="chartMermas" height="120"></canvas></div>
+        </div>
+
+        <!-- 3. Usuarios por rol -->
+        <div class="card">
+            <div class="card-header"><div class="card-title">👤 Usuarios por rol</div></div>
+            <div class="card-body"><canvas id="chartUsuarios" height="120"></canvas></div>
+        </div>
+
+        <!-- 4. Tiendas -->
+        <div class="card">
+            <div class="card-header"><div class="card-title">🏪 Tiendas</div></div>
+            <div class="card-body"><canvas id="chartTiendas" height="120"></canvas></div>
+        </div>
+
+        <!-- 5. Clientes -->
+        <div class="card">
+            <div class="card-header"><div class="card-title">🧑 Clientes</div></div>
+            <div class="card-body"><canvas id="chartClientes" height="120"></canvas></div>
+        </div>
+
+        <!-- 6. Productos por categoría -->
+        <div class="card">
+            <div class="card-header"><div class="card-title">📦 Productos x categoría</div></div>
+            <div class="card-body"><canvas id="chartProductos" height="120"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let chartIncidencias, chartMermas, chartUsuarios, chartTiendas, chartClientes, chartProductos;
+
+    function initFechas() {
+        const hoy = new Date();
+        const hace30Dias = new Date();
+        hace30Dias.setDate(hoy.getDate() - 30);
+        document.getElementById('fechaInicio').value = hace30Dias.toISOString().split('T')[0];
+        document.getElementById('fechaFin').value = hoy.toISOString().split('T')[0];
+    }
+
+    const colores = ['#2563EB', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16'];
+
+    function actualizarReportes() {
+        const inicio = document.getElementById('fechaInicio').value;
+        const fin = document.getElementById('fechaFin').value;
+        if (!inicio || !fin) { alert('Selecciona ambas fechas'); return; }
+
+        // KPIs
+        fetch('/api/usuarios').then(r => r.json()).then(d => document.getElementById('kpiUsuarios').textContent = d.length || 0).catch(() => {});
+        fetch('/api/roles').then(r => r.json()).then(d => document.getElementById('kpiRoles').textContent = d.length || 0).catch(() => {});
+        fetch('/api/tiendas').then(r => r.json()).then(d => document.getElementById('kpiTiendas').textContent = d.length || 0).catch(() => {});
+        fetch('/api/clientes').then(r => r.json()).then(d => document.getElementById('kpiClientes').textContent = d.length || 0).catch(() => {});
+        fetch('/api/productos').then(r => r.json()).then(d => document.getElementById('kpiProductos').textContent = d.length || 0).catch(() => {});
+        fetch('/api/proveedores').then(r => r.json()).then(d => document.getElementById('kpiProveedores').textContent = d.length || 0).catch(() => {});
+
+        // ================================================
+        // 1. Incidencias
+        // ================================================
+        fetch('/api/reportes/incidencias').then(r => r.json()).then(d => {
+            const estados = {};
+            d.forEach(item => { const e = item.estado || 'ABIERTO'; estados[e] = (estados[e] || 0) + 1; });
+            const labels = Object.keys(estados), data = Object.values(estados);
+            const colors = ['#F59E0B', '#3B82F6', '#10B981', '#6B7280', '#EF4444'];
+            if (chartIncidencias) chartIncidencias.destroy();
+            chartIncidencias = new Chart(document.getElementById('chartIncidencias'), {
+                type: 'doughnut',
+                data: { labels: labels.length > 0 ? labels : ['Sin datos'], datasets: [{ data: data.length > 0 ? data : [1], backgroundColor: colors.slice(0, labels.length || 1), borderWidth: 1, borderColor: '#fff' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 3, font: { size: 7 } } } } }
+            });
+        }).catch(() => {});
+
+        // ================================================
+        // 2. Mermas
+        // ================================================
+        fetch(`/api/reportes/mermas?inicio=${inicio}T00:00:00&fin=${fin}T23:59:59`)
+            .then(r => r.json()).then(d => {
+                const motivos = {};
+                d.forEach(item => { const m = item.motivo || 'Sin motivo'; motivos[m] = (motivos[m] || 0) + 1; });
+                const labels = Object.keys(motivos), data = Object.values(motivos);
+                const colors = ['#EF4444', '#F59E0B', '#3B82F6', '#10B981', '#8B5CF6'];
+                if (chartMermas) chartMermas.destroy();
+                chartMermas = new Chart(document.getElementById('chartMermas'), {
+                    type: 'pie',
+                    data: { labels: labels.length > 0 ? labels : ['Sin datos'], datasets: [{ data: data.length > 0 ? data : [1], backgroundColor: colors.slice(0, labels.length || 1), borderWidth: 1, borderColor: '#fff' }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 3, font: { size: 7 } } } } }
+                });
+            }).catch(() => {});
+
+        // ================================================
+        // 3. Usuarios por rol
+        // ================================================
+        fetch('/api/usuarios').then(r => r.json()).then(d => {
+            const roles = {};
+            d.forEach(u => { const r = u.rol?.nombreRol || 'Sin rol'; roles[r] = (roles[r] || 0) + 1; });
+            const labels = Object.keys(roles), data = Object.values(roles);
+            if (chartUsuarios) chartUsuarios.destroy();
+            chartUsuarios = new Chart(document.getElementById('chartUsuarios'), {
+                type: 'doughnut',
+                data: { labels: labels.length > 0 ? labels : ['Sin datos'], datasets: [{ data: data.length > 0 ? data : [1], backgroundColor: colores.slice(0, labels.length || 1), borderWidth: 1, borderColor: '#fff' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 3, font: { size: 7 } } } } }
+            });
+        }).catch(() => {});
+
+        // ================================================
+        // 4. Tiendas
+        // ================================================
+        fetch('/api/tiendas').then(r => r.json()).then(d => {
+            const activas = d.filter(t => t.activo).length;
+            const inactivas = d.filter(t => !t.activo).length;
+            if (chartTiendas) chartTiendas.destroy();
+            chartTiendas = new Chart(document.getElementById('chartTiendas'), {
+                type: 'doughnut',
+                data: { labels: ['Activas', 'Inactivas'], datasets: [{ data: [activas || 1, inactivas || 0], backgroundColor: ['#10B981', '#EF4444'], borderWidth: 1, borderColor: '#fff' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 3, font: { size: 7 } } } } }
+            });
+        }).catch(() => {});
+
+        // ================================================
+        // 5. Clientes
+        // ================================================
+        fetch('/api/clientes').then(r => r.json()).then(d => {
+            const activos = d.filter(c => c.activo).length;
+            const inactivos = d.filter(c => !c.activo).length;
+            if (chartClientes) chartClientes.destroy();
+            chartClientes = new Chart(document.getElementById('chartClientes'), {
+                type: 'doughnut',
+                data: { labels: ['Activos', 'Inactivos'], datasets: [{ data: [activos || 1, inactivos || 0], backgroundColor: ['#3B82F6', '#6B7280'], borderWidth: 1, borderColor: '#fff' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 3, font: { size: 7 } } } } }
+            });
+        }).catch(() => {});
+
+        // ================================================
+        // 6. Productos por categoría
+        // ================================================
+        fetch('/api/productos').then(r => r.json()).then(d => {
+            const cats = {};
+            d.forEach(p => { const c = p.categoria?.nombreCategoria || 'Sin categoría'; cats[c] = (cats[c] || 0) + 1; });
+            const labels = Object.keys(cats), data = Object.values(cats);
+            if (chartProductos) chartProductos.destroy();
+            chartProductos = new Chart(document.getElementById('chartProductos'), {
+                type: 'bar',
+                data: { labels: labels.length > 0 ? labels : ['Sin datos'], datasets: [{ label: 'Productos', data: data.length > 0 ? data : [0], backgroundColor: colores.slice(0, labels.length || 1), borderColor: '#1E293B', borderWidth: 0.5, borderRadius: 3 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 7 } } }, y: { grid: { display: false }, ticks: { font: { size: 7 } } } } }
+            });
+        }).catch(() => {});
+    }
+
+    // ============================================================
+    // DESCARGAR PDF (horizontal)
+    // ============================================================
+    function descargarPDF() {
+        const boton = document.querySelector('.btn-success');
+        boton.textContent = '⏳ Generando...';
+        boton.disabled = true;
+
+        const container = document.getElementById('reportesContainer');
+
+        html2canvas(container, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            logging: false,
+            allowTaint: true,
+            useCORS: true,
+			
+            padding: 50
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('l', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            let heightLeft = pdfHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+            heightLeft -= pdf.internal.pageSize.getHeight();
+
+            while (heightLeft > 0) {
+                position = heightLeft - pdfHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+                heightLeft -= pdf.internal.pageSize.getHeight();
+            }
+
+            pdf.save(`reporte_${new Date().toISOString().substring(0,10)}.pdf`);
+            boton.textContent = '📄 Descargar PDF';
+            boton.disabled = false;
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('❌ Error al generar el PDF');
+            boton.textContent = '📄 Descargar PDF';
+            boton.disabled = false;
+        });
+    }
+
+    initFechas();
+    setTimeout(actualizarReportes, 500);
+</script>
+</body>
+</html>

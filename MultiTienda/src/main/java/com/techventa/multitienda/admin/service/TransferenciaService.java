@@ -15,8 +15,10 @@ public class TransferenciaService {
 
     @Autowired
     private TransferenciaRepository transferenciaRepository;
+    
     @Autowired
     private DetalleTransferenciaRepository detalleRepository;
+    
     @Autowired
     private EstadoTransferenciaRepository estadoRepository;
 
@@ -24,26 +26,50 @@ public class TransferenciaService {
         return "TRF-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
-    public List<Transferencia> listarTodas() { return transferenciaRepository.findAll(); }
-    public List<Transferencia> listarActivas() { return transferenciaRepository.findByActivoTrue(); }
-    public List<Transferencia> listarPorTiendaOrigen(Integer idTienda) { return transferenciaRepository.findByTiendaOrigen_IdTienda(idTienda); }
-    public List<Transferencia> listarPorTiendaDestino(Integer idTienda) { return transferenciaRepository.findByTiendaDestino_IdTienda(idTienda); }
-    public List<Transferencia> listarPorEstado(Integer idEstado) { return transferenciaRepository.findByEstadoTransferencia_IdEstadoTransferencia(idEstado); }
-    public Optional<Transferencia> buscarPorId(Integer id) { return transferenciaRepository.findById(id); }
-    public Optional<Transferencia> buscarPorCodigo(String codigo) { return transferenciaRepository.findByCodigoTransferencia(codigo); }
+    public List<Transferencia> listarTodas() {
+        return transferenciaRepository.findAll();
+    }
+    
+    public List<Transferencia> listarActivas() {
+        return transferenciaRepository.findByActivoTrue();
+    }
+    
+    public List<Transferencia> listarPorTiendaOrigen(Integer idTienda) {
+        return transferenciaRepository.findByTiendaOrigen_IdTienda(idTienda);
+    }
+    
+    public List<Transferencia> listarPorTiendaDestino(Integer idTienda) {
+        return transferenciaRepository.findByTiendaDestino_IdTienda(idTienda);
+    }
+    
+    public List<Transferencia> listarPorEstado(Integer idEstado) {
+        return transferenciaRepository.findByEstadoTransferencia_IdEstadoTransferencia(idEstado);
+    }
+    
+    public Optional<Transferencia> buscarPorId(Integer id) {
+        return transferenciaRepository.findById(id);
+    }
+    
+    public Optional<Transferencia> buscarPorCodigo(String codigo) {
+        return transferenciaRepository.findByCodigoTransferencia(codigo);
+    }
 
     @Transactional
     public Transferencia crear(Transferencia transferencia, List<DetalleTransferencia> detalles) {
         transferencia.setCodigoTransferencia(generarCodigo());
         transferencia.setFechaSolicitud(LocalDateTime.now());
-        Optional<EstadoTransferencia> estadoPendiente = estadoRepository.findByNombreEstado("PENDIENTE");
-        estadoPendiente.ifPresent(transferencia::setEstadoTransferencia);
         transferencia.setActivo(true);
+        
+        Optional<EstadoTransferencia> estadoPendiente = estadoRepository.findById(1);
+        estadoPendiente.ifPresent(transferencia::setEstadoTransferencia);
+        
         Transferencia saved = transferenciaRepository.save(transferencia);
+        
         for (DetalleTransferencia detalle : detalles) {
             detalle.setTransferencia(saved);
             detalleRepository.save(detalle);
         }
+        
         return saved;
     }
 
@@ -55,18 +81,22 @@ public class TransferenciaService {
             Optional<EstadoTransferencia> estadoOpt = estadoRepository.findByNombreEstado(nombreEstado);
             if (estadoOpt.isPresent()) {
                 t.setEstadoTransferencia(estadoOpt.get());
-                if ("EN_TRANSITO".equals(nombreEstado)) t.setFechaEnvio(LocalDateTime.now());
-                if ("RECIBIDO".equals(nombreEstado)) t.setFechaRecepcion(LocalDateTime.now());
+                if ("EN_TRANSITO".equals(nombreEstado)) {
+                    t.setFechaEnvio(LocalDateTime.now());
+                }
+                if ("RECIBIDO".equals(nombreEstado)) {
+                    t.setFechaRecepcion(LocalDateTime.now());
+                }
                 return transferenciaRepository.save(t);
             }
         }
         return null;
     }
 
-    public void eliminarLogico(Integer id) {
-        transferenciaRepository.findById(id).ifPresent(t -> {
-            t.setActivo(false);
-            transferenciaRepository.save(t);
-        });
+    // ============================================================
+    // ELIMINAR FÍSICAMENTE
+    // ============================================================
+    public void eliminarFisico(Integer id) {
+        transferenciaRepository.deleteById(id);
     }
 }

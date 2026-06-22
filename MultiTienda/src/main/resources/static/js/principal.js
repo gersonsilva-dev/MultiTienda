@@ -1,10 +1,6 @@
 /* ═══════════════════════════════════════════════════════
      JAVASCRIPT DEL SISTEMA BASE
 ═══════════════════════════════════════════════════════ */
-/* ── CONFIGURACIÓN DE ROLES ──────────────────────────────
-   Para usar en cada página hija:
-     setRole('supervisor');
-   Los colores, usuario y menú cambian automáticamente.   */
 
 const ROLES = {
   administrador: {
@@ -12,33 +8,25 @@ const ROLES = {
     name:'Alan Díaz', role:'Administrador Global', initials:'AD',
     nav:[
       { type:'section', label:'PRINCIPAL' },
-      { type:'item',    view:'dashboard',     icon:'fas fa-tachometer-alt', label:'Dashboard' },
-      { type:'group',   icon:'fas fa-store',  label:'Tiendas', children:[
-        { view:'tiendas-list',  label:'Ver tiendas' },
-        { view:'tiendas-new',   label:'Nueva tienda' },
-      ]},
-      { type:'group',   icon:'fas fa-users',  label:'Empleados', children:[
-        { view:'empleados',     label:'Listado' },
-        { view:'empleados-new', label:'Agregar empleado' },
-      ]},
-      { type:'group',   icon:'fas fa-user',   label:'Clientes', children:[
-        { view:'clientes',     label:'Listado' },
-        { view:'clientes-new', label:'Registrar cliente' },
-      ]},
+      { type:'item', view:'dashboard', icon:'fas fa-tachometer-alt', label:'Dashboard' },
+      { type:'item', view:'usuarios', icon:'fas fa-users', label:'Usuarios' },
+      { type:'item', view:'roles', icon:'fas fa-lock', label:'Roles' },
+      { type:'item', view:'tiendas', icon:'fas fa-store', label:'Tiendas' },
+      { type:'item', view:'proveedores', icon:'fas fa-truck', label:'Proveedores' },
       { type:'section', label:'CATÁLOGO' },
-      { type:'group',   icon:'fas fa-box',    label:'Productos', badge:'5', children:[
-        { view:'productos',        label:'Catálogo' },
-        { view:'productos-aprobar',label:'Por aprobar', badge:'5' },
-      ]},
-      { type:'item',    view:'proveedores', icon:'fas fa-truck',    label:'Proveedores' },
-      { type:'group',   icon:'fas fa-tag',   label:'Ofertas', children:[
-        { view:'ofertas',     label:'Ofertas activas' },
-        { view:'ofertas-new', label:'Crear oferta' },
-      ]},
+      { type:'item', view:'categorias', icon:'fas fa-tags', label:'Categorías' },
+      { type:'item', view:'productos', icon:'fas fa-box', label:'Productos' },
+      { type:'item', view:'cajas', icon:'fas fa-cash-register', label:'Cajas' },
+      { type:'item', view:'turnos', icon:'fas fa-clock', label:'Turnos' },
+      { type:'item', view:'clientes', icon:'fas fa-user', label:'Clientes' },
+      { type:'section', label:'OPERACIONES' },
+      { type:'item', view:'ofertas', icon:'fas fa-tag', label:'Ofertas' },
+      { type:'item', view:'incidencias', icon:'fas fa-exclamation-triangle', label:'Incidencias' },
+      { type:'item', view:'mermas', icon:'fas fa-trash', label:'Mermas' },
+      { type:'item', view:'transferencias', icon:'fas fa-exchange-alt', label:'Transferencias' },
+      { type:'item', view:'lotes', icon:'fas fa-cubes', label:'Lotes' },
       { type:'section', label:'SISTEMA' },
-      { type:'item',    view:'reportes',      icon:'fas fa-chart-bar',  label:'Reportes' },
-      { type:'item',    view:'auditoria',     icon:'fas fa-shield-alt', label:'Auditoría' },
-      { type:'item',    view:'configuracion', icon:'fas fa-cog',        label:'Configuración' },
+      { type:'item', view:'reportes', icon:'fas fa-chart-bar', label:'Reportes' },
     ]
   },
   supervisor: {
@@ -46,11 +34,11 @@ const ROLES = {
     name:'Rosa López', role:'Supervisora', initials:'RL',
     nav:[
       { type:'section', label:'MONITOREO' },
-      { type:'item', view:'dashboard',  icon:'fas fa-eye',          label:'Dashboard en vivo' },
-      { type:'item', view:'autorizar',  icon:'fas fa-check-circle', label:'Autorizar', badge:'3' },
-      { type:'item', view:'tickets',    icon:'fas fa-ticket-alt',   label:'Tickets', badge:'2' },
+      { type:'item', view:'dashboard', icon:'fas fa-eye', label:'Dashboard en vivo' },
+      { type:'item', view:'autorizar', icon:'fas fa-check-circle', label:'Autorizar', badge:'3' },
+      { type:'item', view:'tickets', icon:'fas fa-ticket-alt', label:'Tickets', badge:'2' },
       { type:'section', label:'OPERACIONES' },
-      { type:'item', view:'stock',    icon:'fas fa-boxes',     label:'Stock crítico', badge:'8' },
+      { type:'item', view:'stock', icon:'fas fa-boxes', label:'Stock crítico', badge:'8' },
       { type:'item', view:'reportes', icon:'fas fa-chart-line', label:'Reportes' },
     ]
   },
@@ -60,12 +48,12 @@ const ROLES = {
     nav:[
       { type:'section', label:'PRINCIPAL' },
       { type:'item', view:'dashboard', icon:'fas fa-tachometer-alt', label:'Dashboard' },
-      { type:'item', view:'validar',   icon:'fas fa-check-double',   label:'Validar productos', badge:'5' },
-      { type:'item', view:'recibir',   icon:'fas fa-truck-loading',  label:'Recibir mercadería' },
+      { type:'item', view:'validar', icon:'fas fa-check-double', label:'Validar productos', badge:'5' },
+      { type:'item', view:'recibir', icon:'fas fa-truck-loading', label:'Recibir mercadería' },
       { type:'section', label:'INVENTARIO' },
-      { type:'item', view:'stock',    icon:'fas fa-boxes',   label:'Stock actual' },
-      { type:'item', view:'kardex',   icon:'fas fa-book',    label:'Kardex' },
-      { type:'item', view:'mermas',   icon:'fas fa-trash',   label:'Mermas' },
+      { type:'item', view:'stock', icon:'fas fa-boxes', label:'Stock actual' },
+      { type:'item', view:'kardex', icon:'fas fa-book', label:'Kardex' },
+      { type:'item', view:'mermas', icon:'fas fa-trash', label:'Mermas' },
       { type:'section', label:'ANÁLISIS' },
       { type:'item', view:'reportes', icon:'fas fa-chart-bar', label:'Reportes' },
     ]
@@ -75,16 +63,16 @@ const ROLES = {
     name:'Lácteos del Norte', role:'Proveedor', initials:'LN',
     nav:[
       { type:'section', label:'MI PORTAL' },
-      { type:'item', view:'dashboard',  icon:'fas fa-tachometer-alt', label:'Dashboard' },
+      { type:'item', view:'dashboard', icon:'fas fa-tachometer-alt', label:'Dashboard' },
       { type:'group', icon:'fas fa-box', label:'Mis productos', children:[
-        { view:'productos',    label:'Ver mis productos' },
-        { view:'subir',        label:'Subir nuevo' },
+        { view:'productos', label:'Ver mis productos' },
+        { view:'subir', label:'Subir nuevo' },
       ]},
       { type:'section', label:'OPERACIONES' },
-      { type:'item', view:'ordenes',     icon:'fas fa-clipboard-list', label:'Órdenes', badge:'3' },
-      { type:'item', view:'entregas',    icon:'fas fa-truck',          label:'Entregas' },
-      { type:'item', view:'facturacion', icon:'fas fa-file-invoice',   label:'Facturación' },
-      { type:'item', view:'pagos',       icon:'fas fa-dollar-sign',    label:'Pagos' },
+      { type:'item', view:'ordenes', icon:'fas fa-clipboard-list', label:'Órdenes', badge:'3' },
+      { type:'item', view:'entregas', icon:'fas fa-truck', label:'Entregas' },
+      { type:'item', view:'facturacion', icon:'fas fa-file-invoice', label:'Facturación' },
+      { type:'item', view:'pagos', icon:'fas fa-dollar-sign', label:'Pagos' },
       { type:'section', label:'CUENTA' },
       { type:'item', view:'perfil', icon:'fas fa-user-circle', label:'Mi perfil' },
     ]
@@ -93,11 +81,11 @@ const ROLES = {
     label:'POS', color:'#16A34A', colorHover:'#15803D', sidebar:'#071A0E',
     name:'Juan Pérez', role:'Cajero · Caja 1', initials:'JP',
     nav:[
-      { type:'item', view:'venta',       icon:'fas fa-shopping-cart',  label:'Nueva venta' },
-      { type:'item', view:'suspendidas', icon:'fas fa-pause-circle',   label:'Suspendidas', badge:'2' },
-      { type:'item', view:'ofertas',     icon:'fas fa-tag',            label:'Ofertas activas', badge:'4' },
-      { type:'item', view:'misventas',   icon:'fas fa-chart-line',     label:'Mis ventas' },
-      { type:'item', view:'devolucion',  icon:'fas fa-undo-alt',       label:'Devolución' },
+      { type:'item', view:'apertura', icon:'fas fa-cash-register', label:'Apertura' },
+      { type:'item', view:'venta', icon:'fas fa-shopping-cart', label:'Nueva venta' },
+      { type:'item', view:'misventas', icon:'fas fa-chart-line', label:'Mis ventas' },
+      { type:'item', view:'devolucion', icon:'fas fa-undo-alt', label:'Devolución' },
+      { type:'item', view:'cierre', icon:'fas fa-lock', label:'Cierre' },
     ]
   }
 };
@@ -108,38 +96,34 @@ const S = {
   view: 'dashboard',
   collapsed: false,
   dark: false,
-  openGroups: new Set(),   // IDs de grupos abiertos en accordion
+  openGroups: new Set(),
 };
 
 const NOTIFS = [
-  { id:1, unread:true,  icon:'fa-exclamation-triangle', title:'Stock crítico — Tienda Norte',  sub:'Azúcar 1kg: 3 unidades restantes',    color:'#F59E0B', bg:'#FEF3C7' },
-  { id:2, unread:true,  icon:'fa-bell',                 title:'Nueva orden #OC-2841 recibida', sub:'Lácteos del Norte · S/ 1,240',         color:'#3B82F6', bg:'#DBEAFE' },
-  { id:3, unread:false, icon:'fa-check-circle',         title:'Yogurt Gloria 1L aprobado',     sub:'Ya disponible en el catálogo',         color:'#10B981', bg:'#D1FAE5' },
+  { id:1, unread:true, icon:'fa-exclamation-triangle', title:'Stock crítico — Tienda Norte', sub:'Azúcar 1kg: 3 unidades restantes', color:'#F59E0B', bg:'#FEF3C7' },
+  { id:2, unread:true, icon:'fa-bell', title:'Nueva orden #OC-2841 recibida', sub:'Lácteos del Norte · S/ 1,240', color:'#3B82F6', bg:'#DBEAFE' },
+  { id:3, unread:false, icon:'fa-check-circle', title:'Yogurt Gloria 1L aprobado', sub:'Ya disponible en el catálogo', color:'#10B981', bg:'#D1FAE5' },
 ];
 
 /* ── INIT ──────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
-	// Si window.USER_ROLE existe (inyectado por Thymeleaf), úsalo.
-	    // Si no, intenta obtenerlo de localStorage o pon 'admin' por defecto.
-	    const r = window.USER_ROLE || localStorage.getItem('tvp-role') || 'admin';
-	    
-	    setRole(r);
-	    buildNotifs();
-	});
+  const r = window.USER_ROLE || localStorage.getItem('tvp-role') || 'admin';
+  setRole(r);
+  buildNotifs();
+});
+
 /* ── SET ROLE ──────────────────────────────────────────── */
 function setRole(role) {
   S.role = role;
   const cfg = ROLES[role];
   if (!cfg) return;
 
-  // CSS vars de color
   const root = document.documentElement;
-  root.style.setProperty('--role-primary',        cfg.color);
-  root.style.setProperty('--role-primary-hover',  cfg.colorHover);
-  root.style.setProperty('--role-sidebar',        cfg.sidebar);
+  root.style.setProperty('--role-primary', cfg.color);
+  root.style.setProperty('--role-primary-hover', cfg.colorHover);
+  root.style.setProperty('--role-sidebar', cfg.sidebar);
   root.style.setProperty('--role-sidebar-active', cfg.color);
 
-  // Textos
   ['sidebarAvatar','topbarAvatar'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -148,16 +132,12 @@ function setRole(role) {
   });
   setText('sidebarUserName', cfg.name);
   setText('sidebarUserRole', cfg.role);
-  setText('topbarName',      cfg.name);
-  setText('topbarRole',      cfg.role);
-  setText('roleBadge',       cfg.label);
-  setText('logoIcon', '');
+  setText('topbarName', cfg.name);
+  setText('topbarRole', cfg.role);
+  setText('roleBadge', cfg.label);
   document.getElementById('logoIcon').innerHTML = '<i class="fas fa-store"></i>';
 
-  // Construir menú
   buildNav(cfg.nav);
-
-  // Cargar primera vista
   const first = cfg.nav.find(n => n.type === 'item' || (n.type === 'group' && n.children?.length));
   if (first) {
     const v = first.type === 'item' ? first.view : first.children[0].view;
@@ -178,7 +158,7 @@ function buildNav(items) {
       return `
         <div class="nav-item" data-view="${item.view}" data-tooltip="${item.label}"
              onclick="loadView('${item.view}')">
-          <i class="${item.icon} nav-icon" aria-hidden="true"></i>
+          <i class="${item.icon} nav-icon"></i>
           <span class="nav-label">${item.label}</span>
           ${badge}
         </div>`;
@@ -193,7 +173,7 @@ function buildNav(items) {
       return `
         <div class="nav-item" data-group="${gId}" data-tooltip="${item.label}"
              onclick="toggleGroup('${gId}')">
-          <i class="${item.icon} nav-icon" aria-hidden="true"></i>
+          <i class="${item.icon} nav-icon"></i>
           <span class="nav-label">${item.label}</span>
           ${badge}
           <i class="fas fa-chevron-right nav-chevron"></i>
@@ -210,45 +190,101 @@ function toggleGroup(gId) {
   const btn = document.querySelector(`[data-group="${gId}"]`);
   if (!sub || !btn) return;
   const isOpen = sub.classList.contains('open');
-  // Cerrar todos los grupos
   document.querySelectorAll('.nav-sub.open').forEach(el => el.classList.remove('open'));
   document.querySelectorAll('.nav-item.accordion-open').forEach(el => el.classList.remove('accordion-open'));
-  // Abrir este si estaba cerrado
   if (!isOpen) {
     sub.classList.add('open');
     btn.classList.add('accordion-open');
   }
 }
 
-/* ── LOAD VIEW ─────────────────────────────────────────── */
-/* ── LOAD VIEW MODIFICADO PARA FETCH ─────────────────────── */
-async function loadView(viewName) {
-    S.view = viewName;
+/* ── EJECUTAR CARGA DE DATOS ───────────────────────────── */
+function ejecutarCargaDatos(viewName) {
+  setTimeout(() => {
+    switch(viewName) {
+      case 'usuarios':
+        if (typeof cargarUsuarios === 'function') cargarUsuarios();
+        break;
+      case 'roles':
+        if (typeof cargarRoles === 'function') cargarRoles();
+        break;
+      case 'tiendas':
+        if (typeof cargarTiendas === 'function') cargarTiendas();
+        break;
+      case 'proveedores':
+        if (typeof cargarProveedores === 'function') cargarProveedores();
+        break;
+      case 'categorias':
+        if (typeof cargarCategorias === 'function') cargarCategorias();
+        break;
+      case 'productos':
+        if (typeof cargarProductos === 'function') cargarProductos();
+        break;
+      case 'cajas':
+        if (typeof cargarCajas === 'function') cargarCajas();
+        break;
+      case 'turnos':
+        if (typeof cargarTurnos === 'function') cargarTurnos();
+        break;
+      case 'clientes':
+        if (typeof cargarClientes === 'function') cargarClientes();
+        break;
+      case 'ofertas':
+        if (typeof cargarOfertas === 'function') cargarOfertas();
+        break;
+      case 'incidencias':
+        if (typeof cargarIncidencias === 'function') cargarIncidencias();
+        break;
+      case 'mermas':
+        if (typeof cargarMermas === 'function') cargarMermas();
+        break;
+      case 'transferencias':
+        if (typeof cargarTransferencias === 'function') cargarTransferencias();
+        break;
+      case 'lotes':
+        if (typeof cargarLotes === 'function') cargarLotes();
+        break;
+      case 'dashboard':
+        if (typeof cargarDashboard === 'function') cargarDashboard();
+        break;
+      default:
+        break;
+    }
+  }, 100);
+}
 
-    // Actualizar activos en el menú
-    document.querySelectorAll('.nav-item, .nav-sub-item').forEach(el => {
-        el.classList.toggle('active', el.getAttribute('data-view') === viewName);
+/* ── LOAD VIEW ─────────────────────────────────────────── */
+async function loadView(viewName) {
+  S.view = viewName;
+  document.querySelectorAll('.nav-item, .nav-sub-item').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('data-view') === viewName);
+  });
+  setText('bcCurrent', findLabel(viewName));
+  showLoader();
+  try {
+    const response = await fetch(`/api/views/${viewName}`);
+    if (!response.ok) throw new Error("No se pudo cargar la vista");
+    const html = await response.text();
+    document.getElementById('mainContent').innerHTML = html;
+
+    const scripts = document.getElementById('mainContent').querySelectorAll('script');
+    scripts.forEach(script => {
+      const newScript = document.createElement('script');
+      if (script.src) {
+        newScript.src = script.src;
+      } else {
+        newScript.textContent = script.textContent;
+      }
+      document.body.appendChild(newScript);
     });
 
-    // Breadcrumb
-    setText('bcCurrent', findLabel(viewName));
-
-    // Carga desde el Servidor
-    showLoader();
-    try {
-        const response = await fetch(`/api/views/${viewName}`);
-        
-        if (!response.ok) throw new Error("No se pudo cargar la vista");
-        
-        const html = await response.text();
-        document.getElementById('mainContent').innerHTML = html;
-        
-    } catch (error) {
-        console.error("Error cargando vista:", error);
-        document.getElementById('mainContent').innerHTML = defaultView(viewName);
-    } finally {
-        hideLoader();
-    }
+    ejecutarCargaDatos(viewName);
+  } catch (error) {
+    console.error("Error cargando vista:", error);
+    document.getElementById('mainContent').innerHTML = defaultView(viewName);
+  } finally {
+    hideLoader();
+  }
 }
 
 function findLabel(viewName) {
@@ -333,7 +369,7 @@ function closeAll() {
 /* ── NOTIFICACIONES ────────────────────────────────────── */
 function buildNotifs() {
   const list = document.getElementById('notifList');
-  const dot  = document.getElementById('notifDot');
+  const dot = document.getElementById('notifDot');
   const unread = NOTIFS.filter(n => n.unread);
   dot.classList.toggle('visible', unread.length > 0);
   list.innerHTML = NOTIFS.map(n => `
@@ -360,7 +396,7 @@ function markAllRead() {
 
 /* ── LOADER ─────────────────────────────────────────────── */
 function showLoader() { document.getElementById('pageLoader').classList.add('visible'); }
-function hideLoader()  { document.getElementById('pageLoader').classList.remove('visible'); }
+function hideLoader() { document.getElementById('pageLoader').classList.remove('visible'); }
 
 /* ── TOASTS ─────────────────────────────────────────────── */
 const TOAST_ICONS = { success:'fa-check-circle', warning:'fa-exclamation-triangle', error:'fa-times-circle', info:'fa-info-circle' };
@@ -405,10 +441,11 @@ function toggleSwitch(el) {
 /* ── HELPERS ────────────────────────────────────────────── */
 function setText(id, txt) { const el=document.getElementById(id); if(el) el.textContent=txt; }
 
-/* ── DEMO ───────────────────────────────────────────────── */
-/* Para cambiar de rol en una página hija:
-     setRole('supervisor');
-   Para registrar vistas propias:
-     window.VIEWS = { dashboard: '<div>...</div>', ... };
-*/
+// ============================================================
+// ALIAS PARA CARGAR PÁGINAS DESDE EL DASHBOARD
+// ============================================================
+function cargarPagina(viewName) {
+    loadView(viewName);
+}
+
 setTimeout(() => showToast('success','Layout Master v2.0 listo','Sidebar, accordion, dark mode y toasts funcionando.'), 500);

@@ -70,7 +70,6 @@ public class CategoriaService {
         return categoriaRepository.save(categoria);
     }
 
-    // Eliminar categoría (borrado lógico)
     public void eliminarLogico(Integer id) {
         Optional<CategoriaProducto> categoriaOpt = categoriaRepository.findById(id);
         if (categoriaOpt.isPresent()) {
@@ -80,7 +79,7 @@ public class CategoriaService {
         }
     }
 
-    // Eliminar categoría (borrado físico)
+    // AHORA (borrado físico)
     public void eliminarFisico(Integer id) {
         categoriaRepository.deleteById(id);
     }

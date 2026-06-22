@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/cajas")
+@RequestMapping("/api/cajas")
 public class CajaController {
 
     @Autowired
@@ -106,6 +106,26 @@ public class CajaController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
+    
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<Object> cambiarEstado(@PathVariable Integer id, @RequestParam Boolean activo) {
+        try {
+            Optional<Caja> existente = cajaService.buscarPorId(id);
+            if (existente.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            Caja caja = existente.get();
+            caja.setActivo(activo);
+            cajaService.actualizar(caja);
+            Map<String, String> response = new HashMap<>();
+            response.put("mensaje", "Estado actualizado correctamente");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al actualizar estado: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
 
     // Eliminar caja (borrado lógico)
     @DeleteMapping("/{id}")
@@ -115,7 +135,7 @@ public class CajaController {
             if (existente.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            cajaService.eliminarLogico(id);
+            cajaService.eliminarFisico(id);  // ← BORRADO FÍSICO
             Map<String, String> response = new HashMap<>();
             response.put("mensaje", "Caja eliminada correctamente");
             return ResponseEntity.ok(response);

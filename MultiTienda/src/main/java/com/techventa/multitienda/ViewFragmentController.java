@@ -68,15 +68,22 @@ public class ViewFragmentController {
         }
 
         // ============================================================
+        // CONSTRUIR RUTA SEGÚN ROL (NUEVA ESTRUCTURA)
+        // ============================================================
+        String path = "fragments/" + rol + "/" + viewName;
+        
+        System.out.println("📂 RUTA: " + path);
+
+        // ============================================================
         // RETORNAR EL LAYOUT SEGÚN EL ROL
         // ============================================================
         // Si es cajero → usa layout-pos.html (sin sidebar)
         if ("cajero".equals(rol)) {
-            model.addAttribute("content", "fragments/" + viewName);
+            model.addAttribute("content", path);
             return "layout-pos";
         }
 
-        // Para otros roles → usa el fragmento solo (dashboard.html lo envuelve)
-        return "fragments/" + viewName;
+        // Para otros roles → usa el fragmento solo
+        return path;
     }
 }

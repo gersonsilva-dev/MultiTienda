@@ -20,15 +20,41 @@ public class IncidenciaService {
         return "INC-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
-    public List<Incidencia> listarTodas() { return incidenciaRepository.findAll(); }
-    public List<Incidencia> listarActivas() { return incidenciaRepository.findByActivoTrue(); }
-    public List<Incidencia> listarPorSupervisor(Integer idSupervisor) { return incidenciaRepository.findBySupervisor_IdUsuario(idSupervisor); }
-    public List<Incidencia> listarPorTienda(Integer idTienda) { return incidenciaRepository.findByTienda_IdTienda(idTienda); }
-    public List<Incidencia> listarPorEstado(Integer idEstado) { return incidenciaRepository.findByEstadoIncidencia_IdEstadoIncidencia(idEstado); }
-    public List<Incidencia> listarPorPrioridad(Integer nivel) { return incidenciaRepository.findByPrioridad_Nivel(nivel); }
-    public Optional<Incidencia> buscarPorId(Integer id) { return incidenciaRepository.findById(id); }
-    public Optional<Incidencia> buscarPorCodigo(String codigo) { return incidenciaRepository.findByCodigoIncidencia(codigo); }
-    public List<Incidencia> buscarPorTitulo(String titulo) { return incidenciaRepository.findByTituloContainingIgnoreCase(titulo); }
+    public List<Incidencia> listarTodas() {
+        return incidenciaRepository.findAll();
+    }
+
+    public List<Incidencia> listarActivas() {
+        return incidenciaRepository.findByActivoTrue();
+    }
+
+    public List<Incidencia> listarPorSupervisor(Integer idSupervisor) {
+        return incidenciaRepository.findBySupervisor_IdUsuario(idSupervisor);
+    }
+
+    public List<Incidencia> listarPorTienda(Integer idTienda) {
+        return incidenciaRepository.findByTienda_IdTienda(idTienda);
+    }
+
+    public List<Incidencia> listarPorEstado(Integer idEstado) {
+        return incidenciaRepository.findByEstadoIncidencia_IdEstadoIncidencia(idEstado);
+    }
+
+    public List<Incidencia> listarPorPrioridad(Integer nivel) {
+        return incidenciaRepository.findByPrioridad_Nivel(nivel);
+    }
+
+    public Optional<Incidencia> buscarPorId(Integer id) {
+        return incidenciaRepository.findById(id);
+    }
+
+    public Optional<Incidencia> buscarPorCodigo(String codigo) {
+        return incidenciaRepository.findByCodigoIncidencia(codigo);
+    }
+
+    public List<Incidencia> buscarPorTitulo(String titulo) {
+        return incidenciaRepository.findByTituloContainingIgnoreCase(titulo);
+    }
 
     public Incidencia crear(Incidencia incidencia) {
         incidencia.setCodigoIncidencia(generarCodigo());
@@ -36,14 +62,26 @@ public class IncidenciaService {
         return incidenciaRepository.save(incidencia);
     }
 
-    public Incidencia actualizar(Incidencia incidencia) { return incidenciaRepository.save(incidencia); }
+    // ============================================================
+    // ACTUALIZAR (CORREGIDO)
+    // ============================================================
+    public Incidencia actualizar(Incidencia incidencia) {
+        Optional<Incidencia> existenteOpt = incidenciaRepository.findById(incidencia.getIdIncidencia());
+        if (existenteOpt.isPresent()) {
+            Incidencia existente = existenteOpt.get();
+            // Mantener el código original
+            incidencia.setCodigoIncidencia(existente.getCodigoIncidencia());
+        }
+        return incidenciaRepository.save(incidencia);
+    }
 
     public Incidencia resolver(Integer id, Integer idAdmin, String respuesta) {
         Optional<Incidencia> incidenciaOpt = incidenciaRepository.findById(id);
         if (incidenciaOpt.isPresent()) {
             Incidencia incidencia = incidenciaOpt.get();
-            incidencia.setAdminResuelve(new Usuario());
-            incidencia.getAdminResuelve().setIdUsuario(idAdmin);
+            Usuario admin = new Usuario();
+            admin.setIdUsuario(idAdmin);
+            incidencia.setAdminResuelve(admin);
             incidencia.setRespuestaAdmin(respuesta);
             incidencia.setFechaResolucion(LocalDateTime.now());
             return incidenciaRepository.save(incidencia);
@@ -68,6 +106,11 @@ public class IncidenciaService {
         });
     }
 
-    public void eliminarFisico(Integer id) { incidenciaRepository.deleteById(id); }
-    public boolean existeCodigo(String codigo) { return incidenciaRepository.existsByCodigoIncidencia(codigo); }
+    public void eliminarFisico(Integer id) {
+        incidenciaRepository.deleteById(id);
+    }
+
+    public boolean existeCodigo(String codigo) {
+        return incidenciaRepository.existsByCodigoIncidencia(codigo);
+    }
 }

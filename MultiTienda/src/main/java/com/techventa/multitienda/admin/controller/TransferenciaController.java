@@ -10,20 +10,46 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/transferencias")
+@RequestMapping("/api/transferencias")
 public class TransferenciaController {
 
     @Autowired
     private TransferenciaService transferenciaService;
 
-    @GetMapping public ResponseEntity<List<Transferencia>> listarTodas() { return ResponseEntity.ok(transferenciaService.listarTodas()); }
-    @GetMapping("/activas") public ResponseEntity<List<Transferencia>> listarActivas() { return ResponseEntity.ok(transferenciaService.listarActivas()); }
-    @GetMapping("/origen/{idTienda}") public ResponseEntity<List<Transferencia>> listarPorTiendaOrigen(@PathVariable Integer idTienda) { return ResponseEntity.ok(transferenciaService.listarPorTiendaOrigen(idTienda)); }
-    @GetMapping("/destino/{idTienda}") public ResponseEntity<List<Transferencia>> listarPorTiendaDestino(@PathVariable Integer idTienda) { return ResponseEntity.ok(transferenciaService.listarPorTiendaDestino(idTienda)); }
-    @GetMapping("/estado/{idEstado}") public ResponseEntity<List<Transferencia>> listarPorEstado(@PathVariable Integer idEstado) { return ResponseEntity.ok(transferenciaService.listarPorEstado(idEstado)); }
-    @GetMapping("/{id}") public ResponseEntity<Transferencia> buscarPorId(@PathVariable Integer id) { return transferenciaService.buscarPorId(id).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build()); }
+    @GetMapping
+    public ResponseEntity<List<Transferencia>> listarTodas() {
+        return ResponseEntity.ok(transferenciaService.listarTodas());
+    }
+
+    @GetMapping("/activas")
+    public ResponseEntity<List<Transferencia>> listarActivas() {
+        return ResponseEntity.ok(transferenciaService.listarActivas());
+    }
+
+    @GetMapping("/origen/{idTienda}")
+    public ResponseEntity<List<Transferencia>> listarPorTiendaOrigen(@PathVariable Integer idTienda) {
+        return ResponseEntity.ok(transferenciaService.listarPorTiendaOrigen(idTienda));
+    }
+
+    @GetMapping("/destino/{idTienda}")
+    public ResponseEntity<List<Transferencia>> listarPorTiendaDestino(@PathVariable Integer idTienda) {
+        return ResponseEntity.ok(transferenciaService.listarPorTiendaDestino(idTienda));
+    }
+
+    @GetMapping("/estado/{idEstado}")
+    public ResponseEntity<List<Transferencia>> listarPorEstado(@PathVariable Integer idEstado) {
+        return ResponseEntity.ok(transferenciaService.listarPorEstado(idEstado));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Transferencia> buscarPorId(@PathVariable Integer id) {
+        return transferenciaService.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
     @PostMapping
     public ResponseEntity<Object> crear(@RequestBody TransferenciaRequest request) {
@@ -41,7 +67,9 @@ public class TransferenciaController {
     public ResponseEntity<Object> actualizarEstado(@PathVariable Integer id, @RequestParam String estado) {
         try {
             Transferencia actualizada = transferenciaService.actualizarEstado(id, estado);
-            if (actualizada == null) return ResponseEntity.notFound().build();
+            if (actualizada == null) {
+                return ResponseEntity.notFound().build();
+            }
             return ResponseEntity.ok(actualizada);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
@@ -52,16 +80,27 @@ public class TransferenciaController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> eliminar(@PathVariable Integer id) {
-        transferenciaService.eliminarLogico(id);
-        Map<String, String> response = new HashMap<>();
-        response.put("mensaje", "Transferencia eliminada");
-        return ResponseEntity.ok(response);
+        try {
+            Optional<Transferencia> existente = transferenciaService.buscarPorId(id);
+            if (existente.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            transferenciaService.eliminarFisico(id);  // ← BORRADO FÍSICO
+            Map<String, String> response = new HashMap<>();
+            response.put("mensaje", "Transferencia eliminada correctamente");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al eliminar la transferencia: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
     // Clase auxiliar para recibir transferencia + detalles
     public static class TransferenciaRequest {
         private Transferencia transferencia;
         private List<DetalleTransferencia> detalles;
+
         public Transferencia getTransferencia() { return transferencia; }
         public void setTransferencia(Transferencia transferencia) { this.transferencia = transferencia; }
         public List<DetalleTransferencia> getDetalles() { return detalles; }

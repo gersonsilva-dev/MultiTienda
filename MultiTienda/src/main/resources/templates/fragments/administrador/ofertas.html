@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ofertas</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">🏷️ Ofertas</div>
+        <div class="page-subtitle">Gestiona las promociones y descuentos</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalOferta()"><i class="fas fa-plus"></i> Nueva oferta</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Nombre</th><th>Tipo</th><th>Valor</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tablaOfertas">
+                <tr><td colspan="8" style="text-align:center;padding:40px;">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOferta">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalOfertaTitle">Nueva Oferta</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalOferta()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formOferta">
+                <input type="hidden" id="ofertaId">
+                <div class="form-group">
+                    <label class="form-label">Nombre</label>
+                    <input class="form-control" id="ofertaNombre" placeholder="Nombre de la oferta" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Tipo de descuento</label>
+                        <select class="form-control" id="ofertaTipo">
+                            <option value="1">PORCENTAJE</option>
+                            <option value="2">MONTO FIJO</option>
+                            <option value="3">2X1</option>
+                            <option value="4">COMBO</option>
+                            <option value="5">DESCUENTO_POR_CANTIDAD</option>
+                            <option value="6">PRECIO_ESPECIAL</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Valor</label>
+                        <input class="form-control" id="ofertaValor" type="number" step="0.01" placeholder="0.00" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Fecha Inicio</label>
+                        <input class="form-control" id="ofertaInicio" type="datetime-local" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha Fin</label>
+                        <input class="form-control" id="ofertaFin" type="datetime-local" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Prioridad</label>
+                        <select class="form-control" id="ofertaPrioridad">
+                            <option value="1">BAJA</option>
+                            <option value="2">MEDIA</option>
+                            <option value="3">ALTA</option>
+                            <option value="4">URGENTE</option>
+                            <option value="5">CRÍTICA</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Estado</label>
+                        <select class="form-control" id="ofertaEstado">
+                            <option value="1">BORRADOR</option>
+                            <option value="2">ACTIVA</option>
+                            <option value="3">FINALIZADA</option>
+                            <option value="4">SUSPENDIDA</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalOferta()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarOferta()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let ofertasData = [];
+	
+	
+	function cambiarEstadoOferta(id, nuevoEstado) {
+	    if (!confirm(`¿${nuevoEstado ? 'Activar' : 'Desactivar'} esta oferta?`)) return;
+	    fetch(`/api/ofertas/${id}/estado?activo=${nuevoEstado}`, {
+	        method: 'PUT'
+	    })
+	    .then(r => {
+	        if (!r.ok) {
+	            return r.text().then(text => { throw new Error(text); });
+	        }
+	        return r.json();
+	    })
+	    .then(() => {
+	        cargarOfertas();
+	        alert('✅ Estado actualizado');
+	    })
+	    .catch((error) => {
+	        console.error('Error:', error);
+	        alert('❌ Error: ' + error.message);
+	    });
+	}
+	
+
+    function cargarOfertas() {
+        fetch('/api/ofertas')
+            .then(r => r.json())
+            .then(d => {
+                ofertasData = d;
+                const tbody = document.getElementById('tablaOfertas');
+                if (!d || d.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">No hay ofertas</td></tr>';
+                    return;
+                }
+				tbody.innerHTML = d.map(o => `
+				    <tr>
+				        <td>${o.idOferta}</td>
+				        <td><strong>${o.nombreOferta}</strong></td>
+				        <td>${o.tipoDescuento?.nombreTipo || '-'}</td>
+				        <td>${o.valorDescuento}</td>
+				        <td>${o.fechaInicio ? o.fechaInicio.substring(0,16) : '-'}</td>
+				        <td>${o.fechaFin ? o.fechaFin.substring(0,16) : '-'}</td>
+				        <td><span class="badge ${o.estadoOferta?.nombreEstado === 'ACTIVA' ? 'badge-success' : 'badge-warning'}">${o.estadoOferta?.nombreEstado || 'BORRADOR'}</span></td>
+				        <td>
+				            <button class="btn btn-primary btn-sm" onclick="editarOferta(${o.idOferta})"><i class="fas fa-edit"></i></button>
+				            <button class="btn btn-danger btn-sm" onclick="eliminarOferta(${o.idOferta})"><i class="fas fa-trash"></i></button>
+				        </td>
+				    </tr>
+				`).join('');
+            })
+            .catch(() => document.getElementById('tablaOfertas').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
+    }
+
+    function abrirModalOferta() {
+        document.getElementById('modalOfertaTitle').textContent = 'Nueva Oferta';
+        document.getElementById('formOferta').reset();
+        document.getElementById('ofertaId').value = '';
+        document.getElementById('modalOferta').classList.add('open');
+    }
+
+    function cerrarModalOferta() {
+        document.getElementById('modalOferta').classList.remove('open');
+    }
+
+	function editarOferta(id) {
+	    const o = ofertasData.find(x => x.idOferta === id);
+	    if (!o) return;
+
+	    document.getElementById('modalOfertaTitle').textContent = 'Editar Oferta';
+	    document.getElementById('ofertaId').value = o.idOferta;
+	    document.getElementById('ofertaNombre').value = o.nombreOferta || '';
+	    document.getElementById('ofertaValor').value = o.valorDescuento || '';
+	    document.getElementById('ofertaInicio').value = o.fechaInicio ? o.fechaInicio.substring(0,16) : '';
+	    document.getElementById('ofertaFin').value = o.fechaFin ? o.fechaFin.substring(0,16) : '';
+	    document.getElementById('ofertaTipo').value = o.tipoDescuento?.idTipoDescuento || '';
+	    document.getElementById('ofertaPrioridad').value = o.prioridad || '';
+	    document.getElementById('ofertaEstado').value = o.estadoOferta?.idEstadoOferta || '';
+	    document.getElementById('modalOferta').classList.add('open');
+	}
+
+	function guardarOferta() {
+	    const id = document.getElementById('ofertaId').value;
+	    
+	    let fechaInicio = document.getElementById('ofertaInicio').value;
+	    let fechaFin = document.getElementById('ofertaFin').value;
+	    
+	    if (fechaInicio && fechaInicio.length === 16) {
+	        fechaInicio = fechaInicio + ':00';
+	    }
+	    if (fechaFin && fechaFin.length === 16) {
+	        fechaFin = fechaFin + ':00';
+	    }
+	    
+	    const data = {
+	        nombreOferta: document.getElementById('ofertaNombre').value,
+	        tipoDescuento: { idTipoDescuento: parseInt(document.getElementById('ofertaTipo').value) },
+	        valorDescuento: parseFloat(document.getElementById('ofertaValor').value) || 0,
+	        fechaInicio: fechaInicio,
+	        fechaFin: fechaFin,
+	        prioridad: parseInt(document.getElementById('ofertaPrioridad').value) || 1,
+	        estadoOferta: { idEstadoOferta: parseInt(document.getElementById('ofertaEstado').value) },
+	        usuarioCrea: 6  // ← admin@techventa.com
+	    };
+	    
+	    console.log('📤 Enviando:', data);
+	    
+	    const method = id ? 'PUT' : 'POST';
+	    const url = id ? `/api/ofertas/${id}` : '/api/ofertas';
+	    fetch(url, {
+	        method: method,
+	        headers: { 'Content-Type': 'application/json' },
+	        body: JSON.stringify(data)
+	    })
+	    .then(r => {
+	        if (!r.ok) {
+	            return r.text().then(text => { throw new Error(text); });
+	        }
+	        return r.json();
+	    })
+	    .then(() => {
+	        cerrarModalOferta();
+	        cargarOfertas();
+	        showToast('success', 'Éxito', id ? 'Actualizada' : 'Creada');
+	    })
+	    .catch((error) => {
+	        console.error('Error:', error);
+	        showToast('error', 'Error', 'No se pudo guardar: ' + error.message);
+	    });
+	}
+
+	function eliminarOferta(id) {
+	    if (!confirm('¿Eliminar esta oferta?')) return;
+	    fetch(`/api/ofertas/${id}`, { method: 'DELETE' })
+	        .then(() => {
+	            cargarOfertas();
+	            alert('✅ Oferta eliminada');
+	        })
+	        .catch(() => alert('❌ Error al eliminar'));
+	}
+
+    cargarOfertas();
+</script>
+</body>
+</html>

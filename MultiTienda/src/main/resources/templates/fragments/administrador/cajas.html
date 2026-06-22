@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cajas</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">💰 Cajas</div>
+        <div class="page-subtitle">Gestiona las cajas por tienda</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalCaja()"><i class="fas fa-plus"></i> Nueva caja</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Nombre</th><th>Número</th><th>Tienda</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tablaCajas">
+                <tr><td colspan="6" style="text-align:center;padding:40px;">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalCaja">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalCajaTitle">Nueva Caja</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalCaja()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formCaja">
+                <input type="hidden" id="cajaId">
+                <div class="form-group">
+                    <label class="form-label">Nombre</label>
+                    <input class="form-control" id="cajaNombre" placeholder="Nombre de la caja" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Número</label>
+                    <input class="form-control" id="cajaNumero" type="number" placeholder="Número de caja" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tienda</label>
+                    <select class="form-control" id="cajaTienda"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Estado</label>
+                    <select class="form-control" id="cajaEstado">
+                        <option value="1">Activa</option>
+                        <option value="2">Inactiva</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalCaja()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarCaja()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cajasData = [];
+    let tiendas = [];
+	
+	function cambiarEstadoCaja(id, nuevoEstado) {
+	    if (!confirm(`¿${nuevoEstado ? 'Activar' : 'Desactivar'} esta caja?`)) return;
+	    fetch(`/api/cajas/${id}/estado?activo=${nuevoEstado}`, {
+	        method: 'PUT'
+	    })
+	    .then(r => {
+	        if (!r.ok) {
+	            return r.text().then(text => { throw new Error(text); });
+	        }
+	        return r.json();
+	    })
+	    .then(() => {
+	        cargarCajas();
+	        alert('✅ Estado actualizado');
+	    })
+	    .catch((error) => {
+	        console.error('Error:', error);
+	        alert('❌ Error: ' + error.message);
+	    });
+	}
+
+    function cargarTiendasSelect() {
+        fetch('/api/tiendas')
+            .then(r => r.json())
+            .then(d => {
+                tiendas = d;
+                const select = document.getElementById('cajaTienda');
+                select.innerHTML = d.map(t => `<option value="${t.idTienda}">${t.nombreTienda}</option>`).join('');
+            })
+            .catch(() => {});
+    }
+
+    function cargarCajas() {
+        fetch('/api/cajas')
+            .then(r => r.json())
+            .then(d => {
+                cajasData = d;
+                const tbody = document.getElementById('tablaCajas');
+                if (!d || d.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">No hay cajas</td></tr>';
+                    return;
+                }
+				tbody.innerHTML = d.map(c => `
+				    <tr>
+				        <td>${c.idCaja}</td>
+				        <td><strong>${c.nombreCaja}</strong></td>
+				        <td>${c.numeroCaja}</td>
+				        <td>${c.tienda?.nombreTienda || '-'}</td>
+				        <td><span class="badge ${c.activo ? 'badge-success' : 'badge-danger'}">${c.activo ? 'Activa' : 'Inactiva'}</span></td>
+				        <td>
+				            <button class="btn btn-primary btn-sm" onclick="editarCaja(${c.idCaja})"><i class="fas fa-edit"></i></button>
+				            <button class="btn btn-success btn-sm" onclick="cambiarEstadoCaja(${c.idCaja}, ${!c.activo})">
+				                <i class="fas ${c.activo ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
+				            </button>
+				            <button class="btn btn-danger btn-sm" onclick="eliminarCaja(${c.idCaja})"><i class="fas fa-trash"></i></button>
+				        </td>
+				    </tr>
+				`).join('');
+            })
+            .catch(() => document.getElementById('tablaCajas').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
+    }
+
+    function abrirModalCaja() {
+        document.getElementById('modalCajaTitle').textContent = 'Nueva Caja';
+        document.getElementById('formCaja').reset();
+        document.getElementById('cajaId').value = '';
+        cargarTiendasSelect();
+        document.getElementById('modalCaja').classList.add('open');
+    }
+
+    function cerrarModalCaja() { document.getElementById('modalCaja').classList.remove('open'); }
+
+    function editarCaja(id) {
+        const c = cajasData.find(x => x.idCaja === id);
+        if (!c) return;
+        document.getElementById('modalCajaTitle').textContent = 'Editar Caja';
+        document.getElementById('cajaId').value = c.idCaja;
+        document.getElementById('cajaNombre').value = c.nombreCaja || '';
+        document.getElementById('cajaNumero').value = c.numeroCaja || '';
+        document.getElementById('cajaEstado').value = c.activo ? 1 : 2;
+        cargarTiendasSelect();
+        document.getElementById('cajaTienda').value = c.tienda?.idTienda || '';
+        document.getElementById('modalCaja').classList.add('open');
+    }
+
+    function guardarCaja() {
+        const id = document.getElementById('cajaId').value;
+        const data = {
+            nombreCaja: document.getElementById('cajaNombre').value,
+            numeroCaja: parseInt(document.getElementById('cajaNumero').value),
+            tienda: { idTienda: parseInt(document.getElementById('cajaTienda').value) },
+            activo: document.getElementById('cajaEstado').value === '1'
+        };
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/cajas/${id}` : '/api/cajas';
+        fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(r => r.json())
+            .then(() => { cerrarModalCaja(); cargarCajas(); showToast('success', 'Éxito', id ? 'Actualizada' : 'Creada'); })
+            .catch(() => showToast('error', 'Error', 'No se pudo guardar'));
+    }
+
+	function eliminarCaja(id) {
+	    if (!confirm('¿Eliminar esta caja?')) return;
+	    fetch(`/api/cajas/${id}`, { method: 'DELETE' })
+	        .then(() => {
+	            cargarCajas();
+	            alert('✅ Caja eliminada');
+	        })
+	        .catch(() => alert('❌ Error al eliminar'));
+	}
+
+    cargarCajas();
+</script>
+</body>
+</html>

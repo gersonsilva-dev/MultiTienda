@@ -91,6 +91,7 @@ public class MermaService {
 
     public Merma actualizar(Merma merma) { return mermaRepository.save(merma); }
 
+ // ANTES (borrado lógico)
     public void eliminarLogico(Integer id) {
         mermaRepository.findById(id).ifPresent(m -> {
             m.setActivo(false);
@@ -98,5 +99,8 @@ public class MermaService {
         });
     }
 
-    public void eliminarFisico(Integer id) { mermaRepository.deleteById(id); }
+    // AHORA (borrado físico)
+    public void eliminarFisico(Integer id) {
+        mermaRepository.deleteById(id);
+    }
 }

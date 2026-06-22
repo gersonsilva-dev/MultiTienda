@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/lotes")
+@RequestMapping("/api/lotes")
 public class LoteController {
 
     @Autowired

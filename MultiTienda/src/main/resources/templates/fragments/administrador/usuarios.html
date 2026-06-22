@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Usuarios</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">👤 Usuarios</div>
+        <div class="page-subtitle">Gestiona los usuarios del sistema</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalCrear()"><i class="fas fa-plus"></i> Nuevo usuario</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-toolbar">
+        <div class="toolbar-left">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar usuario..." id="buscarUsuario" oninput="filtrarUsuarios()">
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <span id="totalRegistros">0 registros</span>
+        </div>
+    </div>
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaUsuarios">
+                <tr><td colspan="7" style="text-align:center;padding:40px;">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalUsuario">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalUsuarioTitle">Nuevo Usuario</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalUsuario()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formUsuario">
+                <input type="hidden" id="userId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nombres</label>
+                        <input class="form-control" id="nombres" placeholder="Nombres" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Apellidos</label>
+                        <input class="form-control" id="apellidos" placeholder="Apellidos" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Correo</label>
+                        <input class="form-control" id="correo" type="email" placeholder="correo@empresa.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Teléfono</label>
+                        <input class="form-control" id="telefono" placeholder="Teléfono">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Documento</label>
+                        <input class="form-control" id="documento" placeholder="DNI o RUC">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contraseña</label>
+                        <input class="form-control" id="contrasena" type="password" placeholder="******">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Rol</label>
+                        <select class="form-control" id="rolUsuario">
+                            <option value="1">Administrador</option>
+                            <option value="2">Supervisor</option>
+                            <option value="3">Almacenero</option>
+                            <option value="4">Cajero</option>
+                            <option value="5">Proveedor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tienda</label>
+                        <select class="form-control" id="tiendaUsuario">
+                            <option value="1">Tienda Principal</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Estado</label>
+                    <select class="form-control" id="estadoUsuario">
+                        <option value="1">Activo</option>
+                        <option value="2">Inactivo</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalUsuario()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarUsuario()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let usuariosData = [];
+
+    function cargarUsuarios() {
+        fetch('/api/usuarios')
+            .then(r => r.json())
+            .then(d => { usuariosData = d; renderizarUsuarios(d); document.getElementById('totalRegistros').textContent = d.length + ' registros'; })
+            .catch(() => document.getElementById('tablaUsuarios').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
+    }
+	
+	
+	function cambiarEstadoUsuario(id, nuevoEstado) {
+	    if (!confirm(`¿${nuevoEstado ? 'Activar' : 'Desactivar'} este usuario?`)) return;
+	    fetch(`/api/usuarios/${id}/estado?activo=${nuevoEstado}`, {
+	        method: 'PUT'
+	    })
+	    .then(r => {
+	        if (!r.ok) {
+	            return r.text().then(text => { throw new Error(text); });
+	        }
+	        return r.json();
+	    })
+	    .then(() => {
+	        cargarUsuarios();
+	        alert('✅ Estado actualizado');
+	    })
+	    .catch((error) => {
+	        console.error('Error:', error);
+	        alert('❌ Error: ' + error.message);
+	    });
+	}
+
+
+    function renderizarUsuarios(data) {
+        const tbody = document.getElementById('tablaUsuarios');
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No hay usuarios</td></tr>';
+            return;
+        }
+		tbody.innerHTML = data.map(u => `
+		    <tr>
+		        <td>${u.idUsuario}</td>
+		        <td>${u.nombres || '-'}</td>
+		        <td>${u.apellidos || '-'}</td>
+		        <td>${u.correoElectronico || '-'}</td>
+		        <td><span class="badge badge-info">${u.rol?.nombreRol || 'Sin rol'}</span></td>
+		        <td><span class="badge ${u.activo ? 'badge-success' : 'badge-danger'}">${u.activo ? 'Activo' : 'Inactivo'}</span></td>
+		        <td>
+		            <button class="btn btn-primary btn-sm" onclick="editarUsuario(${u.idUsuario})"><i class="fas fa-edit"></i></button>
+		            <button class="btn btn-success btn-sm" onclick="cambiarEstadoUsuario(${u.idUsuario}, ${!u.activo})">
+		                <i class="fas ${u.activo ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
+		            </button>
+		            <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${u.idUsuario})"><i class="fas fa-trash"></i></button>
+		        </td>
+		    </tr>
+		`).join('');
+    }
+
+    function filtrarUsuarios() {
+        const term = document.getElementById('buscarUsuario').value.toLowerCase();
+        const filtrados = usuariosData.filter(u => (u.nombres?.toLowerCase() || '').includes(term) || (u.apellidos?.toLowerCase() || '').includes(term) || (u.correoElectronico?.toLowerCase() || '').includes(term));
+        renderizarUsuarios(filtrados);
+        document.getElementById('totalRegistros').textContent = filtrados.length + ' registros';
+    }
+
+    function abrirModalCrear() {
+        document.getElementById('modalUsuarioTitle').textContent = 'Nuevo Usuario';
+        document.getElementById('formUsuario').reset();
+        document.getElementById('userId').value = '';
+        document.getElementById('modalUsuario').classList.add('open');
+    }
+
+    function cerrarModalUsuario() { document.getElementById('modalUsuario').classList.remove('open'); }
+
+    function editarUsuario(id) {
+        const u = usuariosData.find(x => x.idUsuario === id);
+        if (!u) return;
+        document.getElementById('modalUsuarioTitle').textContent = 'Editar Usuario';
+        document.getElementById('userId').value = u.idUsuario;
+        document.getElementById('nombres').value = u.nombres || '';
+        document.getElementById('apellidos').value = u.apellidos || '';
+        document.getElementById('correo').value = u.correoElectronico || '';
+        document.getElementById('telefono').value = u.telefono || '';
+        document.getElementById('documento').value = u.numeroDocumento || '';
+        document.getElementById('rolUsuario').value = u.rol?.idRol || 1;
+        document.getElementById('estadoUsuario').value = u.activo ? 1 : 2;
+        document.getElementById('modalUsuario').classList.add('open');
+    }
+
+    function guardarUsuario() {
+        const id = document.getElementById('userId').value;
+        const data = {
+            nombres: document.getElementById('nombres').value,
+            apellidos: document.getElementById('apellidos').value,
+            correoElectronico: document.getElementById('correo').value,
+            telefono: document.getElementById('telefono').value,
+            numeroDocumento: document.getElementById('documento').value,
+            contrasenaHash: document.getElementById('contrasena').value || '123456',
+            rol: { idRol: parseInt(document.getElementById('rolUsuario').value) },
+            activo: document.getElementById('estadoUsuario').value === '1'
+        };
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/usuarios/${id}` : '/api/usuarios';
+        fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(r => r.json())
+            .then(() => { cerrarModalUsuario(); cargarUsuarios(); showToast('success', 'Éxito', id ? 'Actualizado' : 'Creado'); })
+            .catch(() => showToast('error', 'Error', 'No se pudo guardar'));
+    }
+
+	function eliminarUsuario(id) {
+	    if (!confirm('¿Eliminar este usuario?')) return;
+	    fetch(`/api/usuarios/${id}`, { method: 'DELETE' })
+	        .then(() => {
+	            cargarUsuarios();
+	            alert('✅ Usuario eliminado');
+	        })
+	        .catch(() => alert('❌ Error al eliminar'));
+	}
+
+	cargarUsuarios();
+
+</script>
+</body>
+</html>

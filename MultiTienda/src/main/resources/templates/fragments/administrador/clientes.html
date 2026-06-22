@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Clientes</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">🧑 Clientes</div>
+        <div class="page-subtitle">Gestiona los clientes del sistema</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalCliente()"><i class="fas fa-plus"></i> Nuevo cliente</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-toolbar">
+        <div class="toolbar-left">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar cliente..." id="buscarCliente" oninput="filtrarClientes()">
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <span id="totalRegistros">0 registros</span>
+        </div>
+    </div>
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Nombre</th><th>Documento</th><th>Correo</th><th>Teléfono</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tablaClientes">
+                <tr><td colspan="7" style="text-align:center;padding:40px;">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalCliente">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalClienteTitle">Nuevo Cliente</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalCliente()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formCliente">
+                <input type="hidden" id="clienteId">
+                <div class="form-group">
+                    <label class="form-label">Tipo</label>
+                    <select class="form-control" id="clienteTipo" onchange="toggleClienteFields()">
+                        <option value="NATURAL">Persona Natural</option>
+                        <option value="JURIDICO">Persona Jurídica</option>
+                    </select>
+                </div>
+                <div id="naturalFields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Nombres</label>
+                            <input class="form-control" id="clienteNombres" placeholder="Nombres">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Apellidos</label>
+                            <input class="form-control" id="clienteApellidos" placeholder="Apellidos">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DNI</label>
+                        <input class="form-control" id="clienteDocumento" placeholder="DNI">
+                    </div>
+                </div>
+                <div id="juridicoFields" style="display:none;">
+                    <div class="form-group">
+                        <label class="form-label">Razón Social</label>
+                        <input class="form-control" id="clienteRazonSocial" placeholder="Razón Social">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">RUC</label>
+                        <input class="form-control" id="clienteRuc" placeholder="RUC">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Correo</label>
+                    <input class="form-control" id="clienteCorreo" type="email" placeholder="correo@cliente.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Teléfono</label>
+                    <input class="form-control" id="clienteTelefono" placeholder="Teléfono">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dirección</label>
+                    <input class="form-control" id="clienteDireccion" placeholder="Dirección">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Estado</label>
+                    <select class="form-control" id="clienteEstado">
+                        <option value="1">Activo</option>
+                        <option value="2">Inactivo</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalCliente()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarCliente()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let clientesData = [];
+
+    function toggleClienteFields() {
+        const tipo = document.getElementById('clienteTipo').value;
+        document.getElementById('naturalFields').style.display = tipo === 'NATURAL' ? 'block' : 'none';
+        document.getElementById('juridicoFields').style.display = tipo === 'JURIDICO' ? 'block' : 'none';
+    }
+
+    function cargarClientes() {
+        fetch('/api/clientes')
+            .then(r => r.json())
+            .then(d => {
+                clientesData = d;
+                renderizarClientes(d);
+                document.getElementById('totalRegistros').textContent = d.length + ' registros';
+            })
+            .catch(() => document.getElementById('tablaClientes').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
+    }
+
+    function renderizarClientes(data) {
+        const tbody = document.getElementById('tablaClientes');
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No hay clientes</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.map(c => `
+            <tr>
+                <td>${c.idCliente}</td>
+                <td><strong>${c.nombres || c.razonSocial || '-'}</strong></td>
+                <td><span class="badge badge-info">${c.numeroDocumento || c.ruc || '-'}</span></td>
+                <td>${c.correoElectronico || '-'}</td>
+                <td>${c.telefono || '-'}</td>
+                <td><span class="badge ${c.activo ? 'badge-success' : 'badge-danger'}">${c.activo ? 'Activo' : 'Inactivo'}</span></td>
+                <td>
+                    <button class="btn btn-primary btn-sm" onclick="editarCliente(${c.idCliente})"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarCliente(${c.idCliente})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function filtrarClientes() {
+        const term = document.getElementById('buscarCliente').value.toLowerCase();
+        const filtrados = clientesData.filter(c => (c.nombres?.toLowerCase() || '').includes(term) || (c.razonSocial?.toLowerCase() || '').includes(term) || (c.correoElectronico?.toLowerCase() || '').includes(term));
+        renderizarClientes(filtrados);
+        document.getElementById('totalRegistros').textContent = filtrados.length + ' registros';
+    }
+
+    function abrirModalCliente() {
+        document.getElementById('modalClienteTitle').textContent = 'Nuevo Cliente';
+        document.getElementById('formCliente').reset();
+        document.getElementById('clienteId').value = '';
+        document.getElementById('naturalFields').style.display = 'block';
+        document.getElementById('juridicoFields').style.display = 'none';
+        document.getElementById('modalCliente').classList.add('open');
+    }
+
+    function cerrarModalCliente() { document.getElementById('modalCliente').classList.remove('open'); }
+
+    function editarCliente(id) {
+        const c = clientesData.find(x => x.idCliente === id);
+        if (!c) return;
+        document.getElementById('modalClienteTitle').textContent = 'Editar Cliente';
+        document.getElementById('clienteId').value = c.idCliente;
+        document.getElementById('clienteTipo').value = c.tipoCliente || 'NATURAL';
+        toggleClienteFields();
+        document.getElementById('clienteNombres').value = c.nombres || '';
+        document.getElementById('clienteApellidos').value = c.apellidos || '';
+        document.getElementById('clienteDocumento').value = c.numeroDocumento || '';
+        document.getElementById('clienteRazonSocial').value = c.razonSocial || '';
+        document.getElementById('clienteRuc').value = c.ruc || '';
+        document.getElementById('clienteCorreo').value = c.correoElectronico || '';
+        document.getElementById('clienteTelefono').value = c.telefono || '';
+        document.getElementById('clienteDireccion').value = c.direccion || '';
+        document.getElementById('clienteEstado').value = c.activo ? 1 : 2;
+        document.getElementById('modalCliente').classList.add('open');
+    }
+
+    function guardarCliente() {
+        const id = document.getElementById('clienteId').value;
+        const tipo = document.getElementById('clienteTipo').value;
+        const data = {
+            tipoCliente: tipo,
+            nombres: document.getElementById('clienteNombres').value,
+            apellidos: document.getElementById('clienteApellidos').value,
+            numeroDocumento: document.getElementById('clienteDocumento').value,
+            razonSocial: document.getElementById('clienteRazonSocial').value,
+            ruc: document.getElementById('clienteRuc').value,
+            correoElectronico: document.getElementById('clienteCorreo').value,
+            telefono: document.getElementById('clienteTelefono').value,
+            direccion: document.getElementById('clienteDireccion').value,
+            activo: document.getElementById('clienteEstado').value === '1'
+        };
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/clientes/${id}` : '/api/clientes';
+        fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(r => r.json())
+            .then(() => { cerrarModalCliente(); cargarClientes(); showToast('success', 'Éxito', id ? 'Actualizado' : 'Creado'); })
+            .catch(() => showToast('error', 'Error', 'No se pudo guardar'));
+    }
+
+    function eliminarCliente(id) {
+        if (!confirm('¿Eliminar este cliente?')) return;
+        fetch(`/api/clientes/${id}`, { method: 'DELETE' })
+            .then(() => { cargarClientes(); showToast('success', 'Eliminado', 'Cliente eliminado'); })
+            .catch(() => showToast('error', 'Error', 'No se pudo eliminar'));
+    }
+
+    cargarClientes();
+</script>
+</body>
+</html>

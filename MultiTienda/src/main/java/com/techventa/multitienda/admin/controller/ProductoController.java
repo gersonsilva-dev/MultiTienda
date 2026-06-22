@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/productos")
+@RequestMapping("/api/productos")
 public class ProductoController {
 
     @Autowired
@@ -120,7 +120,7 @@ public class ProductoController {
             if (existente.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            productoService.eliminarLogico(id);
+            productoService.eliminarFisico(id);  // ← CAMBIADO
             Map<String, String> response = new HashMap<>();
             response.put("mensaje", "Producto eliminado correctamente");
             return ResponseEntity.ok(response);

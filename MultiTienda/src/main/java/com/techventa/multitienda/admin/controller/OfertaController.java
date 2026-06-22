@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/ofertas")
+@RequestMapping("/api/ofertas")
 public class OfertaController {
 
     @Autowired
@@ -122,6 +122,27 @@ public class OfertaController {
         }
     }
 
+    
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<Object> cambiarEstado(@PathVariable Integer id, @RequestParam Boolean activo) {
+        try {
+            Optional<Oferta> existente = ofertaService.buscarPorId(id);
+            if (existente.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            Oferta oferta = existente.get();
+            oferta.setActivo(activo);
+            ofertaService.actualizar(oferta);
+            Map<String, String> response = new HashMap<>();
+            response.put("mensaje", "Estado actualizado correctamente");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al actualizar estado: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
     // Eliminar oferta (borrado lógico)
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> eliminar(@PathVariable Integer id) {
@@ -130,7 +151,7 @@ public class OfertaController {
             if (existente.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            ofertaService.eliminarLogico(id);
+            ofertaService.eliminarFisico(id);  // ← BORRADO FÍSICO
             Map<String, String> response = new HashMap<>();
             response.put("mensaje", "Oferta eliminada correctamente");
             return ResponseEntity.ok(response);

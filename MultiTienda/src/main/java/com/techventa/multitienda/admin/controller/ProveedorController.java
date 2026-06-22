@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/proveedores")
+@RequestMapping("/api/proveedores")
 public class ProveedorController {
 
     @Autowired
@@ -67,7 +67,27 @@ public class ProveedorController {
         List<Proveedor> proveedores = proveedorService.buscarPorEstado(idEstado);
         return ResponseEntity.ok(proveedores);
     }
-
+    
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<Object> cambiarEstado(@PathVariable Integer id, @RequestParam Boolean activo) {
+        try {
+            Optional<Proveedor> existente = proveedorService.buscarPorId(id);
+            if (existente.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            Proveedor proveedor = existente.get();
+            proveedor.setActivo(activo);
+            proveedorService.actualizar(proveedor);
+            Map<String, String> response = new HashMap<>();
+            response.put("mensaje", "Estado actualizado correctamente");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al actualizar estado: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
     // Crear nuevo proveedor
     @PostMapping
     public ResponseEntity<Object> crear(@RequestBody Proveedor proveedor) {
@@ -113,7 +133,7 @@ public class ProveedorController {
             if (existente.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            proveedorService.eliminarLogico(id);
+            proveedorService.eliminarFisico(id);  // ← CAMBIADO
             Map<String, String> response = new HashMap<>();
             response.put("mensaje", "Proveedor eliminado correctamente");
             return ResponseEntity.ok(response);
