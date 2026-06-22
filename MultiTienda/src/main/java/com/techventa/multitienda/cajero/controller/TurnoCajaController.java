@@ -1,7 +1,11 @@
 package com.techventa.multitienda.cajero.controller;
 
+import com.techventa.multitienda.admin.model.Usuario;
 import com.techventa.multitienda.cajero.model.TurnoCaja;
 import com.techventa.multitienda.cajero.service.TurnoCajaService;
+
+import jakarta.servlet.http.HttpSession;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +14,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/turnos-caja")
@@ -58,10 +63,58 @@ public class TurnoCajaController {
     }
 
     @PostMapping("/abrir")
-    public ResponseEntity<Object> abrirTurno(@RequestBody TurnoCaja turnoCaja) {
+    public ResponseEntity<Object> abrirTurno(@RequestBody Map<String, Object> requestData,
+                                              HttpSession session) {
         try {
+            // 1️⃣ Obtener usuario de la sesión
+            Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+            if (usuario == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Usuario no autenticado");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+
+            // 2️⃣ Validar que el usuario tenga tienda
+            if (usuario.getTienda() == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "El usuario no tiene una tienda asignada");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+
+            // 3️⃣ Validar que el usuario tenga caja
+            if (usuario.getCaja() == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "El usuario no tiene una caja asignada");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+
+            // 4️⃣ Obtener el fondo inicial del request
+            BigDecimal fondoInicial;
+            if (requestData.get("fondoInicial") instanceof Integer) {
+                fondoInicial = BigDecimal.valueOf((Integer) requestData.get("fondoInicial"));
+            } else if (requestData.get("fondoInicial") instanceof Double) {
+                fondoInicial = BigDecimal.valueOf((Double) requestData.get("fondoInicial"));
+            } else {
+                fondoInicial = new BigDecimal(requestData.get("fondoInicial").toString());
+            }
+
+            // 5️⃣ Crear el turno automáticamente con los datos del usuario
+            TurnoCaja turnoCaja = new TurnoCaja();
+            turnoCaja.setCajero(usuario);
+            turnoCaja.setTienda(usuario.getTienda());
+            turnoCaja.setCaja(usuario.getCaja());
+            turnoCaja.setFondoInicial(fondoInicial);
+
+            // 6️⃣ Abrir el turno
             TurnoCaja nuevo = turnoCajaService.abrirTurno(turnoCaja);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
+
+            // 7️⃣ Respuesta exitosa
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Turno abierto correctamente");
+            response.put("idTurnoCaja", nuevo.getIdTurnoCaja());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al abrir turno: " + e.getMessage());
@@ -86,6 +139,21 @@ public class TurnoCajaController {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al cerrar turno: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    // En TurnoCajaController.java
+    @GetMapping("/usuario/{idUsuario}/activo")
+    public ResponseEntity<Map<String, Object>> buscarActivoPorUsuario(@PathVariable Integer idUsuario) {
+        Map<String, Object> response = new HashMap<>();
+        Optional<TurnoCaja> turno = turnoCajaService.buscarActivoPorUsuario(idUsuario);
+        
+        if (turno.isPresent()) {
+            response.put("activo", true);
+            response.put("turno", turno.get());
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("activo", false);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
 }

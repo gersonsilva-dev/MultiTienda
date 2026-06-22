@@ -5,16 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>TechVenta Pro — POS</title>
 
-    <!-- ICONOS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
-    <!-- FUENTES -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-    <!-- CSS PRINCIPAL DEL POS -->
     <style>
         /* ============================================================ */
         /* LAYOUT COMPLETO - ESTILOS DEL POS                            */
@@ -47,13 +43,11 @@
             --border-radius-lg: 8px;
         }
 
-        html,
-        body {
+        html, body {
             height: 100%;
             background: var(--color-background-tertiary);
         }
 
-        /* ========== SHELL ========== */
         .shell {
             display: flex;
             flex-direction: column;
@@ -62,7 +56,6 @@
             overflow: hidden;
         }
 
-        /* ========== TOPBAR ========== */
         .topbar {
             height: 48px;
             background: #0F172A;
@@ -113,14 +106,9 @@
             font-size: 13px;
         }
 
-        .status-online {
-            color: #4ADE80;
-        }
-        .status-offline {
-            color: #EF4444;
-        }
+        .status-online { color: #4ADE80; }
+        .status-offline { color: #EF4444; }
 
-        /* Botón de logout */
         .topbar-logout {
             cursor: pointer;
             transition: color 0.2s;
@@ -129,7 +117,6 @@
             color: rgba(255, 255, 255, 0.9);
         }
 
-        /* ========== TAB BAR ========== */
         .tab-bar {
             display: flex;
             background: #1E293B;
@@ -178,7 +165,6 @@
             pointer-events: none;
         }
 
-        /* ========== BODY ========== */
         .body {
             flex: 1;
             overflow: hidden;
@@ -191,7 +177,6 @@
             background: var(--color-background-tertiary);
         }
 
-        /* ========== SCROLL ========== */
         ::-webkit-scrollbar {
             width: 5px;
             height: 5px;
@@ -205,51 +190,55 @@
             border-radius: 99px;
         }
 
-        /* ========== ANIMACIONES ========== */
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(6px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .page {
-            animation: fadeIn 0.2s ease;
+        .page { animation: fadeIn 0.2s ease; }
+
+        /* Toast notifications (global) */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 200px;
+        }
+        .toast-success { background: #16A34A; }
+        .toast-error { background: #EF4444; }
+        .toast-warning { background: #F59E0B; }
+        .toast-info { background: #3B82F6; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        /* ========== RESPONSIVE ========== */
         @media (max-width: 768px) {
-            .topbar-left {
-                font-size: 11px;
-            }
-            .topbar-item.hide-mobile {
-                display: none;
-            }
-            .tab span {
-                display: none;
-            }
-            .tab i {
-                font-size: 17px;
-            }
-            .tab {
-                padding: 10px 12px;
-            }
+            .topbar-left { font-size: 11px; }
+            .topbar-item.hide-mobile { display: none; }
+            .tab span { display: none; }
+            .tab i { font-size: 17px; }
+            .tab { padding: 10px 12px; }
         }
 
         @media (max-width: 480px) {
-            .topbar {
-                padding: 0 8px;
-            }
-            .topbar-right {
-                gap: 8px;
-            }
-            .topbar-item {
-                font-size: 9px;
-            }
+            .topbar { padding: 0 8px; }
+            .topbar-right { gap: 8px; }
+            .topbar-item { font-size: 9px; }
         }
 
         /* ============================================================ */
@@ -288,12 +277,8 @@
             gap: 8px;
         }
 
-        .caja-card-header h2 i {
-            color: #16A34A;
-        }
-        .caja-card-header h2 .ti-lock {
-            color: #DC2626;
-        }
+        .caja-card-header h2 i { color: #16A34A; }
+        .caja-card-header h2 .ti-lock { color: #DC2626; }
 
         .caja-card-body {
             padding: 18px;
@@ -334,10 +319,7 @@
             width: 100%;
         }
 
-        .caja-campo input:read-only {
-            font-weight: 500;
-        }
-
+        .caja-campo input:read-only { font-weight: 500; }
         .caja-campo input:focus,
         .caja-campo select:focus,
         .caja-campo textarea:focus {
@@ -372,58 +354,11 @@
             font-weight: 500;
         }
 
-        .caja-resumen-info {
-            background: var(--color-background-secondary);
-            border-radius: var(--border-radius-md);
-            padding: 12px 14px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 8px;
-        }
-
-        .caja-resumen-info .item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .caja-resumen-info .label {
-            font-size: 9px;
-            color: var(--color-text-tertiary);
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .caja-resumen-info .value {
-            font-size: 14px;
-            font-weight: 500;
-        }
-
         .caja-actions {
             display: flex;
             gap: 10px;
             margin-top: 4px;
             flex-wrap: wrap;
-        }
-
-        .diferencia-box {
-            background: var(--color-background-secondary);
-            border-radius: var(--border-radius-md);
-            padding: 12px 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .diferencia-box .label {
-            font-size: 10px;
-            color: var(--color-text-tertiary);
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .diferencia-box .value {
-            font-size: 18px;
-            font-weight: 600;
         }
 
         .info-box {
@@ -454,22 +389,6 @@
             color: var(--color-text-secondary);
         }
 
-        .metodo-bar {
-            height: 4px;
-            background: var(--color-border-tertiary);
-            border-radius: 99px;
-            overflow: hidden;
-        }
-
-        .metodo-bar .fill {
-            height: 100%;
-            border-radius: 99px;
-            transition: width 0.5s ease;
-        }
-
-        /* ============================================================ */
-        /* BOTONES                                                       */
-        /* ============================================================ */
         .btn {
             flex: 1;
             min-width: 120px;
@@ -489,38 +408,25 @@
             background: #16A34A;
             color: #fff;
         }
-        .btn-success:hover {
-            background: #15803D;
-        }
+        .btn-success:hover { background: #15803D; }
 
         .btn-outline {
             background: transparent;
             color: var(--color-text-secondary);
             border: 1px solid var(--color-border-tertiary) !important;
         }
-        .btn-outline:hover {
-            background: var(--color-background-secondary);
-        }
+        .btn-outline:hover { background: var(--color-background-secondary); }
 
         .btn-danger {
             background: #DC2626;
             color: #fff;
         }
-        .btn-danger:hover {
-            background: #B91C1C;
-        }
+        .btn-danger:hover { background: #B91C1C; }
 
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
 
-        /* ============================================================ */
-        /* RESPONSIVE EXTRA                                             */
-        /* ============================================================ */
         @media (max-width: 768px) {
-            .caja-row {
-                grid-template-columns: 1fr;
-            }
+            .caja-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -559,19 +465,19 @@
 
         <!-- ========== TAB BAR ========== -->
         <div class="tab-bar" id="tabBar">
-            <button class="tab active" data-page="apertura" onclick="irAPagina('apertura')">
+            <button class="tab" id="tabApertura" data-page="apertura" onclick="cambiarVista('apertura')">
                 <i class="ti ti-cash-register"></i><span>Apertura</span>
             </button>
-            <button class="tab disabled" data-page="venta" onclick="irAPagina('venta')">
+            <button class="tab active" id="tabVenta" data-page="venta" onclick="cambiarVista('venta')">
                 <i class="ti ti-shopping-cart"></i><span>Nueva venta</span>
             </button>
-            <button class="tab disabled" data-page="misventas" onclick="irAPagina('misventas')">
+            <button class="tab" id="tabMisVentas" data-page="misventas" onclick="cambiarVista('misventas')">
                 <i class="ti ti-chart-bar"></i><span>Mis ventas</span>
             </button>
-            <button class="tab disabled" data-page="devolucion" onclick="irAPagina('devolucion')">
+            <button class="tab" id="tabDevolucion" data-page="devolucion" onclick="cambiarVista('devolucion')">
                 <i class="ti ti-arrow-back"></i><span>Devolución</span>
             </button>
-            <button class="tab disabled" data-page="cierre" onclick="irAPagina('cierre')">
+            <button class="tab" id="tabCierre" data-page="cierre" onclick="cambiarVista('cierre')">
                 <i class="ti ti-lock"></i><span>Cierre</span>
             </button>
         </div>
@@ -579,35 +485,94 @@
         <!-- ========== CONTENIDO ========== -->
         <div class="body">
             <div class="content-area" id="contentArea">
-                <div th:replace="${content}"></div>
+                <div th:replace="~{fragments/__${viewName}__ :: content}"></div>
             </div>
         </div>
 
     </div>
 
     <!-- ============================================================ -->
-    <!-- JAVASCRIPT DEL LAYOUT                                        -->
+    <!-- JAVASCRIPT DEL LAYOUT (COMPLETO Y CORREGIDO)                -->
     <!-- ============================================================ -->
     <script th:inline="javascript">
         /*<![CDATA[*/
 
-        // ============================================================
-        // VARIABLES GLOBALES
-        // ============================================================
+        // === GUARDAR DATOS DEL USUARIO PARA REUTILIZAR ===
+        var usuarioGlobal = /*[[${usuario}]]*/ null;
+        var viewNameGlobal = /*[[${viewName}]]*/ 'venta';
 
+        // === GUARDAR ID DEL USUARIO GLOBALMENTE ===
+        window.idUsuarioGlobal = null;
+        try {
+            window.idUsuarioGlobal = /*[[${usuario.idUsuario}]]*/ null;
+        } catch(e) {
+            console.warn('No se pudo obtener idUsuario');
+        }
+        console.log('ID Usuario global:', window.idUsuarioGlobal);
+
+        // === VARIABLES GLOBALES ===
         let cajaAbierta = false;
-        let paginaActual = 'apertura';
+        let paginaActual = 'venta';
+
+        const tabApertura = document.getElementById('tabApertura');
+        const tabCierre = document.getElementById('tabCierre');
+        const tabs = document.querySelectorAll('.tab');
+
+        let idUsuario = null;
+        try {
+            idUsuario = /*[[${usuario.idUsuario}]]*/ null;
+        } catch(e) {
+            console.warn('No se pudo obtener idUsuario');
+        }
+        console.log('ID Usuario:', idUsuario);
 
         const statusText = document.getElementById('statusText');
         const statusIcon = document.getElementById('statusIcon');
-        const tabs = document.querySelectorAll('.tab');
 
-        // ============================================================
-        // NAVEGACIÓN
-        // ============================================================
+        // === ACTUALIZAR ESTADO DE CAJA ===
+        window.actualizarEstadoCaja = function(abierta) {
+            cajaAbierta = abierta;
+            
+            if (statusText) {
+                statusText.textContent = abierta ? 'Caja abierta' : 'Caja cerrada';
+                statusText.style.color = abierta ? '#4ADE80' : '#EF4444';
+            }
+            if (statusIcon) {
+                statusIcon.className = abierta ? 'ti ti-circle-filled status-online' : 'ti ti-circle-filled status-offline';
+            }
+            
+            if (tabApertura) {
+                tabApertura.style.display = abierta ? 'none' : 'flex';
+            }
+            if (tabCierre) {
+                tabCierre.style.display = abierta ? 'flex' : 'none';
+            }
+            
+            // Actualizar pestañas visibles según estado
+            tabs.forEach(tab => {
+                const page = tab.dataset.page;
+                // Si la pestaña no está oculta, actualizar su clase active
+                if (tab.style.display !== 'none') {
+                    tab.classList.toggle('active', tab.dataset.page === paginaActual);
+                }
+            });
+        };
 
-        function irAPagina(pagina) {
-            // Validar acceso
+        // === FUNCIÓN PARA ACTUALIZAR PESTAÑA ACTIVA ===
+        function actualizarPestanaActiva(pagina) {
+            paginaActual = pagina;
+            tabs.forEach(tab => {
+                const page = tab.dataset.page;
+                // Solo si la pestaña está visible
+                if (tab.style.display !== 'none') {
+                    tab.classList.toggle('active', page === pagina);
+                }
+            });
+        }
+
+        // === FUNCIÓN DE NAVEGACIÓN SIN RECARGA (AJAX) ===
+        window.cambiarVista = function(pagina) {
+            // Validaciones de caja
             if (!cajaAbierta && pagina !== 'apertura') {
                 alert('⚠️ Primero debes abrir la caja en "Apertura"');
                 return;
@@ -617,48 +582,84 @@
                 return;
             }
 
-            // Redirigir al backend
-            window.location.href = '/api/views/' + pagina;
-        }
-
-        // ============================================================
-        // ACTUALIZAR ESTADO DE CAJA
-        // ============================================================
-
-        function actualizarEstadoCaja(abierta) {
-            cajaAbierta = abierta;
-
-            if (statusText) {
-                statusText.textContent = abierta ? 'Caja abierta' : 'Caja cerrada';
-                statusText.style.color = abierta ? '#4ADE80' : '#EF4444';
-            }
-
-            if (statusIcon) {
-                statusIcon.className = abierta ? 'ti ti-circle-filled status-online' : 'ti ti-circle-filled status-offline';
-            }
-
-            // Actualizar tabs
-            tabs.forEach(tab => {
-                const page = tab.dataset.page;
-                if (!abierta && page !== 'apertura') {
-                    tab.classList.add('disabled');
-                } else if (abierta && page === 'apertura') {
-                    tab.classList.add('disabled');
-                } else {
-                    tab.classList.remove('disabled');
+            // 🔥 CARGAR FRAGMENTO CON AJAX
+            fetch('/views/' + pagina, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error al cargar la vista');
+                return response.text();
+            })
+            .then(html => {
+                // 🔥 REEMPLAZAR CONTENIDO
+                const contentArea = document.getElementById('contentArea');
+                contentArea.innerHTML = html;
+                
+                // 🔥 ACTUALIZAR URL
+                window.history.pushState({ pagina: pagina }, '', '/views/' + pagina);
+                
+                // 🔥 ACTUALIZAR PESTAÑA ACTIVA
+                actualizarPestanaActiva(pagina);
+                
+                // 🔥 EJECUTAR SCRIPTS DEL FRAGMENTO
+                const scripts = contentArea.querySelectorAll('script');
+                scripts.forEach(script => {
+                    if (script.textContent && !script.src) {
+                        try {
+                            eval(script.textContent);
+                        } catch (e) {
+                            console.warn('Error al ejecutar script del fragmento:', e);
+                        }
+                    }
+                });
+                
+                // 🔥 INICIALIZAR MÓDULOS ESPECÍFICOS SEGÚN LA PÁGINA
+                setTimeout(function() {
+                    if (pagina === 'venta') {
+                        if (typeof cargarDatosIniciales === 'function') {
+                            cargarDatosIniciales();
+                        }
+                        if (typeof renderizarCarrito === 'function') {
+                            renderizarCarrito();
+                        }
+                    } else if (pagina === 'misventas') {
+                        if (typeof window.inicializarMisVentas === 'function') {
+                            console.log('🔄 Inicializando Mis Ventas...');
+                            window.inicializarMisVentas();
+                        } else {
+                            console.warn('⚠️ función inicializarMisVentas no encontrada');
+                            // Intentar ejecutar directamente si está en el script del fragmento
+                            if (typeof inicializarMisVentas === 'function') {
+                                inicializarMisVentas();
+                            }
+                        }
+                    } else if (pagina === 'devolucion') {
+                        if (typeof window.inicializarDevolucion === 'function') {
+                            window.inicializarDevolucion();
+                        }
+                    } else if (pagina === 'apertura') {
+                        if (typeof window.inicializarApertura === 'function') {
+                            window.inicializarApertura();
+                        }
+                    } else if (pagina === 'cierre') {
+                        if (typeof window.inicializarCierre === 'function') {
+                            window.inicializarCierre();
+                        }
+                    }
+                }, 50);
+                
+                console.log('✅ Vista cargada:', pagina);
+            })
+            .catch(error => {
+                console.error('❌ Error al cargar vista:', error);
+                // Fallback: recargar la página
+                window.location.href = '/views/' + pagina;
             });
+        };
 
-            // Marcar tab activo según página actual
-            tabs.forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.page === paginaActual);
-            });
-        }
-
-        // ============================================================
-        // RELOJ
-        // ============================================================
-
+        // === RELOJ ===
         function actualizarReloj() {
             const el = document.getElementById('reloj');
             if (!el) return;
@@ -668,56 +669,84 @@
             el.textContent = h + ':' + m;
         }
 
-        // ============================================================
-        // CERRAR SESIÓN
-        // ============================================================
-
-        function cerrarSesion() {
+        // === CERRAR SESIÓN ===
+        window.cerrarSesion = function() {
             if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
                 window.location.href = '/logout';
             }
-        }
+        };
 
-        // ============================================================
-        // INICIALIZACIÓN
-        // ============================================================
+        // === MANEJAR BOTÓN ATRÁS ===
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.pagina) {
+                cambiarVista(event.state.pagina);
+            }
+        });
 
+        // === INICIALIZACIÓN (CORREGIDA) ===
         function init() {
-            // Reloj
+            // Iniciar reloj
             actualizarReloj();
             setInterval(actualizarReloj, 30000);
 
-            // Detectar página actual desde URL
+            // 🔥 DETECTAR PÁGINA ACTUAL DESDE LA URL
             const path = window.location.pathname;
-            const pageMatch = path.match(/\/api\/views\/([a-zA-Z0-9]+)/);
+            const pageMatch = path.match(/\/views\/([a-zA-Z0-9]+)/);
             if (pageMatch) {
                 paginaActual = pageMatch[1];
+            } else {
+                paginaActual = 'venta'; // por defecto
+            }
+            console.log('📄 Página actual detectada:', paginaActual);
+
+            // 🔥 ACTUALIZAR PESTAÑA ACTIVA DESDE EL INICIO
+            tabs.forEach(tab => {
+                // Ocultar/mostrar según estado (se actualizará después)
+                tab.classList.toggle('active', tab.dataset.page === paginaActual);
+            });
+
+            // Verificar turno activo
+            if (idUsuario) {
+                console.log('🔍 Verificando turno activo...');
+                fetch('/turnos-caja/usuario/' + idUsuario + '/activo')
+                    .then(response => {
+                        if (response.ok) return response.json();
+                        if (response.status === 404) return null;
+                        throw new Error('Error al verificar turno');
+                    })
+                    .then(data => {
+                        if (data && data.activo && data.turno) {
+                            console.log('✅ Turno activo encontrado');
+                            actualizarEstadoCaja(true);
+                            // Si estamos en apertura pero hay turno, redirigir a venta
+                            if (paginaActual === 'apertura') {
+                                window.location.href = '/views/venta';
+                            }
+                        } else {
+                            console.log('⚠️ No hay turno activo');
+                            actualizarEstadoCaja(false);
+                            // Si no estamos en apertura, redirigir
+                            if (paginaActual !== 'apertura') {
+                                window.location.href = '/views/apertura';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Error al verificar turno:', error);
+                        actualizarEstadoCaja(false);
+                        if (paginaActual !== 'apertura') {
+                            window.location.href = '/views/apertura';
+                        }
+                    });
+            } else {
+                console.warn('⚠️ No hay idUsuario');
+                window.location.href = '/login';
             }
 
-            // Verificar estado de caja desde el backend
-            fetch('/api/caja/api/turno-activo')
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.turno) {
-                        actualizarEstadoCaja(true);
-                    } else {
-                        // Si no hay turno activo y no estamos en apertura, redirigir
-                        if (paginaActual !== 'apertura') {
-                            window.location.href = '/api/views/apertura';
-                        }
-                    }
-                })
-                .catch(() => {
-                    // Si hay error, asumir caja cerrada
-                    if (paginaActual !== 'apertura') {
-                        window.location.href = '/api/views/apertura';
-                    }
-                });
-
-            console.log('✅ Layout POS inicializado');
+            console.log('✅ Layout POS inicializado correctamente');
         }
 
-        // Ejecutar cuando el DOM esté listo
+        // Ejecutar inicialización
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);
         } else {
@@ -726,6 +755,9 @@
 
         /*]]>*/
     </script>
+	<!-- jsPDF para generar PDFs -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 </body>
 </html>

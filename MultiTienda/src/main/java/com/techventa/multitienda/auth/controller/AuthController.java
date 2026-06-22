@@ -26,14 +26,12 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String login(
-            @RequestParam String email,
-            @RequestParam String password,
-            HttpSession session,
-            Model model) {
+    public String login(@RequestParam String email,
+                        @RequestParam String password,
+                        HttpSession session,
+                        Model model) {
 
         Usuario usuario = authService.login(email, password);
-
         if (usuario == null) {
             model.addAttribute("error", "Correo o contraseña incorrectos");
             return "login";
@@ -41,28 +39,21 @@ public class AuthController {
 
         session.setAttribute("usuarioLogueado", usuario);
 
-        // ============================================================
-        // REDIRECCIÓN SEGÚN ROL
-        // ============================================================
         String rol = usuario.getRol().getNombreRol().toLowerCase();
         
-        // SI ES CAJERO → va al POS (sin sidebar)
         if ("cajero".equals(rol)) {
-            return "redirect:/api/views/apertura";
+            return "redirect:/views/apertura";   // ✅ SIN /api
         }
         
-        // Para los demás roles → dashboard con sidebar
         return "redirect:/dashboard";
     }
     
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
         Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
-        
         if (usuario == null) {
             return "redirect:/login";
         }
-        
         model.addAttribute("userRole", usuario.getRol().getNombreRol().toLowerCase());
         return "dashboard"; 
     }

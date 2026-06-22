@@ -21,4 +21,6 @@ public interface TurnoCajaRepository extends JpaRepository<TurnoCaja, Integer> {
     Optional<TurnoCaja> findByCaja_IdCajaAndEstadoTurno(Integer idCaja, String estado);
 
     List<TurnoCaja> findByFechaAperturaBetween(LocalDate inicio, LocalDate fin);
+ // En TurnoCajaRepository.java
+    Optional<TurnoCaja> findByCajero_IdUsuarioAndEstadoTurno(Integer idCajero, String estado);
 }
