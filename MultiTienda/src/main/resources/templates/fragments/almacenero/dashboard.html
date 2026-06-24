@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Almacén - TechVenta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .kpi-card {
+            border: none;
+            border-radius: 12px;
+            transition: transform 0.2s;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+        }
+        .icon-shape {
+            width: 48px;
+            height: 48px;
+            background-color: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            border-bottom: 3px solid #0d6efd;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container-fluid py-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fa-solid fa-warehouse me-2 text-primary"></i>Panel de Control de Almacén
+            </h1>
+            <p class="text-muted small mb-0">Gestión de inventarios, alertas de rotura y trazabilidad de mermas</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-dark px-3 py-2 fs-6">
+                <i class="fa-solid fa-shop me-1"></i> Sucursal: <span th:text="${session.usuarioLogueado?.tienda?.nombreTienda}">Cargando tienda...</span>
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card kpi-card bg-primary text-white h-100 shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase fw-bold text-white-50 small">Stock Total Físico</h6>
+                        <h2 class="mb-0 fw-bold" id="kpi-stock-total">0</h2>
+                    </div>
+                    <div class="icon-shape"><i class="fa-solid fa-boxes-stacked fs-4"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card kpi-card bg-danger text-white h-100 shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase fw-bold text-white-50 small">Alertas de Stock Crítico</h6>
+                        <h2 class="mb-0 fw-bold" id="kpi-stock-critico">0</h2>
+                    </div>
+                    <div class="icon-shape"><i class="fa-solid fa-triangle-exclamation fs-4"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card kpi-card bg-warning text-dark h-100 shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase fw-bold text-black-50 small">Ítems por Validar</h6>
+                        <h2 class="mb-0 fw-bold" id="kpi-pendientes-validar">0</h2>
+                    </div>
+                    <div class="icon-shape" style="background-color: rgba(0,0,0,0.08);"><i class="fa-solid fa-clipboard-check fs-4"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card kpi-card bg-secondary text-white h-100 shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase fw-bold text-white-50 small">Pérdida por Mermas</h6>
+                        <h2 class="mb-0 fw-bold" id="kpi-valor-mermas">S/ 0.00</h2>
+                    </div>
+                    <div class="icon-shape"><i class="fa-solid fa-dumpster fs-4"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white pt-3">
+            <ul class="nav nav-tabs card-header-tabs" id="dashboardTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active text-danger" id="criticos-tab" data-bs-toggle="tab" data-bs-target="#criticos-panel" type="button" role="tab">
+                        <i class="fa-solid fa-arrow-trend-down me-1"></i> Productos Críticos
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-dark" id="pedidos-tab" data-bs-toggle="tab" data-bs-target="#pedidos-panel" type="button" role="tab">
+                        <i class="fa-solid fa-truck-ramp-box me-1"></i> Pedidos en Camino
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-dark" id="kardex-tab" data-bs-toggle="tab" data-bs-target="#kardex-panel" type="button" role="tab">
+                        <i class="fa-solid fa-clock-rotate-left me-1"></i> Historial Reciente (Kardex)
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body tab-content" id="dashboardTabsContent">
+            
+            <div class="tab-pane fade show active" id="criticos-panel" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Producto</th>
+                                <th>Marca</th>
+                                <th class="text-center">Stock Actual</th>
+                                <th class="text-center">Stock Mínimo</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-criticos">
+                            <tr><td colspan="6" class="text-center py-3 text-muted">Cargando productos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="pedidos-panel" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Código de Orden</th>
+                                <th>Proveedor</th>
+                                <th>Fecha de Entrega Est.</th>
+                                <th>Estado de Envío</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-pedidos">
+                            <tr><td colspan="4" class="text-center py-3 text-muted">Cargando órdenes de compra...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="kardex-panel" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha / Hora</th>
+                                <th>Producto</th>
+                                <th>Tipo de Operación</th>
+                                <th class="text-center">Cantidad</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-kardex">
+                            <tr><td colspan="5" class="text-center py-3 text-muted">Cargando movimientos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // 1. LLAMADA DIRECTA AL INSTANTE (Sin addEventListener)
+    // Al quitar el DOMContentLoaded, se ejecutará inmediatamente al cargarse la vista
+    cargarDatosDashboard();
+
+    function cargarDatosDashboard() {
+        // Hacemos el Fetch directamente al RestController seguro
+        fetch('/api/dashboard/almacen')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("No se pudo obtener las métricas del almacén");
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 2. Inyectar valores numéricos en los KPIs principales
+                document.getElementById('kpi-stock-total').textContent = data.stockTotal.toLocaleString();
+                document.getElementById('kpi-stock-critico').textContent = data.stockCriticoCount;
+                document.getElementById('kpi-pendientes-validar').textContent = data.pendientesValidarCount;
+                
+                // Darle formato monetario al valor de las mermas (S/. Soles peruanos)
+                document.getElementById('kpi-valor-mermas').textContent = new Intl.NumberFormat('es-PE', {
+                    style: 'currency',
+                    currency: 'PEN'
+                }).format(data.valorMermas);
+
+                // 3. Renderizar Tabla A: Productos Críticos
+                const tbodyCriticos = document.getElementById('tabla-criticos');
+                tbodyCriticos.innerHTML = '';
+                if(data.productosCriticos.length === 0) {
+                    tbodyCriticos.innerHTML = '<tr><td colspan="6" class="text-center text-success py-3 fw-bold">¡Todo en orden! No hay productos con stock crítico.</td></tr>';
+                } else {
+                    data.productosCriticos.forEach(prod => {
+                        tbodyCriticos.innerHTML += `
+                            <tr>
+                                <td><strong>#${prod.id}</strong></td>
+                                <td>${prod.nombre}</td>
+                                <td><span class="badge bg-secondary">${prod.marca}</span></td>
+                                <td class="text-center text-danger fw-bold">${prod.stock}</td>
+                                <td class="text-center text-muted">${prod.minimo}</td>
+                                <td><span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> Reabastecer</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                // 4. Renderizar Tabla B: Pedidos en Camino
+                const tbodyPedidos = document.getElementById('tabla-pedidos');
+                tbodyPedidos.innerHTML = '';
+                if(data.pedidosCamino.length === 0) {
+                    tbodyPedidos.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No hay órdenes de compra programadas en camino.</td></tr>';
+                } else {
+                    data.pedidosCamino.forEach(ped => {
+                        let badgeColor = ped.estado === 'ENVIADA' ? 'bg-info text-dark' : 'bg-warning text-dark';
+                        tbodyPedidos.innerHTML += `
+                            <tr>
+                                <td><code class="text-primary fw-bold">${ped.codigo}</code></td>
+                                <td>${ped.proveedor}</td>
+                                <td>${new Date(ped.fechaEntrega).toLocaleDateString('es-PE')}</td>
+                                <td><span class="badge ${badgeColor}"><i class="fa-solid fa-truck me-1"></i> ${ped.estado}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                // 5. Renderizar Tabla C: Historial del Kardex
+                const tbodyKardex = document.getElementById('tabla-kardex');
+                tbodyKardex.innerHTML = '';
+                if(data.actividadReciente.length === 0) {
+                    tbodyKardex.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No se registran movimientos de inventario recientes.</td></tr>';
+                } else {
+                    data.actividadReciente.forEach(mov => {
+                        let esEntrada = mov.tipoMovimiento.toLowerCase().includes('ingreso') || mov.tipoMovimiento.toLowerCase().includes('entrada') || mov.tipoMovimiento.toLowerCase().includes('recepcion');
+                        let badgeMov = esEntrada ? 'bg-success-subtle text-success border border-success' : 'bg-danger-subtle text-danger border border-danger';
+                        let signo = esEntrada ? '+' : '-';
+
+                        tbodyKardex.innerHTML += `
+                            <tr>
+                                <td class="text-muted small">${new Date(mov.fecha).toLocaleString('es-PE')}</td>
+                                <td><strong>${mov.producto}</strong></td>
+                                <td><span class="badge ${badgeMov} text-uppercase">${mov.tipoMovimiento}</span></td>
+                                <td class="text-center fw-bold ${esEntrada ? 'text-success':'text-danger'}">${signo}${mov.cantidad}</td>
+                                <td class="text-muted small italic">${mov.observacion || '-'}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Error al pintar el dashboard:", error);
+                alert("Hubo un problema al procesar las estadísticas del inventario.");
+            });
+    }
+</script>
+</body>
+</html>
