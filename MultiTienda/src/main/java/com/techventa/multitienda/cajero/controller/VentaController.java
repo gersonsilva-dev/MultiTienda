@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/ventas")
+@RequestMapping("/api/ventas")  // 🔥 AGREGAR /api AQUÍ
 public class VentaController {
 
     @Autowired
@@ -86,7 +86,6 @@ public class VentaController {
         }
     }
 
-    // Clase auxiliar para recibir venta + detalles
     public static class VentaRequest {
         private Venta venta;
         private List<DetalleVenta> detalles;

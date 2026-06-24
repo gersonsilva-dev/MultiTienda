@@ -42,7 +42,7 @@ public class AuthController {
         String rol = usuario.getRol().getNombreRol().toLowerCase();
         
         if ("cajero".equals(rol)) {
-            return "redirect:/views/apertura";   // ✅ SIN /api
+            return "redirect:/api/views/apertura";   // ✅ CORREGIDO
         }
         
         return "redirect:/dashboard";

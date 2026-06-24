@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/turnos-caja")
+@RequestMapping("/api/turnos-caja")  // 🔥 AGREGAR /api AQUÍ
 public class TurnoCajaController {
 
     @Autowired
@@ -66,7 +66,6 @@ public class TurnoCajaController {
     public ResponseEntity<Object> abrirTurno(@RequestBody Map<String, Object> requestData,
                                               HttpSession session) {
         try {
-            // 1️⃣ Obtener usuario de la sesión
             Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
             if (usuario == null) {
                 Map<String, String> error = new HashMap<>();
@@ -74,21 +73,18 @@ public class TurnoCajaController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
             }
 
-            // 2️⃣ Validar que el usuario tenga tienda
             if (usuario.getTienda() == null) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "El usuario no tiene una tienda asignada");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
             }
 
-            // 3️⃣ Validar que el usuario tenga caja
             if (usuario.getCaja() == null) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "El usuario no tiene una caja asignada");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
             }
 
-            // 4️⃣ Obtener el fondo inicial del request
             BigDecimal fondoInicial;
             if (requestData.get("fondoInicial") instanceof Integer) {
                 fondoInicial = BigDecimal.valueOf((Integer) requestData.get("fondoInicial"));
@@ -98,17 +94,14 @@ public class TurnoCajaController {
                 fondoInicial = new BigDecimal(requestData.get("fondoInicial").toString());
             }
 
-            // 5️⃣ Crear el turno automáticamente con los datos del usuario
             TurnoCaja turnoCaja = new TurnoCaja();
             turnoCaja.setCajero(usuario);
             turnoCaja.setTienda(usuario.getTienda());
             turnoCaja.setCaja(usuario.getCaja());
             turnoCaja.setFondoInicial(fondoInicial);
 
-            // 6️⃣ Abrir el turno
             TurnoCaja nuevo = turnoCajaService.abrirTurno(turnoCaja);
 
-            // 7️⃣ Respuesta exitosa
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Turno abierto correctamente");
@@ -141,7 +134,8 @@ public class TurnoCajaController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    // En TurnoCajaController.java
+
+    // 🔥 ENDPOINT PARA BUSCAR TURNO ACTIVO POR USUARIO (YA ESTÁ, PERO CON /api)
     @GetMapping("/usuario/{idUsuario}/activo")
     public ResponseEntity<Map<String, Object>> buscarActivoPorUsuario(@PathVariable Integer idUsuario) {
         Map<String, Object> response = new HashMap<>();
