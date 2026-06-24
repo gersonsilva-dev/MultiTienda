@@ -1421,43 +1421,52 @@
     // ================================================================
     // CALCULAR DESCUENTOS
     // ================================================================
-    function calcularDescuentos(subtotal, items) {
-        var descuentoTotal = 0;
-        
-        if (!ofertasActivas || ofertasActivas.length === 0) {
-            return { descuento: 0 };
-        }
+	// ================================================================
+	// CALCULAR DESCUENTOS
+	// ================================================================
+	function calcularDescuentos(subtotal, items) {
+	    var descuentoTotal = 0;
+	    
+	    if (!ofertasActivas || ofertasActivas.length === 0) {
+	        return { descuento: 0 };
+	    }
 
-        ofertasActivas.forEach(function(oferta) {
-            var tipo = oferta.tipoDescuento?.idTipoDescuento || 0;
-            var valor = oferta.valorDescuento || 0;
-            var montoMinimo = oferta.montoMinimo || 0;
-            var cantidadCompra = oferta.cantidadCompra || 2;
+	    ofertasActivas.forEach(function(oferta) {
+	        var tipo = oferta.tipoDescuento?.idTipoDescuento || 0;
+	        var valor = oferta.valorDescuento || 0;
+	        var montoMinimo = oferta.montoMinimo || 0;
+	        var cantidadCompra = oferta.cantidadCompra || 2;
 
-            if (tipo === 3) {
-                items.forEach(function(item) {
-                    var gratis = Math.floor(item.cantidad / cantidadCompra);
-                    if (gratis > 0) {
-                        descuentoTotal += gratis * item.precio;
-                    }
-                });
-            } else if (tipo === 1) {
-                if (subtotal >= montoMinimo && valor > 0) {
-                    descuentoTotal += subtotal * (valor / 100);
-                }
-            } else if (tipo === 2) {
-                if (subtotal >= montoMinimo && valor > 0) {
-                    descuentoTotal += Math.min(valor, subtotal);
-                }
-            }
-        });
+	        if (tipo === 3) {
+	            items.forEach(function(item) {
+	                var gratis = Math.floor(item.cantidad / cantidadCompra);
+	                if (gratis > 0) {
+	                    descuentoTotal += gratis * item.precio;
+	                }
+	            });
+	        } else if (tipo === 1) {
+	            if (subtotal >= montoMinimo && valor > 0) {
+	                descuentoTotal += subtotal * (valor / 100);
+	            }
+	        } else if (tipo === 2) {
+	            if (subtotal >= montoMinimo && valor > 0) {
+	                descuentoTotal += Math.min(valor, subtotal);
+	            }
+	        }
+	    });
 
-        if (descuentoTotal > 0) {
-            mostrarToast('🎯 Descuento aplicado: -S/ ' + descuentoTotal.toFixed(2), 'success');
-        }
+	    // 🔥 EVITAR DESCUENTO NEGATIVO 🔥
+	    // Si el descuento supera el subtotal, lo limitamos al subtotal
+	    if (descuentoTotal > subtotal) {
+	        descuentoTotal = subtotal;
+	    }
 
-        return { descuento: descuentoTotal };
-    }
+	    if (descuentoTotal > 0) {
+	        mostrarToast('🎯 Descuento aplicado: -S/ ' + descuentoTotal.toFixed(2), 'success');
+	    }
+
+	    return { descuento: descuentoTotal };
+	}
 
     // ================================================================
     // FUNCIONES DE CLIENTE (CORREGIDAS)
