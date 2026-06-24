@@ -1,0 +1,2205 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="content" th:remove="tag">
+    <style>
+        /* ============================================================ */
+        /* ESTILOS DE VENTA - MEJORADOS                                */
+        /* ============================================================ */
+        .venta-view {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 12px;
+            padding: 12px;
+            height: 100%;
+            max-height: calc(100vh - 110px);
+            background: var(--color-background-tertiary);
+        }
+
+        .venta-left {
+            background: var(--color-background-primary);
+            border-radius: var(--border-radius-lg);
+            border: 1px solid var(--color-border-tertiary);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .venta-right {
+            background: var(--color-background-primary);
+            border-radius: var(--border-radius-lg);
+            border: 1px solid var(--color-border-tertiary);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* ===== SEARCH BAR ===== */
+        .search-bar {
+            display: flex;
+            gap: 8px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            flex-shrink: 0;
+        }
+        .search-inp {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 0 12px;
+            border: 1px solid var(--color-border-tertiary);
+            transition: border-color 0.2s;
+        }
+        .search-inp:focus-within { border-color: #16A34A; }
+        .search-inp i { color: var(--color-text-tertiary); font-size: 16px; }
+        .search-inp input {
+            border: none;
+            background: transparent;
+            padding: 8px 0;
+            font-size: 13px;
+            flex: 1;
+            outline: none;
+            color: var(--color-text-primary);
+        }
+        .search-inp input::placeholder { color: var(--color-text-tertiary); }
+        .search-inp .clear-btn {
+            cursor: pointer;
+            color: var(--color-text-tertiary);
+            font-size: 14px;
+            padding: 0 4px;
+            transition: color 0.2s;
+        }
+        .search-inp .clear-btn:hover {
+            color: var(--color-text-primary);
+        }
+
+        .scan-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #0F172A;
+            color: #fff;
+            border: none;
+            padding: 0 18px;
+            border-radius: var(--border-radius-md);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .scan-btn:hover { background: #1E293B; }
+
+        /* ===== OFERTAS PANEL ===== */
+        .ofertas-panel {
+            border-bottom: 1px solid var(--color-border-tertiary);
+            flex-shrink: 0;
+            background: var(--color-background-secondary);
+        }
+        .ofertas-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 14px;
+        }
+        .ofertas-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+        }
+        .ofertas-title i { color: #F59E0B; }
+        .ofertas-sub {
+            font-size: 10px;
+            color: var(--color-text-tertiary);
+        }
+        .ofertas-table-wrap {
+            max-height: 80px;
+            overflow-y: auto;
+            padding: 0 14px 6px 14px;
+        }
+        .ofertas-table {
+            width: 100%;
+            font-size: 11px;
+            border-collapse: collapse;
+        }
+        .ofertas-table th {
+            text-align: left;
+            color: var(--color-text-tertiary);
+            font-weight: 500;
+            padding: 2px 4px;
+            border-bottom: 1px solid var(--color-border-tertiary);
+        }
+        .ofertas-table td {
+            padding: 3px 4px;
+            color: var(--color-text-secondary);
+            border-bottom: 1px solid #F1F5F9;
+        }
+        .ofertas-table tr:last-child td { border-bottom: none; }
+
+        /* ===== CART HEAD ===== */
+        .cart-head {
+            display: grid;
+            grid-template-columns: 1fr 70px 80px 80px 30px;
+            padding: 8px 14px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--color-text-tertiary);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            flex-shrink: 0;
+            background: var(--color-background-secondary);
+        }
+
+        /* ===== CART AREA ===== */
+        .cart-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 6px 10px 6px 14px;
+        }
+        .cart-area::-webkit-scrollbar { width: 4px; }
+        .cart-area::-webkit-scrollbar-thumb { background: var(--color-border-tertiary); border-radius: 99px; }
+
+        .empty-cart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--color-text-tertiary);
+        }
+        .empty-cart i { font-size: 48px; color: #CBD5E1; margin-bottom: 10px; }
+        .empty-cart p { font-size: 13px; }
+
+        /* ===== CART ITEM ===== */
+        .cart-item {
+            display: grid;
+            grid-template-columns: 1fr 70px 80px 80px 30px;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #F1F5F9;
+            font-size: 13px;
+            gap: 0;
+        }
+        .cart-item .item-name { font-weight: 500; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cart-item .item-cant { display: flex; align-items: center; gap: 4px; justify-content: center; }
+        .cart-item .item-cant button {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            border: 1px solid var(--color-border-tertiary);
+            background: var(--color-background-secondary);
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-secondary);
+            transition: all 0.15s;
+        }
+        .cart-item .item-cant button:hover { background: #16A34A; color: #fff; border-color: #16A34A; }
+        .cart-item .item-cant span { min-width: 24px; text-align: center; font-weight: 500; }
+        .cart-item .item-precio { text-align: right; color: var(--color-text-secondary); }
+        .cart-item .item-total { text-align: right; font-weight: 600; color: var(--color-text-primary); }
+        .cart-item .item-del {
+            text-align: center;
+            cursor: pointer;
+            color: var(--color-text-tertiary);
+            transition: color 0.2s;
+            font-size: 16px;
+        }
+        .cart-item .item-del:hover { color: #EF4444; }
+
+        /* ===== RIGHT PANEL ===== */
+        .totals-sec {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            flex-shrink: 0;
+        }
+        .tot-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+        .tot-row .tot-val.desc { color: #EF4444; }
+        .grand-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0 0 0;
+            font-size: 18px;
+            font-weight: 700;
+            border-top: 2px solid var(--color-border-tertiary);
+            margin-top: 6px;
+        }
+        .grand-row .grand-label { color: var(--color-text-primary); }
+        .grand-row .grand-val { color: #16A34A; }
+
+        /* ===== COMPROBANTE ===== */
+        .comp-sec {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            flex-shrink: 0;
+        }
+        .sec-lbl {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--color-text-tertiary);
+            margin-bottom: 6px;
+        }
+        .comp-opts {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .comp-opt {
+            padding: 4px 16px;
+            border-radius: 99px;
+            border: 1px solid var(--color-border-tertiary);
+            background: transparent;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            transition: all 0.2s;
+        }
+        .comp-opt.sel {
+            background: #0F172A;
+            color: #fff;
+            border-color: #0F172A;
+        }
+        .comp-opt:hover:not(.sel) { background: var(--color-background-secondary); }
+
+        .comp-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .comp-row {
+            display: flex;
+            gap: 8px;
+        }
+        .cf-row {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .cf-label {
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--color-text-tertiary);
+        }
+        .cf-input {
+            background: var(--color-background-secondary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            padding: 4px 10px;
+            font-size: 12px;
+            color: var(--color-text-primary);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .cf-input:focus { border-color: #16A34A; }
+        .comp-btns {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .btn-sm {
+            padding: 4px 14px;
+            border-radius: 99px;
+            border: 1px solid var(--color-border-tertiary);
+            background: transparent;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--color-text-secondary);
+            transition: all 0.2s;
+        }
+        .btn-sm:hover { background: var(--color-background-secondary); }
+        .btn-sm.primary {
+            background: #0F172A;
+            color: #fff;
+            border-color: #0F172A;
+        }
+        .btn-sm.primary:hover { background: #1E293B; }
+        .cf-note {
+            font-size: 9px;
+            color: var(--color-text-tertiary);
+            margin-top: 2px;
+        }
+
+        /* ============================================================ */
+        /* 🔥 PAGOS - PANELES PROFESIONALES 🔥                       */
+        /* ============================================================ */
+        .pay-sec {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            flex-shrink: 0;
+            background: var(--color-background-primary);
+        }
+
+        .pay-sec .sec-lbl {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--color-text-tertiary);
+            margin-bottom: 8px;
+        }
+
+        .pay-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        .pay-card {
+            padding: 12px 8px;
+            border-radius: var(--border-radius-md);
+            border: 2px solid var(--color-border-tertiary);
+            background: var(--color-background-secondary);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .pay-card:hover {
+            border-color: #16A34A;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
+        }
+
+        .pay-card.sel {
+            border-color: #16A34A;
+            background: #F0FDF4;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+        }
+
+        .pay-card .pay-icon {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 4px;
+            color: var(--color-text-secondary);
+        }
+        .pay-card.sel .pay-icon {
+            color: #16A34A;
+        }
+
+        .pay-card .pay-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .pay-card .pay-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #16A34A;
+            color: #fff;
+            font-size: 8px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 99px;
+            display: none;
+        }
+
+        .pay-card.sel .pay-badge {
+            display: block;
+        }
+
+        .pay-card .pay-desc {
+            font-size: 9px;
+            color: var(--color-text-tertiary);
+            margin-top: 2px;
+        }
+
+        /* ===== ACCIONES ===== */
+        .action-sec {
+            padding: 12px 16px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: auto;
+            background: var(--color-background-primary);
+        }
+        .btn-cobrar {
+            background: #16A34A;
+            color: #fff;
+            border: none;
+            border-radius: 99px;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-cobrar:hover { background: #15803D; }
+        .btn-cobrar span { background: rgba(255,255,255,0.2); padding: 0 12px; border-radius: 99px; }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-s {
+            flex: 1;
+            padding: 8px;
+            border-radius: 99px;
+            border: none;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        .btn-warn { background: #F59E0B; color: #fff; }
+        .btn-warn:hover { background: #D97706; }
+        .btn-danger { background: #EF4444; color: #fff; }
+        .btn-danger:hover { background: #DC2626; }
+
+        /* ============================================================ */
+        /* 🔥 MODAL DE PAGO MEJORADO 🔥                                */
+        /* ============================================================ */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #fff;
+            border-radius: 16px;
+            max-width: 480px;
+            width: 100%;
+            padding: 28px 32px;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+            animation: modalIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-header h3 i {
+            font-size: 22px;
+            color: #16A34A;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--color-text-tertiary);
+            transition: color 0.2s;
+        }
+        .modal-close:hover { color: var(--color-text-primary); }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .modal-total {
+            background: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            border-radius: var(--border-radius-md);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-total .label { font-size: 13px; color: var(--color-text-secondary); }
+        .modal-total .value { font-size: 22px; font-weight: 700; color: #16A34A; }
+
+        .modal-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .modal-field label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .modal-field input {
+            padding: 10px 14px;
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            font-size: 14px;
+            color: var(--color-text-primary);
+            background: var(--color-background-secondary);
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        .modal-field input:focus {
+            border-color: #16A34A;
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+        }
+
+        .modal-field input:read-only {
+            background: #F1F5F9;
+            cursor: not-allowed;
+        }
+
+        .modal-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            padding: 12px;
+            border-radius: 99px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .modal-btn-primary {
+            background: #16A34A;
+            color: #fff;
+        }
+
+        .modal-btn-primary:hover {
+            background: #15803D;
+        }
+
+        .modal-btn-secondary {
+            background: var(--color-background-secondary);
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border-tertiary);
+        }
+
+        .modal-btn-secondary:hover {
+            background: var(--color-border-tertiary);
+        }
+
+        .modal-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal-qr {
+            text-align: center;
+            padding: 16px;
+            background: #fff;
+            border: 2px dashed var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+        }
+
+        .modal-qr .qr-placeholder {
+            font-size: 48px;
+            color: #16A34A;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .modal-qr .qr-text {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+            margin-top: 4px;
+        }
+
+        .modal-qr .qr-code {
+            background: #0F172A;
+            color: #fff;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 16px;
+            letter-spacing: 2px;
+            display: inline-block;
+        }
+
+        .mt-8 { margin-top: 8px; }
+
+        /* ===== VISTA PREVIA DE BOLETA ===== */
+        .boleta-preview {
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 12px;
+            font-size: 10px;
+            color: var(--color-text-primary);
+            border: 0.5px dashed var(--color-border-tertiary);
+        }
+        .bp-header {
+            text-align: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--color-border-tertiary);
+        }
+        .bp-title { font-size: 12px; font-weight: 500; letter-spacing: .05em; }
+        .bp-sub { font-size: 9px; color: var(--color-text-secondary); margin-top: 1px; }
+        .bp-row { display: flex; justify-content: space-between; padding: 1px 0; }
+        .bp-divider { border: none; border-top: 1px dashed var(--color-border-tertiary); margin: 5px 0; }
+        .bp-total { font-weight: 500; font-size: 11px; }
+        .vuelto-box {
+            background: #DCFCE7;
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .vuelto-label { font-size: 11px; color: #15803D; font-weight: 500; }
+        .vuelto-val { font-size: 20px; font-weight: 500; color: #15803D; }
+
+        /* ===== PANTALLA DE ÉXITO ===== */
+        .success-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+        .success-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: #DCFCE7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #16A34A;
+        }
+        .success-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+        .success-sub { font-size: 11px; color: var(--color-text-secondary); }
+        .success-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .venta-view { grid-template-columns: 1fr 300px; }
+        }
+        @media (max-width: 768px) {
+            .venta-view { grid-template-columns: 1fr; max-height: none; }
+            .venta-right { max-height: 400px; }
+            .pay-cards { grid-template-columns: 1fr 1fr; }
+            .modal-box { margin: 16px; padding: 20px; }
+        }
+        @media (max-width: 600px) {
+            .cart-head { font-size: 8px; grid-template-columns: 1fr 50px 60px 60px 25px; }
+            .cart-item { font-size: 11px; grid-template-columns: 1fr 50px 60px 60px 25px; }
+            .search-bar { flex-wrap: wrap; }
+            .scan-btn { width: 100%; justify-content: center; padding: 8px; }
+            .pay-cards { grid-template-columns: 1fr 1fr; }
+            .modal-row { grid-template-columns: 1fr; }
+        }
+
+        /* ===== TOAST NOTIFICATIONS ===== */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 200px;
+        }
+        .toast-success { background: #16A34A; }
+        .toast-error { background: #EF4444; }
+        .toast-warning { background: #F59E0B; }
+        .toast-info { background: #3B82F6; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ===== RESULTS ===== */
+        .results-container {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        .result-item {
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            transition: background 0.15s;
+        }
+        .result-item:hover {
+            background: var(--color-background-secondary);
+        }
+        .result-item .ri-name {
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--color-text-primary);
+        }
+        .result-item .ri-price {
+            font-size: 13px;
+            font-weight: 600;
+            color: #16A34A;
+        }
+        .result-item .ri-stock {
+            font-size: 10px;
+            color: var(--color-text-tertiary);
+        }
+        .result-item .ri-category {
+            font-size: 9px;
+            color: var(--color-text-tertiary);
+            background: var(--color-background-secondary);
+            padding: 1px 8px;
+            border-radius: 99px;
+            display: inline-block;
+        }
+        .ri-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+		
+		.boleta-preview {
+		    background: var(--color-background-secondary);
+		    border-radius: var(--border-radius-md);
+		    padding: 12px;
+		    font-size: 10px;
+		    color: var(--color-text-primary);
+		    border: 0.5px dashed var(--color-border-tertiary);
+		    max-height: 300px;
+		    overflow-y: auto;
+		}
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- CONTENIDO PRINCIPAL                                           -->
+    <!-- ============================================================ -->
+    <div class="venta-view">
+        <!-- LADO IZQUIERDO -->
+        <div class="venta-left">
+            <div class="search-bar">
+                <div class="search-wrapper" style="flex:1;position:relative;display:flex;align-items:center;">
+                    <div class="search-inp" style="flex:1;display:flex;align-items:center;gap:6px;">
+                        <i class="ti ti-search"></i>
+                        <input type="text" placeholder="Buscar por nombre, código o categoría..." 
+                               id="searchInp" onkeyup="buscarProductos()" onfocus="mostrarResultados()">
+                        <i class="ti ti-x clear-btn" onclick="limpiarBusqueda()"></i>
+                    </div>
+                    <div class="results-container" id="resultsContainer"></div>
+                </div>
+                <button class="scan-btn" onclick="escanearProducto()"><i class="ti ti-scan"></i>Escanear</button>
+            </div>
+
+            <div class="ofertas-panel">
+                <div class="ofertas-header">
+                    <div class="ofertas-title"><i class="ti ti-tag"></i>Promociones activas</div>
+                    <span class="ofertas-sub">Aplicadas automáticamente</span>
+                </div>
+                <div class="ofertas-table-wrap">
+                    <table class="ofertas-table">
+                        <thead><tr><th>Promoción</th><th>Aplica a</th><th>Beneficio</th></tr></thead>
+                        <tbody id="ofertasBody">
+                            <tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:10px;">Cargando promociones...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="cart-head">
+                <span>Producto</span>
+                <span style="text-align:center">Cant.</span>
+                <span style="text-align:right">P/Unit</span>
+                <span style="text-align:right">Total</span>
+                <span></span>
+            </div>
+            <div class="cart-area" id="cartArea">
+                <div class="empty-cart">
+                    <i class="ti ti-shopping-cart"></i>
+                    <p>Agrega productos para comenzar la venta</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- LADO DERECHO -->
+        <div class="venta-right">
+            <div class="totals-sec">
+                <div class="tot-row"><span class="tot-label">Subtotal</span><span class="tot-val" id="subtotal">S/ 0.00</span></div>
+                <div class="tot-row"><span class="tot-label">Descuento</span><span class="tot-val desc" id="descuento">-S/ 0.00</span></div>
+                <div class="tot-row"><span class="tot-label">IGV (18%)</span><span class="tot-val" id="igv">S/ 0.00</span></div>
+                <div class="grand-row">
+                    <span class="grand-label">Total</span>
+                    <span class="grand-val" id="totalVenta">S/ 0.00</span>
+                </div>
+            </div>
+
+            <div class="comp-sec">
+                <div class="sec-lbl">Comprobante</div>
+                <div class="comp-opts">
+                    <button class="comp-opt sel" id="cmpBoleta" onclick="selComp('boleta')">Boleta</button>
+                    <button class="comp-opt" id="cmpFactura" onclick="selComp('factura')">Factura</button>
+                </div>
+                <div class="comp-fields" id="compFields">
+                    <div class="comp-row">
+                        <div class="cf-row">
+                            <div class="cf-label">DNI / RUC</div>
+                            <input class="cf-input" id="clienteDni" value="99999999" placeholder="DNI o RUC del cliente">
+                        </div>
+                        <div class="cf-row" style="flex:2;">
+                            <div class="cf-label">Nombre / Razón Social</div>
+                            <input class="cf-input" id="clienteNombre" value="Cliente General" placeholder="Nombre completo">
+                        </div>
+                    </div>
+                    <div class="comp-btns">
+                        <button class="btn-sm primary" onclick="buscarCliente()"><i class="ti ti-search"></i>Buscar</button>
+                        <button class="btn-sm" onclick="limpiarCliente()"><i class="ti ti-x"></i>Limpiar Cliente</button>
+                    </div>
+                    <div class="cf-note" id="compNote">Boleta — Datos del comprador</div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- 🔥 METODOS DE PAGO - PANELES PROFESIONALES 🔥              -->
+            <!-- ============================================================ -->
+            <div class="pay-sec">
+                <div class="sec-lbl">Método de pago</div>
+                <div class="pay-cards">
+                    <div class="pay-card sel" onclick="selPayCard(this, 'efectivo')">
+                        <span class="pay-icon"><i class="ti ti-cash"></i></span>
+                        <div class="pay-name">Efectivo</div>
+                        <div class="pay-desc">Pago en mano</div>
+                        <span class="pay-badge">✓</span>
+                    </div>
+                    <div class="pay-card" onclick="selPayCard(this, 'tarjeta')">
+                        <span class="pay-icon"><i class="ti ti-credit-card"></i></span>
+                        <div class="pay-name">Tarjeta</div>
+                        <div class="pay-desc">Débito / Crédito</div>
+                        <span class="pay-badge">✓</span>
+                    </div>
+                    <div class="pay-card" onclick="selPayCard(this, 'yapeplin')">
+                        <span class="pay-icon"><i class="ti ti-device-mobile"></i></span>
+                        <div class="pay-name">Yape / Plin</div>
+                        <div class="pay-desc">Pago digital</div>
+                        <span class="pay-badge">✓</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-sec">
+                <button class="btn-cobrar" onclick="abrirModalPago()"><i class="ti ti-cash-register"></i>Procesar Pago <span id="btnTotal">S/ 0.00</span></button>
+                <div class="btn-row">
+                    <button class="btn-s btn-warn" id="suspBtn" onclick="toggleSuspender()"><i class="ti ti-player-pause"></i><span id="suspLabel">Suspender</span></button>
+                    <button class="btn-s btn-danger" onclick="limpiarTodo()"><i class="ti ti-trash"></i>Limpiar Todo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 🔥 MODAL DE PAGO MEJORADO 🔥                                -->
+    <!-- ============================================================ -->
+    <div class="modal-overlay" id="modalPago">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="ti ti-cash"></i> <span id="modalTitle">Efectivo</span></h3>
+                <button class="modal-close" onclick="cerrarModalPago()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-total">
+                    <span class="label">Total a pagar</span>
+                    <span class="value" id="modalTotal">S/ 0.00</span>
+                </div>
+
+                <!-- ===== PASO 1: EFECTIVO - Ingreso monto ===== -->
+                <div id="stepEfectivo1">
+                    <div class="modal-field">
+                        <label>Monto con el que paga el cliente</label>
+                        <input type="number" id="montoPago" value="" step="0.50" min="0" oninput="calcularVuelto()" placeholder="0.00">
+                    </div>
+                    <button class="modal-btn modal-btn-primary" onclick="mostrarVueltoYBoleta()">
+                        <i class="ti ti-arrow-right"></i> Confirmar monto
+                    </button>
+                </div>
+
+                <!-- ===== PASO 2: EFECTIVO - Vuelto y vista previa ===== -->
+                <div id="stepEfectivo2" style="display:none;">
+                    <div class="vuelto-box">
+                        <span class="vuelto-label">Vuelto a entregar</span>
+                        <span class="vuelto-val" id="vueltoVal">S/ 0.00</span>
+                    </div>
+                    <div class="boleta-preview">
+                        <div class="bp-header">
+                            <div class="bp-title">TECHVENTA PRO</div>
+                            <div class="bp-sub">TechVenta Pro SAC · RUC 20123456789</div>
+                            <div class="bp-sub">Tienda Norte · Caja 1</div>
+                            <div class="bp-sub" id="bpFecha">01/06/2026 14:32</div>
+                            <div class="bp-sub" style="margin-top:4px;font-weight:500" id="bpComp">BOLETA — DNI: 99999999 · Cliente: Cliente</div>
+                        </div>
+                        <div id="bpItems">
+                            <!-- Se llenará dinámicamente con JS -->
+                        </div>
+                        <div class="bp-row"><span>IGV (18%)</span><span id="bpIgv">S/ 0.00</span></div>
+                        <div class="bp-divider"></div>
+                        <div class="bp-row bp-total"><span>TOTAL</span><span id="bpTotal">S/ 0.00</span></div>
+                        <div class="bp-divider"></div>
+                        <div class="bp-row"><span>Efectivo recibido</span><span id="bpEfectivo">S/ 0.00</span></div>
+                        <div class="bp-row" style="font-weight:500;color:var(--color-text-success)"><span>Vuelto</span><span id="bpVuelto">S/ 0.00</span></div>
+                        <div class="bp-divider"></div>
+                        <div style="text-align:center;font-size:9px;color:var(--color-text-tertiary)">¡Gracias por su compra!</div>
+                    </div>
+                    <button class="modal-btn modal-btn-primary" onclick="confirmarPago()">
+                        <i class="ti ti-check"></i> Confirmar venta
+                    </button>
+                </div>
+
+                <!-- ===== TARJETA ===== -->
+                <div id="stepTarjeta" style="display:none;">
+                    <div class="card-pay-row" style="padding:8px 0;text-align:center;">
+                        <div style="background:linear-gradient(135deg,#1E3A8A,#2563EB);border-radius:10px;padding:14px 16px;color:#fff;width:100%;max-width:200px;margin:0 auto;">
+                            <div style="font-size:14px;letter-spacing:.2em;margin-bottom:8px;font-weight:500;">•••• •••• •••• ————</div>
+                            <div style="display:flex;justify-content:space-between;font-size:9px;opacity:.8;"><span>Insertar o acercar tarjeta</span><span>POS listo</span></div>
+                        </div>
+                        <div style="font-size:11px;color:var(--color-text-secondary);text-align:center;margin-top:10px;">Solicita al cliente insertar, deslizar o acercar su tarjeta al lector POS. El cobro se realiza automáticamente.</div>
+                        <div style="width:100%;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;display:flex;align-items:center;gap:8px;margin:10px 0;">
+                            <i class="ti ti-loader-2" style="font-size:16px;color:var(--color-text-info);animation:spin .8s linear infinite"></i>
+                            <span style="font-size:11px;color:var(--color-text-secondary)">Esperando transacción en POS…</span>
+                        </div>
+                    </div>
+                    <button class="modal-btn modal-btn-primary" onclick="confirmarPago()"><i class="ti ti-check"></i> Pago confirmado en POS</button>
+                </div>
+
+                <!-- ===== YAPE / PLIN ===== -->
+                <div id="stepYape" style="display:none;">
+                    <div class="modal-qr">
+                        <div class="qr-placeholder"><i class="ti ti-device-mobile"></i></div>
+                        <div class="qr-code" id="qrDisplaySimple">938 456 789</div>
+                        <div class="qr-text">Escanea el código QR o paga al número</div>
+                        <div style="margin-top:8px;font-size:12px;color:var(--color-text-secondary);">
+                            Yape — <span id="yapeTimerSimple" style="font-weight:600;">60s</span> para pagar
+                        </div>
+                        <div style="width:100%;margin-top:8px;">
+                            <div class="timer-bar-track" style="width:100%;height:5px;background:var(--color-background-secondary);border-radius:99px;overflow:hidden;">
+                                <div class="timer-bar-fill" id="yapeBarSimple" style="width:100%;height:100%;border-radius:99px;background:#16A34A;transition:width 1s linear;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-top:8px;font-size:11px;color:var(--color-text-secondary);" id="yapeStatusSimple">⏳ Esperando pago del cliente…</div>
+                    </div>
+                    <button class="modal-btn modal-btn-primary" onclick="confirmarPago()" style="background:#16A34A;color:#fff;border:none;border-radius:99px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;width:100%;">
+                        <i class="ti ti-check"></i> Confirmar pago
+                    </button>
+                    <button class="modal-btn modal-btn-secondary" onclick="regenerarYape()" style="background:var(--color-background-secondary);color:var(--color-text-secondary);border:1px solid var(--color-border-tertiary);border-radius:99px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:8px;">
+                        <i class="ti ti-refresh"></i> Regenerar QR
+                    </button>
+                </div>
+
+                <!-- ===== PANTALLA DE ÉXITO ===== -->
+                <div id="stepSuccess" style="display:none;">
+                    <div class="success-screen">
+                        <div class="success-icon"><i class="ti ti-circle-check"></i></div>
+                        <div class="success-title">¡Compra registrada!</div>
+                        <div class="success-sub">Boleta #<span id="successNumero">4841</span> · S/ <span id="successTotal">0.00</span> · <span id="successMetodo">Efectivo</span></div>
+                        <div class="success-actions">
+							<button class="btn-prim" onclick="imprimirComprobante()" style="background:#16A34A;color:#fff;border:none;border-radius:99px;padding:8px 16px;font-weight:500;display:flex;align-items:center;gap:5px;cursor:pointer;">
+							    <i class="ti ti-printer"></i> Imprimir comprobante
+							</button>
+                            <button class="btn-sec2" onclick="cerrarModalPago()" style="background:transparent;border:1px solid var(--color-border-tertiary);border-radius:99px;padding:8px 16px;font-weight:500;display:flex;align-items:center;gap:5px;cursor:pointer;">
+                                <i class="ti ti-plus"></i> Nueva venta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT DE VENTA - MEJORADO                              -->
+    <!-- ============================================================ -->
+	    <!-- ============================================================ -->
+	    <!-- JAVASCRIPT DE VENTA - MEJORADO                              -->
+	    <!-- ============================================================ -->
+	   <script>
+    // ================================================================
+    // VARIABLES GLOBALES (CON VERIFICACIÓN)
+    // ================================================================
+    if (typeof carrito === 'undefined') {
+        var carrito = [];
+    }
+    if (typeof suspensiones === 'undefined') {
+        var suspensiones = [];
+    }
+    var tipoComprobante = 'boleta';
+    var metodoPago = 'efectivo';
+    var productos = [];
+    var ofertasActivas = [];
+    var timeoutBusqueda = null;
+    var turnoActivo = null;
+    var clienteData = null;
+    var vuelto = 0;
+    var yapeTimerInterval = null;
+    var yapeSegundos = 60;
+    var montoRecibido = 0;
+
+    // 🔥 VARIABLE PARA GUARDAR LA ÚLTIMA VENTA (PARA REIMPRIMIR)
+    window.ultimaVentaData = null;
+
+    // ================================================================
+    // FUNCIÓN PARA OBTENER TURNO DEL LAYOUT
+    // ================================================================
+    function obtenerTurnoActivo() {
+        if (window.getTurnoActivo) {
+            return window.getTurnoActivo();
+        }
+        return turnoActivo;
+    }
+
+    // ================================================================
+    // CERRAR BÚSQUEDA CON ESC
+    // ================================================================
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            ocultarResultados();
+            var inp = document.getElementById('searchInp');
+            if (inp) inp.blur();
+        }
+    });
+
+    // ================================================================
+    // LIMPIAR BÚSQUEDA (botón X)
+    // ================================================================
+    function limpiarBusqueda() {
+        var inp = document.getElementById('searchInp');
+        if (inp) inp.value = '';
+        ocultarResultados();
+    }
+
+    // ================================================================
+    // CARGAR DATOS INICIALES (CORREGIDO)
+    // ================================================================
+    function cargarDatosIniciales() {
+        var idUsuario = window.idUsuarioGlobal || 2;
+        
+        if (idUsuario) {
+            // ✅ CORREGIDO: /api/
+            fetch('/api/turnos-caja/usuario/' + idUsuario + '/activo')
+                .then(function(response) {
+                    if (response.status === 404) return null;
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data && data.activo) {
+                        turnoActivo = data.turno;
+                        console.log('✅ Turno activo:', turnoActivo);
+                        actualizarEstadoUI(true);
+                    } else {
+                        turnoActivo = null;
+                        actualizarEstadoUI(false);
+                    }
+                })
+                .catch(function(error) { console.error('❌ Error al verificar turno:', error); });
+        }
+        
+        cargarProductos();
+        cargarOfertas();
+    }
+
+    // ================================================================
+    // CARGAR PRODUCTOS (CORREGIDO)
+    // ================================================================
+    function cargarProductos() {
+        // ✅ CORREGIDO: /api/
+        fetch('/api/productos')
+            .then(function(response) {
+                if (!response.ok) throw new Error('Error al cargar productos');
+                return response.json();
+            })
+            .then(function(data) {
+                productos = data;
+                console.log('✅ Productos cargados:', productos.length);
+            })
+            .catch(function(error) {
+                console.error('❌ Error:', error);
+                productos = [];
+                mostrarToast('❌ Error al cargar productos', 'error');
+            });
+    }
+
+    // ================================================================
+    // CARGAR OFERTAS (CORREGIDO)
+    // ================================================================
+    function cargarOfertas() {
+        var ofertasBody = document.getElementById('ofertasBody');
+        if (!ofertasBody) return;
+        
+        // ✅ CORREGIDO: /api/
+        fetch('/api/ofertas/activas')
+            .then(function(response) {
+                if (!response.ok) throw new Error('Error al cargar ofertas');
+                return response.json();
+            })
+            .then(function(ofertas) {
+                ofertasActivas = ofertas;
+                console.log('✅ Ofertas cargadas:', ofertas.length);
+                renderizarOfertas(ofertasBody, ofertas);
+            })
+            .catch(function(error) {
+                console.error('❌ Error al cargar ofertas:', error);
+                ofertasBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:red;padding:10px;">Error al cargar promociones</td></tr>';
+            });
+    }
+
+    function renderizarOfertas(container, ofertas) {
+        if (!ofertas || ofertas.length === 0) {
+            container.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:10px;">Sin promociones activas</td></tr>';
+            return;
+        }
+
+        container.innerHTML = ofertas.map(function(o) {
+            var tipo = o.tipoDescuento?.idTipoDescuento || 0;
+            var beneficio = '';
+            if (tipo === 1) beneficio = o.valorDescuento + '%';
+            else if (tipo === 2) beneficio = 'S/ ' + o.valorDescuento;
+            else if (tipo === 3) beneficio = '2x1';
+            else beneficio = o.valorDescuento + '%';
+            
+            return '<tr><td><strong>' + o.nombreOferta + '</strong></td><td>' + (o.aplicaTodasTiendas ? 'Todas las tiendas' : 'Tienda específica') + '</td><td style="color:#16A34A;font-weight:600;">' + beneficio + '</td></tr>';
+        }).join('');
+    }
+
+    // ================================================================
+    // FUNCIONES DE BÚSQUEDA
+    // ================================================================
+    function buscarProductos() {
+        var termino = document.getElementById('searchInp')?.value?.trim()?.toLowerCase() || '';
+        var container = document.getElementById('resultsContainer');
+        if (!container) return;
+
+        if (!termino || termino.length < 1 || productos.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+
+        clearTimeout(timeoutBusqueda);
+        timeoutBusqueda = setTimeout(function() {
+            var resultados = productos.filter(function(p) {
+                return (p.nombreProducto && p.nombreProducto.toLowerCase().includes(termino)) || 
+                       (p.codigoBarras && p.codigoBarras.includes(termino)) ||
+                       (p.categoria && p.categoria.nombreCategoria && p.categoria.nombreCategoria.toLowerCase().includes(termino));
+            });
+
+            if (resultados.length === 0) {
+                container.innerHTML = '<div style="padding:12px;text-align:center;color:var(--color-text-tertiary);"><i class="ti ti-search"></i> No se encontraron productos</div>';
+                container.style.display = 'block';
+                return;
+            }
+
+            container.innerHTML = resultados.map(function(p) {
+                var precio = p.precioVenta || 0;
+                var categoria = p.categoria?.nombreCategoria || 'Sin categoría';
+                return '<div class="result-item" onclick="agregarProductoAlCarrito(' + p.idProducto + ')"><div class="ri-info"><div class="ri-name">' + p.nombreProducto + '</div><div><span class="ri-category">' + categoria + '</span> <span class="ri-stock">' + (p.codigoBarras || 'Sin código') + '</span></div></div><div class="ri-price">S/ ' + precio.toFixed(2) + '</div></div>';
+            }).join('');
+            container.style.display = 'block';
+        }, 300);
+    }
+
+    function mostrarResultados() {
+        var container = document.getElementById('resultsContainer');
+        if (container && document.getElementById('searchInp')?.value?.trim()) {
+            container.style.display = 'block';
+        }
+    }
+
+    function ocultarResultados() {
+        setTimeout(function() {
+            var container = document.getElementById('resultsContainer');
+            if (container) container.style.display = 'none';
+        }, 200);
+    }
+
+    // ================================================================
+    // ESCANEAR PRODUCTO (CORREGIDO)
+    // ================================================================
+    function escanearProducto() {
+        var codigo = prompt('📷 Escanea el código de barras:');
+        if (!codigo) return;
+
+        var producto = productos.find(function(p) { return p.codigoBarras === codigo; });
+        if (producto) {
+            agregarProductoAlCarrito(producto.idProducto);
+            mostrarToast('✅ ' + producto.nombreProducto + ' escaneado', 'success');
+        } else {
+            // ✅ CORREGIDO: /api/
+            fetch('/api/scanner/producto?codigoBarras=' + encodeURIComponent(codigo))
+                .then(function(response) {
+                    if (!response.ok) throw new Error('Producto no encontrado');
+                    return response.json();
+                })
+                .then(function(producto) {
+                    productos.push(producto);
+                    agregarProductoAlCarrito(producto.idProducto);
+                    mostrarToast('✅ ' + producto.nombreProducto + ' escaneado', 'success');
+                })
+                .catch(function() {
+                    mostrarToast('❌ Producto no encontrado: ' + codigo, 'error');
+                });
+        }
+    }
+
+    // ================================================================
+    // FUNCIONES DEL CARRITO
+    // ================================================================
+    function agregarProductoAlCarrito(id) {
+        var producto = productos.find(function(p) { return p.idProducto === id; });
+        if (!producto) {
+            mostrarToast('❌ Producto no encontrado', 'error');
+            return;
+        }
+
+        var precio = producto.precioVenta || 0;
+        if (precio <= 0) {
+            mostrarToast('⚠️ Producto sin precio', 'warning');
+            return;
+        }
+
+        var existente = carrito.find(function(p) { return p.id === id; });
+        if (existente) {
+            existente.cantidad++;
+        } else {
+            carrito.push({
+                id: producto.idProducto,
+                nombre: producto.nombreProducto,
+                precio: precio,
+                codigoBarras: producto.codigoBarras,
+                cantidad: 1
+            });
+        }
+
+        renderizarCarrito();
+        mostrarToast('✅ ' + producto.nombreProducto + ' agregado', 'success');
+        ocultarResultados();
+        var searchInp = document.getElementById('searchInp');
+        if (searchInp) searchInp.value = '';
+    }
+
+    function eliminarProducto(id) {
+        carrito = carrito.filter(function(p) { return p.id !== id; });
+        renderizarCarrito();
+    }
+
+    function cambiarCantidad(id, delta) {
+        var producto = carrito.find(function(p) { return p.id === id; });
+        if (producto) {
+            var nuevo = producto.cantidad + delta;
+            if (nuevo < 1) return;
+            producto.cantidad = nuevo;
+            renderizarCarrito();
+        }
+    }
+
+    // ================================================================
+    // RENDERIZAR CARRITO
+    // ================================================================
+    function renderizarCarrito() {
+        var cartArea = document.getElementById('cartArea');
+        var subtotalEl = document.getElementById('subtotal');
+        var descuentoEl = document.getElementById('descuento');
+        var igvEl = document.getElementById('igv');
+        var totalEl = document.getElementById('totalVenta');
+        var btnTotal = document.getElementById('btnTotal');
+
+        if (!cartArea) return;
+
+        if (carrito.length === 0) {
+            cartArea.innerHTML = '<div class="empty-cart"><i class="ti ti-shopping-cart"></i><p>Agrega productos para comenzar la venta</p></div>';
+            if (subtotalEl) subtotalEl.textContent = 'S/ 0.00';
+            if (descuentoEl) descuentoEl.textContent = '-S/ 0.00';
+            if (igvEl) igvEl.textContent = 'S/ 0.00';
+            if (totalEl) totalEl.textContent = 'S/ 0.00';
+            if (btnTotal) btnTotal.textContent = 'S/ 0.00';
+            return;
+        }
+
+        var html = '';
+        var subtotal = 0;
+
+        carrito.forEach(function(p) {
+            var total = p.precio * p.cantidad;
+            subtotal += total;
+            html += '<div class="cart-item"><span class="item-name">' + p.nombre + '</span><div class="item-cant"><button onclick="cambiarCantidad(' + p.id + ', -1)">−</button><span>' + p.cantidad + '</span><button onclick="cambiarCantidad(' + p.id + ', 1)">+</button></div><span class="item-precio">S/ ' + p.precio.toFixed(2) + '</span><span class="item-total">S/ ' + total.toFixed(2) + '</span><span class="item-del" onclick="eliminarProducto(' + p.id + ')">✕</span></div>';
+        });
+
+        cartArea.innerHTML = html;
+        if (subtotalEl) subtotalEl.textContent = 'S/ ' + subtotal.toFixed(2);
+
+        var resultado = calcularDescuentos(subtotal, carrito);
+        var descuento = resultado.descuento;
+        var igv = (subtotal - descuento) * 0.18;
+        var total = (subtotal - descuento) + igv;
+
+        if (descuentoEl) descuentoEl.textContent = '-S/ ' + descuento.toFixed(2);
+        if (igvEl) igvEl.textContent = 'S/ ' + igv.toFixed(2);
+        if (totalEl) totalEl.textContent = 'S/ ' + total.toFixed(2);
+        if (btnTotal) btnTotal.textContent = 'S/ ' + total.toFixed(2);
+    }
+
+    // ================================================================
+    // CALCULAR DESCUENTOS
+    // ================================================================
+    function calcularDescuentos(subtotal, items) {
+        var descuentoTotal = 0;
+        
+        if (!ofertasActivas || ofertasActivas.length === 0) {
+            return { descuento: 0 };
+        }
+
+        ofertasActivas.forEach(function(oferta) {
+            var tipo = oferta.tipoDescuento?.idTipoDescuento || 0;
+            var valor = oferta.valorDescuento || 0;
+            var montoMinimo = oferta.montoMinimo || 0;
+            var cantidadCompra = oferta.cantidadCompra || 2;
+
+            if (tipo === 3) {
+                items.forEach(function(item) {
+                    var gratis = Math.floor(item.cantidad / cantidadCompra);
+                    if (gratis > 0) {
+                        descuentoTotal += gratis * item.precio;
+                    }
+                });
+            } else if (tipo === 1) {
+                if (subtotal >= montoMinimo && valor > 0) {
+                    descuentoTotal += subtotal * (valor / 100);
+                }
+            } else if (tipo === 2) {
+                if (subtotal >= montoMinimo && valor > 0) {
+                    descuentoTotal += Math.min(valor, subtotal);
+                }
+            }
+        });
+
+        if (descuentoTotal > 0) {
+            mostrarToast('🎯 Descuento aplicado: -S/ ' + descuentoTotal.toFixed(2), 'success');
+        }
+
+        return { descuento: descuentoTotal };
+    }
+
+    // ================================================================
+    // FUNCIONES DE CLIENTE (CORREGIDAS)
+    // ================================================================
+    function buscarCliente() {
+        var dni = document.getElementById('clienteDni')?.value?.trim() || '';
+        if (dni.length < 8) {
+            mostrarToast('⚠️ Ingresa un DNI/RUC válido', 'warning');
+            return;
+        }
+
+        // ✅ CORREGIDO: /api/
+        fetch('/api/clientes/documento/' + encodeURIComponent(dni))
+            .then(function(response) {
+                if (!response.ok) throw new Error('Cliente no encontrado');
+                return response.json();
+            })
+            .then(function(cliente) {
+                clienteData = cliente;
+                var nombreEl = document.getElementById('clienteNombre');
+                if (!nombreEl) return;
+                if (cliente.tipoCliente === 'NATURAL') {
+                    nombreEl.value = cliente.nombres + ' ' + (cliente.apellidos || '');
+                } else {
+                    nombreEl.value = cliente.razonSocial || cliente.nombres || '';
+                }
+                mostrarToast('✅ Cliente encontrado', 'success');
+            })
+            .catch(function() {
+                // ✅ CORREGIDO: /api/
+                fetch('/api/clientes/ruc/' + encodeURIComponent(dni))
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('Cliente no encontrado');
+                        return response.json();
+                    })
+                    .then(function(cliente) {
+                        clienteData = cliente;
+                        var nombreEl = document.getElementById('clienteNombre');
+                        if (nombreEl) nombreEl.value = cliente.razonSocial || cliente.nombres || '';
+                        mostrarToast('✅ Cliente encontrado', 'success');
+                    })
+                    .catch(function() {
+                        mostrarToast('⚠️ Cliente no encontrado', 'warning');
+                    });
+            });
+    }
+
+    function limpiarCliente() {
+        var dniEl = document.getElementById('clienteDni');
+        var nombreEl = document.getElementById('clienteNombre');
+        if (tipoComprobante === 'boleta') {
+            if (dniEl) dniEl.value = '99999999';
+            if (nombreEl) nombreEl.value = 'Cliente General';
+            if (dniEl) dniEl.placeholder = 'DNI del cliente (8 dígitos)';
+        } else {
+            if (dniEl) dniEl.value = '';
+            if (nombreEl) nombreEl.value = '';
+            if (dniEl) dniEl.placeholder = 'RUC (11 dígitos)';
+        }
+        clienteData = null;
+        mostrarToast('🧹 Cliente limpiado', 'info');
+    }
+
+    // ================================================================
+    // FUNCIONES DE COMPROBANTE
+    // ================================================================
+    function selComp(tipo) {
+        tipoComprobante = tipo;
+        var boletaEl = document.getElementById('cmpBoleta');
+        var facturaEl = document.getElementById('cmpFactura');
+        if (boletaEl) boletaEl.classList.toggle('sel', tipo === 'boleta');
+        if (facturaEl) facturaEl.classList.toggle('sel', tipo === 'factura');
+        
+        var note = document.getElementById('compNote');
+        var dniEl = document.getElementById('clienteDni');
+        var nombreEl = document.getElementById('clienteNombre');
+        var labels = document.querySelectorAll('.cf-label');
+        
+        if (tipo === 'boleta') {
+            if (labels.length >= 2) {
+                labels[0].textContent = 'DNI';
+                labels[1].textContent = 'Nombre';
+            }
+            if (note) note.textContent = 'Boleta — Datos del comprador';
+            if (dniEl) {
+                dniEl.placeholder = 'DNI del cliente (8 dígitos)';
+                if (!clienteData) dniEl.value = '99999999';
+            }
+            if (nombreEl && !clienteData) nombreEl.value = 'Cliente General';
+        } else {
+            if (labels.length >= 2) {
+                labels[0].textContent = 'RUC';
+                labels[1].textContent = 'Razón Social';
+            }
+            if (note) note.textContent = 'Factura — Datos del comprador';
+            if (dniEl) {
+                dniEl.placeholder = 'RUC (11 dígitos)';
+                if (!clienteData) dniEl.value = '';
+            }
+            if (nombreEl && !clienteData) nombreEl.value = '';
+        }
+        mostrarToast('📄 Comprobante: ' + tipo.toUpperCase(), 'info');
+    }
+
+    // ================================================================
+    // 🔥 SELECCIONAR MÉTODO DE PAGO
+    // ================================================================
+    function selPayCard(el, metodo) {
+        document.querySelectorAll('.pay-card').forEach(function(c) { c.classList.remove('sel'); });
+        if (el) el.classList.add('sel');
+        metodoPago = metodo;
+        mostrarToast('💳 Método: ' + metodo.toUpperCase(), 'info');
+    }
+
+    // ================================================================
+    // 🔥 SUSPENDER VENTA
+    // ================================================================
+    function toggleSuspender() {
+        var label = document.getElementById('suspLabel');
+        var btn = document.getElementById('suspBtn');
+        
+        if (carrito.length === 0 && suspensiones.length === 0) {
+            mostrarToast('⚠️ No hay productos para suspender', 'warning');
+            return;
+        }
+
+        if (label && label.textContent === 'Suspender') {
+            if (carrito.length === 0) {
+                mostrarToast('⚠️ No hay productos en el carrito', 'warning');
+                return;
+            }
+            
+            var id = 'SUS-' + String(suspensiones.length + 1).padStart(3, '0');
+            suspensiones.push({
+                id: id,
+                fecha: new Date().toLocaleString(),
+                items: JSON.parse(JSON.stringify(carrito)),
+                total: document.getElementById('totalVenta')?.textContent || 'S/ 0.00'
+            });
+            
+            carrito = [];
+            renderizarCarrito();
+            if (label) label.textContent = 'Recuperar';
+            if (btn) btn.style.background = '#3B82F6';
+            mostrarToast('⏸️ Venta suspendida (ID: ' + id + ')', 'warning');
+            mostrarToast('📋 Suspensiones: ' + suspensiones.map(function(s) { return s.id; }).join(', '), 'info');
+        } else {
+            if (suspensiones.length === 0) {
+                if (label) label.textContent = 'Suspender';
+                if (btn) btn.style.background = '#F59E0B';
+                mostrarToast('⚠️ No hay ventas suspendidas', 'warning');
+                return;
+            }
+            
+            var ultima = suspensiones[suspensiones.length - 1];
+            carrito = ultima.items;
+            renderizarCarrito();
+            suspensiones.pop();
+            
+            if (suspensiones.length === 0) {
+                if (label) label.textContent = 'Suspender';
+                if (btn) btn.style.background = '#F59E0B';
+            }
+            mostrarToast('▶️ Venta recuperada: ' + ultima.id, 'success');
+        }
+    }
+
+    // ================================================================
+    // 🔥 LIMPIAR TODO
+    // ================================================================
+    function limpiarTodo() {
+        if (!confirm('¿Limpiar todo el carrito?')) return;
+        carrito = [];
+        renderizarCarrito();
+        mostrarToast('🧹 Carrito limpiado', 'info');
+    }
+
+    // ================================================================
+    // 🔥 MODAL DE PAGO
+    // ================================================================
+    function abrirModalPago() {
+        if (carrito.length === 0) {
+            mostrarToast('⚠️ Agrega productos al carrito', 'warning');
+            return;
+        }
+
+        var turno = obtenerTurnoActivo();
+        if (!turno) {
+            mostrarToast('⚠️ No hay turno de caja activo. Abre un turno en "Apertura"', 'warning');
+            return;
+        }
+        turnoActivo = turno;
+
+        var total = document.getElementById('totalVenta')?.textContent || 'S/ 0.00';
+        var modalTotal = document.getElementById('modalTotal');
+        var btnTotal = document.getElementById('btnTotal');
+        if (modalTotal) modalTotal.textContent = total;
+        if (btnTotal) btnTotal.textContent = total;
+        
+        var title = document.getElementById('modalTitle');
+        var modal = document.getElementById('modalPago');
+        
+        document.getElementById('stepEfectivo1').style.display = 'none';
+        document.getElementById('stepEfectivo2').style.display = 'none';
+        document.getElementById('stepTarjeta').style.display = 'none';
+        document.getElementById('stepYape').style.display = 'none';
+        document.getElementById('stepSuccess').style.display = 'none';
+        
+        if (metodoPago === 'efectivo') {
+            if (title) title.textContent = 'Efectivo';
+            document.getElementById('stepEfectivo1').style.display = 'block';
+            var montoPago = document.getElementById('montoPago');
+            if (montoPago) {
+                montoPago.value = '';
+                var totalNum = parseFloat(total.replace('S/ ', ''));
+                if (totalNum > 0) montoPago.placeholder = totalNum.toFixed(2);
+            }
+        } else if (metodoPago === 'tarjeta') {
+            if (title) title.textContent = 'Tarjeta';
+            document.getElementById('stepTarjeta').style.display = 'block';
+        } else if (metodoPago === 'yapeplin') {
+            if (title) title.textContent = 'Yape / Plin';
+            document.getElementById('stepYape').style.display = 'block';
+            var numero = '9' + Math.floor(100000000 + Math.random() * 900000000);
+            var qrDisplay = document.getElementById('qrDisplaySimple');
+            if (qrDisplay) qrDisplay.textContent = numero;
+            iniciarYapeTimer();
+        }
+        
+        if (modal) modal.classList.add('active');
+    }
+
+    function cerrarModalPago() {
+        var modal = document.getElementById('modalPago');
+        if (modal) modal.classList.remove('active');
+        detenerYapeTimer();
+        document.getElementById('stepEfectivo1').style.display = 'block';
+        document.getElementById('stepEfectivo2').style.display = 'none';
+        document.getElementById('stepTarjeta').style.display = 'none';
+        document.getElementById('stepYape').style.display = 'none';
+        document.getElementById('stepSuccess').style.display = 'none';
+    }
+
+    // ================================================================
+    // 🔥 CALCULAR VUELTO
+    // ================================================================
+    function calcularVuelto() {
+        var totalText = document.getElementById('modalTotal')?.textContent?.replace('S/ ', '') || '0';
+        var total = parseFloat(totalText) || 0;
+        var pago = parseFloat(document.getElementById('montoPago')?.value) || 0;
+        vuelto = pago - total;
+        montoRecibido = pago;
+    }
+
+    // ================================================================
+    // 🔥 MOSTRAR VUELTO Y VISTA PREVIA
+    // ================================================================
+    function mostrarVueltoYBoleta() {
+        var totalText = document.getElementById('modalTotal')?.textContent?.replace('S/ ', '') || '0';
+        var total = parseFloat(totalText) || 0;
+        var pago = parseFloat(document.getElementById('montoPago')?.value) || 0;
+        if (pago < total) {
+            mostrarToast('⚠️ El monto pagado es menor al total', 'warning');
+            return;
+        }
+        var vueltoCalc = pago - total;
+        document.getElementById('vueltoVal').textContent = 'S/ ' + (vueltoCalc > 0 ? vueltoCalc.toFixed(2) : '0.00');
+        document.getElementById('bpEfectivo').textContent = 'S/ ' + pago.toFixed(2);
+        document.getElementById('bpVuelto').textContent = 'S/ ' + (vueltoCalc > 0 ? vueltoCalc.toFixed(2) : '0.00');
+
+        var fecha = new Date();
+        document.getElementById('bpFecha').textContent = fecha.toLocaleDateString('es-PE') + ' ' + fecha.toLocaleTimeString('es-PE', {hour:'2-digit',minute:'2-digit'});
+        var isBoleta = tipoComprobante === 'boleta';
+        var dni = document.getElementById('clienteDni')?.value || '99999999';
+        var nombre = document.getElementById('clienteNombre')?.value || 'Cliente';
+        document.getElementById('bpComp').textContent = isBoleta ? 'BOLETA — DNI: ' + dni + ' · Cliente: ' + nombre : 'FACTURA — RUC: ' + dni;
+
+        var itemsHtml = '';
+        carrito.forEach(function(item) {
+            var totalItem = item.precio * item.cantidad;
+            itemsHtml += '<div class="bp-row"><span>' + item.nombre + ' ×' + item.cantidad + '</span><span>S/ ' + totalItem.toFixed(2) + '</span></div>';
+        });
+        document.getElementById('bpItems').innerHTML = itemsHtml;
+
+        var descuento = parseFloat(document.getElementById('descuento')?.textContent?.replace('-S/ ', '')) || 0;
+        if (descuento > 0) {
+            var descRow = document.createElement('div');
+            descRow.className = 'bp-row';
+            descRow.style.color = 'var(--color-text-success)';
+            descRow.innerHTML = '<span>Descuento aplicado</span><span>-S/ ' + descuento.toFixed(2) + '</span>';
+            document.getElementById('bpItems').appendChild(descRow);
+        }
+
+        var igv = parseFloat(document.getElementById('igv')?.textContent?.replace('S/ ', '')) || 0;
+        var totalFinal = parseFloat(document.getElementById('totalVenta')?.textContent?.replace('S/ ', '')) || 0;
+        document.getElementById('bpIgv').textContent = 'S/ ' + igv.toFixed(2);
+        document.getElementById('bpTotal').textContent = 'S/ ' + totalFinal.toFixed(2);
+
+        document.getElementById('stepEfectivo1').style.display = 'none';
+        document.getElementById('stepEfectivo2').style.display = 'block';
+    }
+
+    // ================================================================
+    // 🔥 YAPE TIMER
+    // ================================================================
+    function iniciarYapeTimer() {
+        detenerYapeTimer();
+        yapeSegundos = 60;
+        actualizarYapeTimer();
+        yapeTimerInterval = setInterval(function() {
+            yapeSegundos--;
+            actualizarYapeTimer();
+            if (yapeSegundos <= 0) {
+                detenerYapeTimer();
+                var status = document.getElementById('yapeStatusSimple');
+                if (status) status.textContent = '⏰ QR expirado. Regenera para continuar.';
+            }
+        }, 1000);
+    }
+
+    function detenerYapeTimer() {
+        if (yapeTimerInterval) {
+            clearInterval(yapeTimerInterval);
+            yapeTimerInterval = null;
+        }
+    }
+
+    function actualizarYapeTimer() {
+        var timerEl = document.getElementById('yapeTimerSimple');
+        var barEl = document.getElementById('yapeBarSimple');
+        var statusEl = document.getElementById('yapeStatusSimple');
+        
+        if (timerEl) timerEl.textContent = yapeSegundos + 's';
+        if (barEl) {
+            var pct = (yapeSegundos / 60) * 100;
+            barEl.style.width = pct + '%';
+            if (yapeSegundos > 20) barEl.style.background = '#16A34A';
+            else if (yapeSegundos > 10) barEl.style.background = '#D97706';
+            else barEl.style.background = '#DC2626';
+        }
+        if (statusEl && yapeSegundos > 0) {
+            statusEl.textContent = '⏳ Esperando pago del cliente…';
+        }
+    }
+
+    function regenerarYape() {
+        var numero = '9' + Math.floor(100000000 + Math.random() * 900000000);
+        var qrDisplay = document.getElementById('qrDisplaySimple');
+        if (qrDisplay) qrDisplay.textContent = numero;
+        iniciarYapeTimer();
+        var status = document.getElementById('yapeStatusSimple');
+        if (status) status.textContent = '⏳ Esperando pago del cliente…';
+        mostrarToast('🔄 QR regenerado', 'info');
+    }
+
+    // ================================================================
+    // 🔥 CONFIRMAR PAGO (PROCESAR VENTA) - CORREGIDO
+    // ================================================================
+    function confirmarPago() {
+        var total = document.getElementById('totalVenta')?.textContent || 'S/ 0.00';
+        var totalNum = parseFloat(total.replace('S/ ', ''));
+
+        var subtotalVal = parseFloat(document.getElementById('subtotal')?.textContent?.replace('S/ ', '')) || 0;
+        var descuentoVal = parseFloat(document.getElementById('descuento')?.textContent?.replace('-S/ ', '')) || 0;
+        var igvVal = parseFloat(document.getElementById('igv')?.textContent?.replace('S/ ', '')) || 0;
+        var totalVal = parseFloat(document.getElementById('totalVenta')?.textContent?.replace('S/ ', '')) || 0;
+
+        var montoPagoVal = 0;
+        var vueltoCalc = 0;
+
+        if (metodoPago === 'efectivo') {
+            montoPagoVal = parseFloat(document.getElementById('montoPago')?.value) || 0;
+            if (montoPagoVal < totalNum) {
+                mostrarToast('⚠️ El monto pagado es menor al total', 'warning');
+                return;
+            }
+            vueltoCalc = montoPagoVal - totalNum;
+        }
+
+        var btn = document.querySelector('.btn-cobrar');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Procesando...';
+        }
+
+        var idCajero = window.idUsuarioGlobal || 2;
+        var turno = obtenerTurnoActivo();
+        if (!turno) {
+            mostrarToast('⚠️ No hay turno activo', 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-cash-register"></i>Procesar Pago'; }
+            return;
+        }
+
+        var ventaData = {
+            venta: {
+                cajero: { idUsuario: idCajero },
+                cliente: clienteData ? { idCliente: clienteData.idCliente } : null,
+                tienda: { idTienda: turno.tienda.idTienda },
+                caja: { idCaja: turno.caja.idCaja },
+                turnoCaja: { idTurnoCaja: turno.idTurnoCaja },
+                tipoComprobante: { idTipoComprobante: tipoComprobante === 'boleta' ? 1 : 2 },
+                subtotal: subtotalVal,
+                descuentoAplicado: descuentoVal,
+                igv: igvVal,
+                total: totalVal,
+                fechaVenta: new Date().toISOString()
+            },
+            detalles: carrito.map(function(item) {
+                return {
+                    producto: { idProducto: item.id },
+                    cantidad: item.cantidad,
+                    precioUnitario: item.precio,
+                    descuentoLinea: 0,
+                    subtotalLinea: item.precio * item.cantidad
+                };
+            })
+        };
+
+        // ✅ CORREGIDO: /api/
+        fetch('/api/ventas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(ventaData)
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                return response.json().then(function(err) {
+                    throw new Error(err.error || 'Error al registrar venta');
+                });
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            mostrarToast('✅ Venta registrada exitosamente', 'success');
+            
+            var numeroComprobante = data.codigoVenta || data.numeroComprobante || '4841';
+            
+            document.getElementById('stepEfectivo1').style.display = 'none';
+            document.getElementById('stepEfectivo2').style.display = 'none';
+            document.getElementById('stepTarjeta').style.display = 'none';
+            document.getElementById('stepYape').style.display = 'none';
+            document.getElementById('stepSuccess').style.display = 'block';
+            
+            document.getElementById('successNumero').textContent = numeroComprobante;
+            document.getElementById('successTotal').textContent = data.total || total.replace('S/ ', '');
+            document.getElementById('successMetodo').textContent = metodoPago.toUpperCase();
+
+            var ventaDataPDF = {
+                detalles: carrito.map(function(item) {
+                    return {
+                        producto: { nombreProducto: item.nombre },
+                        cantidad: item.cantidad,
+                        precioUnitario: item.precio,
+                        subtotalLinea: item.precio * item.cantidad
+                    };
+                }),
+                subtotal: subtotalVal,
+                descuento: descuentoVal,
+                igv: igvVal,
+                total: totalVal
+            };
+
+            // 🔥 GUARDAR DATOS PARA REIMPRIMIR
+            window.ultimaVentaData = {
+                ventaDataPDF: ventaDataPDF,
+                metodoPago: metodoPago,
+                montoRecibido: metodoPago === 'efectivo' ? montoPagoVal : 0,
+                vuelto: metodoPago === 'efectivo' ? vueltoCalc : 0,
+                numeroComprobante: numeroComprobante,
+                total: totalVal
+            };
+
+            setTimeout(function() {
+                generarPDF(
+                    ventaDataPDF,
+                    metodoPago,
+                    metodoPago === 'efectivo' ? montoPagoVal : 0,
+                    metodoPago === 'efectivo' ? vueltoCalc : 0,
+                    numeroComprobante
+                );
+                mostrarToast('📄 PDF generado correctamente', 'success');
+            }, 1000);
+
+            carrito = [];
+            clienteData = null;
+            var dniEl = document.getElementById('clienteDni');
+            var nombreEl = document.getElementById('clienteNombre');
+            if (tipoComprobante === 'boleta') {
+                if (dniEl) dniEl.value = '99999999';
+                if (nombreEl) nombreEl.value = 'Cliente General';
+            } else {
+                if (dniEl) dniEl.value = '';
+                if (nombreEl) nombreEl.value = '';
+            }
+            renderizarCarrito();
+        })
+        .catch(function(error) {
+            mostrarToast('❌ Error: ' + error.message, 'error');
+            console.error('Error:', error);
+        })
+        .finally(function() {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ti ti-cash-register"></i>Procesar Pago <span id="btnTotal">' + total + '</span>';
+            }
+        });
+    }
+
+    // ================================================================
+    // 🔥 FUNCIÓN PARA REIMPRIMIR COMPROBANTE
+    // ================================================================
+    window.imprimirComprobante = function() {
+        if (!window.ultimaVentaData) {
+            mostrarToast('⚠️ No hay comprobante para imprimir', 'warning');
+            return;
+        }
+        
+        if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+            mostrarToast('❌ Error: librería PDF no cargada. Recargue la página.', 'error');
+            return;
+        }
+        
+        const data = window.ultimaVentaData;
+        generarPDF(
+            data.ventaDataPDF,
+            data.metodoPago,
+            data.montoRecibido,
+            data.vuelto,
+            data.numeroComprobante
+        );
+        mostrarToast('📄 Reimprimiendo comprobante...', 'info');
+    };
+
+    // ================================================================
+    // ACTUALIZAR ESTADO UI
+    // ================================================================
+    function actualizarEstadoUI(activo) {
+        var statusText = document.getElementById('statusText');
+        var statusIcon = document.getElementById('statusIcon');
+        
+        if (statusText) {
+            statusText.textContent = activo ? 'Caja abierta' : 'Caja cerrada';
+            statusText.style.color = activo ? '#4ADE80' : '#EF4444';
+        }
+        if (statusIcon) {
+            statusIcon.className = activo ? 'ti ti-circle-filled status-online' : 'ti ti-circle-filled status-offline';
+        }
+    }
+
+    // ================================================================
+    // TOAST NOTIFICATIONS (USANDO CONTENEDOR GLOBAL)
+    // ================================================================
+    function mostrarToast(mensaje, tipo) {
+        tipo = tipo || 'info';
+        // 🔥 USAR EL CONTENEDOR GLOBAL DEL LAYOUT
+        var container = document.getElementById('toastContainerGlobal');
+        if (!container) {
+            // Si no existe (fallback), crear uno temporal
+            container = document.createElement('div');
+            container.id = 'toastContainerGlobal';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        var toast = document.createElement('div');
+        toast.className = 'toast toast-' + tipo;
+        toast.textContent = mensaje;
+        container.appendChild(toast);
+
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(20px)';
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 3000);
+    }
+    
+    // ================================================================
+    // GENERAR PDF DE BOLETA/FACTURA
+    // ================================================================
+    function generarPDF(ventaData, metodoPago, montoRecibido, vuelto, numeroComprobante) {
+        if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+            mostrarToast('❌ Error: librería PDF no cargada. Recargue la página.', 'error');
+            return;
+        }
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = 210;
+        const margin = 15;
+        let y = 20;
+
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('TECHVENTA PRO', pageWidth / 2, y, { align: 'center' });
+        y += 6;
+        
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text('TechVenta Pro SAC - RUC 20123456789', pageWidth / 2, y, { align: 'center' });
+        y += 5;
+        doc.text('Tienda Norte - Caja 1', pageWidth / 2, y, { align: 'center' });
+        y += 5;
+        
+        var fecha = new Date().toLocaleDateString('es-PE') + ' ' + new Date().toLocaleTimeString('es-PE', {hour:'2-digit',minute:'2-digit'});
+        doc.text('Fecha: ' + fecha, pageWidth / 2, y, { align: 'center' });
+        y += 6;
+
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        var tipoComp = tipoComprobante === 'boleta' ? 'BOLETA' : 'FACTURA';
+        var numComprobante = numeroComprobante || 'N/A';
+        doc.text(tipoComp + ' N°: ' + numComprobante, pageWidth / 2, y, { align: 'center' });
+        y += 6;
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        var dni = document.getElementById('clienteDni')?.value || '99999999';
+        var nombre = document.getElementById('clienteNombre')?.value || 'Cliente';
+        doc.text('DNI/RUC: ' + dni, margin, y);
+        y += 5;
+        doc.text('Cliente: ' + nombre, margin, y);
+        y += 7;
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Descripción', margin, y);
+        doc.text('Cant.', 120, y);
+        doc.text('P/U', 150, y);
+        doc.text('Total', 175, y);
+        y += 4;
+        
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 4;
+
+        doc.setFont('helvetica', 'normal');
+        ventaData.detalles.forEach(function(item, index) {
+            var totalItem = item.cantidad * item.precioUnitario;
+            doc.text(item.producto.nombreProducto || 'Producto', margin, y);
+            doc.text(String(item.cantidad), 120, y);
+            doc.text('S/ ' + item.precioUnitario.toFixed(2), 150, y);
+            doc.text('S/ ' + totalItem.toFixed(2), 175, y);
+            y += 6;
+            if (y > 260) { doc.addPage(); y = 20; }
+        });
+
+        var descuento = ventaData.descuento || 0;
+        if (descuento > 0) {
+            doc.text('Descuento aplicado', margin, y);
+            doc.text('-S/ ' + descuento.toFixed(2), 175, y, { align: 'right' });
+            y += 6;
+        }
+
+        var igv = ventaData.igv || 0;
+        var total = ventaData.total || 0;
+        
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 4;
+        
+        doc.text('IGV (18%)', margin, y);
+        doc.text('S/ ' + igv.toFixed(2), 175, y, { align: 'right' });
+        y += 6;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.text('TOTAL', margin, y);
+        doc.text('S/ ' + total.toFixed(2), 175, y, { align: 'right' });
+        y += 8;
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Método de pago: ' + metodoPago.toUpperCase(), margin, y);
+        y += 5;
+        
+        if (metodoPago === 'efectivo') {
+            doc.text('Efectivo recibido: S/ ' + montoRecibido.toFixed(2), margin, y);
+            y += 5;
+            doc.text('Vuelto: S/ ' + vuelto.toFixed(2), margin, y);
+            y += 5;
+        }
+
+        y += 5;
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 5;
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('¡Gracias por su compra!', pageWidth / 2, y, { align: 'center' });
+        
+        doc.save('comprobante_' + new Date().getTime() + '.pdf');
+    }
+
+    // ================================================================
+    // 🔥 FUNCIÓN DE INICIALIZACIÓN DEL MÓDULO DE VENTAS (GLOBAL)
+    // ================================================================
+    function inicializarVenta() {
+        selComp('boleta');
+        cargarDatosIniciales();
+        renderizarCarrito();
+        console.log('✅ Módulo de ventas inicializado');
+    }
+
+    // ================================================================
+    // INICIALIZACIÓN
+    // ================================================================
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inicializarVenta);
+    } else {
+        inicializarVenta();
+    }
+
+    // ================================================================
+    // EXPONER FUNCIONES GLOBALMENTE
+    // ================================================================
+    window.inicializarVenta = inicializarVenta;
+    window.buscarProductos = buscarProductos;
+    window.mostrarResultados = mostrarResultados;
+    window.ocultarResultados = ocultarResultados;
+    window.limpiarBusqueda = limpiarBusqueda;
+    window.escanearProducto = escanearProducto;
+    window.agregarProductoAlCarrito = agregarProductoAlCarrito;
+    window.eliminarProducto = eliminarProducto;
+    window.cambiarCantidad = cambiarCantidad;
+    window.selComp = selComp;
+    window.selPayCard = selPayCard;
+    window.buscarCliente = buscarCliente;
+    window.limpiarCliente = limpiarCliente;
+    window.abrirModalPago = abrirModalPago;
+    window.cerrarModalPago = cerrarModalPago;
+    window.confirmarPago = confirmarPago;
+    window.calcularVuelto = calcularVuelto;
+    window.mostrarVueltoYBoleta = mostrarVueltoYBoleta;
+    window.toggleSuspender = toggleSuspender;
+    window.limpiarTodo = limpiarTodo;
+    window.mostrarToast = mostrarToast;
+    window.obtenerTurnoActivo = obtenerTurnoActivo;
+    window.regenerarYape = regenerarYape;
+    window.imprimirComprobante = imprimirComprobante;
+</script>
+	</div>
+	</html>
+</div>
+</html>

@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="content" th:remove="tag">
+    <style>
+        /* ============================================================ */
+        /* ESTILOS DE DEVOLUCIÓN (tomados del index.html)               */
+        /* ============================================================ */
+        .full-view {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background: var(--color-background-tertiary);
+            width: 100%;
+            height: 100%;
+        }
+
+        .page-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .pt {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        .psub {
+            font-size: 11px;
+            color: var(--color-text-tertiary);
+            margin-top: 2px;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+            gap: 12px;
+        }
+
+        .card {
+            background: var(--color-background-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .ct {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        .cb {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 99px;
+        }
+
+        .cb-ok { background: var(--color-background-success); color: var(--color-text-success); }
+        .cb-warn { background: var(--color-background-warning); color: var(--color-text-warning); }
+        .cb-danger { background: var(--color-background-danger); color: var(--color-text-danger); }
+
+        .btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 8px 14px;
+            font-size: 12px;
+            border-radius: 99px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn-prim {
+            background: #16A34A;
+            color: #fff;
+        }
+        .btn-prim:hover { background: #15803D; }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border-tertiary);
+        }
+        .btn-outline:hover { background: var(--color-background-secondary); }
+
+        .btn-danger {
+            background: #DC2626;
+            color: #fff;
+        }
+        .btn-danger:hover { background: #B91C1C; }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 11px;
+            border-radius: 99px;
+            border: 1px solid var(--color-border-tertiary);
+            background: transparent;
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .btn-sm:hover { background: var(--color-background-secondary); }
+        .btn-sm.primary {
+            background: #0F172A;
+            color: #fff;
+            border-color: #0F172A;
+        }
+        .btn-sm.primary:hover { background: #1E293B; }
+
+        /* Buscador */
+        .search-box {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .search-box .inp {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--color-background-secondary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: 99px;
+            padding: 6px 11px;
+        }
+        .search-box .inp i {
+            font-size: 13px;
+            color: var(--color-text-tertiary);
+        }
+        .search-box .inp input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 12px;
+            color: var(--color-text-primary);
+            width: 100%;
+        }
+
+        /* Info comprobante */
+        .comp-info {
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+        .comp-info .item {
+            display: flex;
+            flex-direction: column;
+        }
+        .comp-info .label {
+            font-size: 9px;
+            color: var(--color-text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .comp-info .value {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        /* Tabla de productos */
+        .prod-table-wrap {
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+        }
+        .prod-table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .prod-table-wrap th {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--color-text-tertiary);
+            padding: 5px 8px;
+            text-align: left;
+            background: var(--color-background-secondary);
+            border-bottom: 1px solid var(--color-border-tertiary);
+        }
+        .prod-table-wrap td {
+            padding: 5px 8px;
+            font-size: 11px;
+            color: var(--color-text-primary);
+            border-bottom: 1px solid var(--color-border-tertiary);
+        }
+        .prod-table-wrap tr:last-child td { border-bottom: none; }
+        .prod-table-wrap tr:hover td { background: var(--color-background-secondary); }
+        .prod-table-wrap tr.seleccionado td { background: #DCFCE7; }
+
+        /* Checkbox personalizado */
+        .prod-table-wrap input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            accent-color: #16A34A;
+            cursor: pointer;
+        }
+
+        .fl {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--color-text-secondary);
+            margin-bottom: 3px;
+        }
+
+        .fsel, .ftxt {
+            width: 100%;
+            background: var(--color-background-secondary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            padding: 6px 10px;
+            font-size: 12px;
+            color: var(--color-text-primary);
+            outline: none;
+        }
+        .fsel:focus, .ftxt:focus {
+            border-color: #16A34A;
+            box-shadow: 0 0 0 2px rgba(22,163,74,0.15);
+        }
+        .ftxt {
+            resize: vertical;
+            min-height: 56px;
+        }
+
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 9px 12px;
+            border-radius: var(--border-radius-md);
+            font-size: 11px;
+        }
+        .alert i { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+        .al-warn {
+            background: var(--color-background-warning);
+            color: var(--color-text-warning);
+        }
+        .al-t { font-weight: 500; color: var(--color-text-primary); }
+        .al-s { font-size: 10px; color: var(--color-text-secondary); margin-top: 1px; }
+
+        .resumen-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--color-border-tertiary);
+        }
+        .resumen-item:last-child { border-bottom: none; }
+        .resumen-item .label { color: var(--color-text-secondary); }
+        .resumen-item .value { font-weight: 500; }
+
+        .badge-estado {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-size: 9px;
+            font-weight: 700;
+        }
+        .badge-estado.aprobada { background: #DCFCE7; color: #15803D; }
+        .badge-estado.pendiente { background: #FEF3C7; color: #B45309; }
+        .badge-estado.rechazada { background: #FEE2E2; color: #DC2626; }
+
+        @media (max-width: 900px) {
+            .two-col { grid-template-columns: 1fr; }
+            .comp-info { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 480px) {
+            .comp-info { grid-template-columns: 1fr; }
+            .search-box { flex-wrap: wrap; }
+        }
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- CONTENIDO PRINCIPAL                                           -->
+    <!-- ============================================================ -->
+    <div class="full-view">
+        <div class="page-head">
+            <div>
+                <div class="pt">Registrar devolución</div>
+                <div class="psub">Busca la boleta o factura y selecciona el producto a devolver</div>
+            </div>
+            <button class="btn btn-outline" onclick="recargarDevoluciones()" title="Actualizar datos">
+                <i class="ti ti-refresh"></i> Actualizar
+            </button>
+        </div>
+
+        <!-- Alerta informativa -->
+        <div class="alert al-warn">
+            <i class="ti ti-alert-triangle"></i>
+            <div>
+                <div class="al-t">Las devoluciones requieren aprobación del supervisor</div>
+                <div class="al-s">Una vez enviada, recibirás una notificación cuando el supervisor la apruebe.</div>
+            </div>
+        </div>
+
+        <!-- Contenido de dos columnas -->
+        <div class="two-col">
+
+            <!-- COLUMNA IZQUIERDA -->
+            <div style="display:flex;flex-direction:column;gap:10px;">
+
+                <!-- Buscar comprobante -->
+                <div class="card">
+                    <div class="ch"><div class="ct">Buscar comprobante</div></div>
+                    <div style="padding:12px;display:flex;flex-direction:column;gap:10px;">
+                        <div class="search-box">
+                            <div class="inp">
+                                <i class="ti ti-receipt"></i>
+                                <input type="text" id="codigoBusqueda" placeholder="N° de boleta o factura (ej. 4840)">
+                            </div>
+                            <button class="btn btn-prim" style="min-width:80px;padding:6px 14px;" onclick="buscarComprobante()">
+                                <i class="ti ti-search"></i> Buscar
+                            </button>
+                        </div>
+
+                        <!-- Datos del comprobante encontrado -->
+                        <div id="comprobanteInfo" style="display:none;">
+                            <div class="comp-info">
+                                <div class="item"><span class="label">Boleta</span><span class="value" id="dBoleta">--</span></div>
+                                <div class="item"><span class="label">Fecha</span><span class="value" id="dFecha">--</span></div>
+                                <div class="item"><span class="label">Total</span><span class="value" id="dTotal">S/ 0.00</span></div>
+                                <div class="item"><span class="label">Comprobante</span><span class="value" id="dComprobante">--</span></div>
+                                <div class="item"><span class="label">Cajero</span><span class="value" id="dCajero">--</span></div>
+                                <div class="item"><span class="label">Pago</span><span class="value" id="dPago">--</span></div>
+                            </div>
+                            <div style="margin-top:8px;">
+                                <div class="fl">Selecciona el producto a devolver:</div>
+                                <div class="prod-table-wrap" id="productosContainer">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th style="width:30px;"></th>
+                                                <th>Producto</th>
+                                                <th style="width:50px;text-align:center;">Cant.</th>
+                                                <th style="width:70px;text-align:right;">Precio</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="productosTabla">
+                                            <tr><td colspan="4" style="text-align:center;padding:12px;color:var(--color-text-tertiary);">No hay productos</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="mensajeError" style="color:var(--color-text-danger);font-size:12px;display:none;"></div>
+                    </div>
+                </div>
+
+                <!-- Motivo de devolución -->
+                <div class="card">
+                    <div class="ch"><div class="ct">Motivo de devolución</div></div>
+                    <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+                        <div>
+                            <div class="fl">Motivo</div>
+                            <select class="fsel" id="motivoDevolucion">
+                                <option value="Producto defectuoso">Producto defectuoso</option>
+                                <option value="Producto vencido">Producto vencido</option>
+                                <option value="Error de cobro">Error de cobro</option>
+                                <option value="Cliente cambió de opinión">Cliente cambió de opinión</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <div class="fl">Observaciones</div>
+                            <textarea class="ftxt" id="observacionesDev" placeholder="Descripción adicional…"></textarea>
+                        </div>
+                        <button class="btn btn-prim" style="width:100%;justify-content:center;" onclick="solicitarDevolucion()">
+                            <i class="ti ti-send"></i> Solicitar aprobación al supervisor
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA -->
+            <div style="display:flex;flex-direction:column;gap:10px;">
+
+                <!-- Resumen de devolución -->
+                <div class="card">
+                    <div class="ch">
+                        <div class="ct">Resumen</div>
+                        <div class="cb cb-warn" id="estadoResumen">Pendiente aprobación</div>
+                    </div>
+                    <div style="padding:12px;display:flex;flex-direction:column;gap:5px;">
+                        <div class="resumen-item"><span class="label">Producto</span><span class="value" id="resProducto">--</span></div>
+                        <div class="resumen-item"><span class="label">Monto a devolver</span><span class="value" style="color:var(--color-text-danger);" id="resMonto">S/ 0.00</span></div>
+                        <div class="resumen-item"><span class="label">Devolución vía</span><span class="value" id="resVia">Efectivo</span></div>
+                        <div class="alert al-warn" style="margin-top:6px;padding:6px 10px;font-size:10px;">
+                            <i class="ti ti-clock" style="font-size:12px;"></i>
+                            <span id="resEstadoMsg">Esperando aprobación del supervisor.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Devoluciones del día -->
+                <div class="card">
+                    <div class="ch">
+                        <div class="ct">Devoluciones del día</div>
+                        <div class="cb cb-warn" id="contadorDev">0</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                            <thead>
+                                <tr>
+                                    <th style="padding:5px 10px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;color:var(--color-text-tertiary);border-bottom:1px solid var(--color-border-tertiary);">Boleta</th>
+                                    <th style="padding:5px 10px;text-align:right;font-size:9px;font-weight:700;text-transform:uppercase;color:var(--color-text-tertiary);border-bottom:1px solid var(--color-border-tertiary);">Monto</th>
+                                    <th style="padding:5px 10px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;color:var(--color-text-tertiary);border-bottom:1px solid var(--color-border-tertiary);">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historialDevoluciones">
+                                <tr><td colspan="3" style="text-align:center;padding:12px;color:var(--color-text-tertiary);">No hay devoluciones hoy</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT DE DEVOLUCIONES                                   -->
+    <!-- ============================================================ -->
+    <script>
+        // ================================================================
+        // VARIABLES GLOBALES
+        // ================================================================
+        var ventaSeleccionada = null;      // objeto venta
+        var productosSeleccionados = [];   // ids de productos seleccionados
+        var devolucionesHoy = [];
+
+        // ================================================================
+        // OBTENER ID DEL USUARIO
+        // ================================================================
+        function obtenerUserId() {
+            return window.idUsuarioGlobal || 2;
+        }
+
+        // ================================================================
+        // BUSCAR COMPROBANTE
+        // ================================================================
+        function buscarComprobante() {
+            var codigo = document.getElementById('codigoBusqueda').value.trim();
+            if (!codigo) {
+                mostrarToast('⚠️ Ingresa el número de comprobante', 'warning');
+                return;
+            }
+
+            mostrarToast('🔍 Buscando...', 'info');
+
+            fetch('/api/ventas/codigo/' + encodeURIComponent(codigo))
+                .then(function(response) {
+                    if (!response.ok) {
+                        if (response.status === 404) throw new Error('Comprobante no encontrado');
+                        throw new Error('Error al buscar comprobante');
+                    }
+                    return response.json();
+                })
+                .then(function(venta) {
+                    ventaSeleccionada = venta;
+                    mostrarComprobante(venta);
+                    mostrarToast('✅ Comprobante encontrado', 'success');
+                })
+                .catch(function(error) {
+                    console.error('❌ Error:', error);
+                    document.getElementById('comprobanteInfo').style.display = 'none';
+                    document.getElementById('mensajeError').textContent = '❌ ' + error.message;
+                    document.getElementById('mensajeError').style.display = 'block';
+                    mostrarToast('❌ ' + error.message, 'error');
+                });
+        }
+
+        // ================================================================
+        // MOSTRAR COMPROBANTE Y PRODUCTOS
+        // ================================================================
+        function mostrarComprobante(venta) {
+            var infoDiv = document.getElementById('comprobanteInfo');
+            infoDiv.style.display = 'block';
+            document.getElementById('mensajeError').style.display = 'none';
+
+            document.getElementById('dBoleta').textContent = venta.codigoVenta || '--';
+            document.getElementById('dFecha').textContent = venta.fechaVenta ? venta.fechaVenta.split('T')[0] : '--';
+            document.getElementById('dTotal').textContent = 'S/ ' + (venta.total || 0).toFixed(2);
+            document.getElementById('dComprobante').textContent = venta.tipoComprobante?.nombreComprobante || 'Boleta';
+            document.getElementById('dCajero').textContent = venta.cajero?.nombres + ' ' + (venta.cajero?.apellidos || '') || '--';
+            document.getElementById('dPago').textContent = venta.metodoPago || 'Efectivo';
+
+            // Productos
+            var tbody = document.getElementById('productosTabla');
+            if (!venta.detalles || venta.detalles.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--color-text-tertiary);">No hay productos en esta venta</td></tr>';
+                return;
+            }
+
+            productosSeleccionados = [];
+            tbody.innerHTML = venta.detalles.map(function(d, idx) {
+                var nombre = d.producto?.nombreProducto || 'Producto #' + (idx+1);
+                var cantidad = d.cantidad || 0;
+                var precio = d.precioUnitario || 0;
+                var subtotal = d.subtotalLinea || (cantidad * precio);
+                return '<tr onclick="toggleProducto(this, ' + idx + ')" style="cursor:pointer;">' +
+                    '<td style="text-align:center;"><input type="checkbox" data-index="' + idx + '" onchange="toggleCheckbox(this)"></td>' +
+                    '<td>' + nombre + '</td>' +
+                    '<td style="text-align:center;">' + cantidad + '</td>' +
+                    '<td style="text-align:right;">S/ ' + subtotal.toFixed(2) + '</td>' +
+                    '</tr>';
+            }).join('');
+
+            // Limpiar resumen anterior
+            limpiarResumen();
+            // Actualizar el resumen con el primer producto seleccionado automáticamente (opcional)
+            // Pero dejamos que el usuario seleccione manualmente
+        }
+
+        // ================================================================
+        // TOGGLE CHECKBOX EN FILA
+        // ================================================================
+        function toggleProducto(tr, idx) {
+            var cb = tr.querySelector('input[type="checkbox"]');
+            if (cb) {
+                cb.checked = !cb.checked;
+                actualizarSeleccion(cb);
+            }
+        }
+
+        function toggleCheckbox(cb) {
+            actualizarSeleccion(cb);
+        }
+
+        function actualizarSeleccion(cb) {
+            var idx = parseInt(cb.getAttribute('data-index'));
+            if (cb.checked) {
+                if (!productosSeleccionados.includes(idx)) {
+                    productosSeleccionados.push(idx);
+                }
+                cb.closest('tr').classList.add('seleccionado');
+            } else {
+                productosSeleccionados = productosSeleccionados.filter(function(i) { return i !== idx; });
+                cb.closest('tr').classList.remove('seleccionado');
+            }
+            actualizarResumen();
+        }
+
+        // ================================================================
+        // ACTUALIZAR RESUMEN
+        // ================================================================
+        function actualizarResumen() {
+            if (!ventaSeleccionada || !ventaSeleccionada.detalles) {
+                limpiarResumen();
+                return;
+            }
+            var selected = productosSeleccionados;
+            if (selected.length === 0) {
+                limpiarResumen();
+                document.getElementById('resProducto').textContent = '--';
+                document.getElementById('resMonto').textContent = 'S/ 0.00';
+                document.getElementById('estadoResumen').textContent = 'Sin selección';
+                document.getElementById('estadoResumen').className = 'cb cb-warn';
+                document.getElementById('resEstadoMsg').textContent = 'Selecciona al menos un producto.';
+                return;
+            }
+
+            var totalDev = 0;
+            var nombres = [];
+            selected.forEach(function(idx) {
+                var d = ventaSeleccionada.detalles[idx];
+                var subtotal = d.subtotalLinea || (d.cantidad * d.precioUnitario);
+                totalDev += subtotal;
+                nombres.push(d.producto?.nombreProducto || 'Producto');
+            });
+
+            document.getElementById('resProducto').textContent = nombres.join(', ');
+            document.getElementById('resMonto').textContent = '-S/ ' + totalDev.toFixed(2);
+            document.getElementById('estadoResumen').textContent = 'Pendiente aprobación';
+            document.getElementById('estadoResumen').className = 'cb cb-warn';
+            document.getElementById('resEstadoMsg').textContent = 'Esperando aprobación del supervisor.';
+            document.getElementById('resVia').textContent = ventaSeleccionada.metodoPago || 'Efectivo';
+        }
+
+        function limpiarResumen() {
+            document.getElementById('resProducto').textContent = '--';
+            document.getElementById('resMonto').textContent = 'S/ 0.00';
+            document.getElementById('estadoResumen').textContent = 'Pendiente aprobación';
+            document.getElementById('estadoResumen').className = 'cb cb-warn';
+            document.getElementById('resEstadoMsg').textContent = 'Selecciona un producto para devolver.';
+            document.getElementById('resVia').textContent = '--';
+        }
+
+        // ================================================================
+        // SOLICITAR DEVOLUCIÓN
+        // ================================================================
+        function solicitarDevolucion() {
+            if (!ventaSeleccionada) {
+                mostrarToast('⚠️ Primero busca un comprobante', 'warning');
+                return;
+            }
+            if (productosSeleccionados.length === 0) {
+                mostrarToast('⚠️ Selecciona al menos un producto para devolver', 'warning');
+                return;
+            }
+
+            var motivo = document.getElementById('motivoDevolucion').value;
+            var observaciones = document.getElementById('observacionesDev').value.trim();
+
+            // Construir payload
+            var detallesDev = productosSeleccionados.map(function(idx) {
+                var d = ventaSeleccionada.detalles[idx];
+                return {
+                    idDetalleVenta: d.idDetalleVenta || null,
+                    idProducto: d.producto?.idProducto || null,
+                    cantidad: d.cantidad || 1,
+                    precioUnitario: d.precioUnitario || 0,
+                    subtotal: d.subtotalLinea || (d.cantidad * d.precioUnitario)
+                };
+            });
+
+            var data = {
+                idVenta: ventaSeleccionada.idVenta,
+                idCajero: obtenerUserId(),
+                motivo: motivo,
+                observaciones: observaciones,
+                detalles: detallesDev
+            };
+
+            var btn = document.querySelector('.btn-prim[onclick="solicitarDevolucion()"]');
+            var originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Enviando...';
+
+            fetch('/api/devoluciones/solicitar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    return response.json().then(function(err) {
+                        throw new Error(err.error || 'Error al solicitar devolución');
+                    });
+                }
+                return response.json();
+            })
+            .then(function(result) {
+                mostrarToast('✅ Solicitud enviada al supervisor', 'success');
+                // Actualizar resumen con estado
+                document.getElementById('estadoResumen').textContent = 'Enviada';
+                document.getElementById('estadoResumen').className = 'cb cb-ok';
+                document.getElementById('resEstadoMsg').textContent = 'Solicitud enviada. Espera la aprobación del supervisor.';
+                // Recargar historial
+                cargarHistorialDevoluciones();
+                // Limpiar selección o mantener visible
+            })
+            .catch(function(error) {
+                mostrarToast('❌ Error: ' + error.message, 'error');
+                console.error('Error:', error);
+            })
+            .finally(function() {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        }
+
+        // ================================================================
+        // CARGAR HISTORIAL DE DEVOLUCIONES DEL DÍA
+        // ================================================================
+        function cargarHistorialDevoluciones() {
+            var userId = obtenerUserId();
+            if (!userId) {
+                console.warn('⚠️ No hay userId para cargar devoluciones');
+                return;
+            }
+
+            fetch('/api/devoluciones/cajero/' + userId + '/hoy')
+                .then(function(response) {
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            devolucionesHoy = [];
+                            renderizarHistorial([]);
+                            return;
+                        }
+                        throw new Error('Error al cargar historial');
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    devolucionesHoy = data || [];
+                    renderizarHistorial(devolucionesHoy);
+                })
+                .catch(function(error) {
+                    console.error('❌ Error al cargar historial:', error);
+                    devolucionesHoy = [];
+                    renderizarHistorial([]);
+                });
+        }
+
+        function renderizarHistorial(devoluciones) {
+            var tbody = document.getElementById('historialDevoluciones');
+            var contador = document.getElementById('contadorDev');
+            contador.textContent = devoluciones.length;
+
+            if (!devoluciones || devoluciones.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:12px;color:var(--color-text-tertiary);">No hay devoluciones hoy</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = devoluciones.map(function(d) {
+                var estado = d.estado || 'PENDIENTE';
+                var claseEstado = estado === 'APROBADA' ? 'aprobada' :
+                                  estado === 'RECHAZADA' ? 'rechazada' : 'pendiente';
+                var labelEstado = estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase();
+                return '<tr>' +
+                    '<td style="padding:5px 10px;border-bottom:1px solid var(--color-border-tertiary);font-weight:500;">' + (d.codigoVenta || '--') + '</td>' +
+                    '<td style="padding:5px 10px;border-bottom:1px solid var(--color-border-tertiary);text-align:right;">S/ ' + (d.montoTotal || 0).toFixed(2) + '</td>' +
+                    '<td style="padding:5px 10px;border-bottom:1px solid var(--color-border-tertiary);"><span class="badge-estado ' + claseEstado + '">' + labelEstado + '</span></td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        // ================================================================
+        // RECARGAR DATOS
+        // ================================================================
+        function recargarDevoluciones() {
+            mostrarToast('🔄 Actualizando datos...', 'info');
+            cargarHistorialDevoluciones();
+            // Si hay una venta seleccionada, refrescar su información (opcional)
+            if (ventaSeleccionada) {
+                // podríamos volver a buscar por código
+            }
+        }
+
+        // ================================================================
+        // TOAST NOTIFICATIONS (global)
+        // ================================================================
+        function mostrarToast(mensaje, tipo) {
+            tipo = tipo || 'info';
+            var container = document.getElementById('toastContainerGlobal');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainerGlobal';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + tipo;
+            toast.textContent = mensaje;
+            container.appendChild(toast);
+
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3000);
+        }
+
+        // ================================================================
+        // INICIALIZACIÓN
+        // ================================================================
+        function inicializarDevolucion() {
+            console.log('🔄 Inicializando Devoluciones...');
+            setTimeout(function() {
+                cargarHistorialDevoluciones();
+                // Configurar evento de búsqueda al presionar Enter
+                document.getElementById('codigoBusqueda').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        buscarComprobante();
+                    }
+                });
+                // Limpiar resumen inicial
+                limpiarResumen();
+            }, 100);
+        }
+
+        window.inicializarDevolucion = inicializarDevolucion;
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', inicializarDevolucion);
+        } else {
+            inicializarDevolucion();
+        }
+    </script>
+</div>
+</html>

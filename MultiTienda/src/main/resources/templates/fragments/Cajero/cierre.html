@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="content" th:remove="tag">
+    <style>
+        /* ============================================================ */
+        /* ESTILOS DE CIERRE (tomados del index.html)                   */
+        /* ============================================================ */
+        .caja-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 16px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .caja-card {
+            background: var(--color-background-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .caja-card-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            background: var(--color-background-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .caja-card-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .caja-card-header h2 i { color: #DC2626; }
+
+        .caja-card-header .sub {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+        }
+
+        .caja-card-body {
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Resumen info */
+        .caja-resumen-info {
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .caja-resumen-info .item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .caja-resumen-info .label {
+            font-size: 9px;
+            color: var(--color-text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .caja-resumen-info .value {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        /* Ventas por método y totales - dos columnas */
+        .cierre-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .cierre-stats .stat-card {
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 10px 14px;
+        }
+
+        .cierre-stats .stat-card .stat-title {
+            font-size: 10px;
+            color: var(--color-text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+        }
+
+        .cierre-stats .stat-card .stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 2px 0;
+        }
+
+        .cierre-stats .stat-card .stat-row .label {
+            color: var(--color-text-secondary);
+        }
+
+        .cierre-stats .stat-card .stat-row .value {
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        .cierre-stats .stat-card .stat-row.total {
+            border-top: 0.5px solid var(--color-border-tertiary);
+            padding-top: 4px;
+            margin-top: 2px;
+            font-weight: 600;
+        }
+
+        .metodo-bar {
+            height: 5px;
+            background: var(--color-border-tertiary);
+            border-radius: 99px;
+            overflow: hidden;
+            margin: 2px 0 6px 0;
+        }
+
+        .metodo-bar .fill {
+            height: 100%;
+            border-radius: 99px;
+        }
+
+        /* Campo fondo final y diferencia */
+        .cierre-campo {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .cierre-campo label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--color-text-tertiary);
+        }
+
+        .cierre-campo input,
+        .cierre-campo textarea {
+            background: var(--color-background-secondary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            padding: 7px 12px;
+            font-size: 13px;
+            color: var(--color-text-primary);
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .cierre-campo input:focus,
+        .cierre-campo textarea:focus {
+            border-color: #DC2626;
+            box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.1);
+        }
+
+        .cierre-campo textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .diferencia-box {
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .diferencia-box .label {
+            font-size: 10px;
+            color: var(--color-text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .diferencia-box .value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .diferencia-box .value.ok {
+            color: #16A34A;
+        }
+        .diferencia-box .value.error {
+            color: #DC2626;
+        }
+
+        /* Botones */
+        .caja-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px;
+            font-size: 13px;
+            border-radius: 99px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-danger {
+            background: #DC2626;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #B91C1C;
+        }
+        .btn-danger:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border-tertiary) !important;
+        }
+        .btn-outline:hover {
+            background: var(--color-background-secondary);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .cierre-stats {
+                grid-template-columns: 1fr;
+            }
+            .caja-resumen-info {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 480px) {
+            .caja-resumen-info {
+                grid-template-columns: 1fr;
+            }
+            .caja-actions .btn {
+                min-width: 100px;
+            }
+        }
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- CONTENIDO PRINCIPAL                                           -->
+    <!-- ============================================================ -->
+    <div class="caja-container">
+        <div class="caja-card">
+            <div class="caja-card-header">
+                <h2><i class="ti ti-lock"></i> Cierre de Caja</h2>
+                <div class="sub">Revisa el resumen del turno antes de cerrar</div>
+            </div>
+            <div class="caja-card-body">
+
+                <!-- Resumen del turno -->
+                <div class="caja-resumen-info" id="cierreResumen">
+                    <div class="item"><span class="label">Cajero</span><span class="value" id="cCajero">Cargando...</span></div>
+                    <div class="item"><span class="label">Turno</span><span class="value" id="cTurno">--</span></div>
+                    <div class="item"><span class="label">Apertura</span><span class="value" id="cApertura">--</span></div>
+                    <div class="item"><span class="label">Caja</span><span class="value" id="cCaja">--</span></div>
+                    <div class="item"><span class="label">Tienda</span><span class="value" id="cTienda">--</span></div>
+                </div>
+
+                <!-- Ventas por método y totales -->
+                <div class="cierre-stats">
+                    <div class="stat-card">
+                        <div class="stat-title">Ventas por método</div>
+                        <div id="metodosContainer">
+                            <div class="stat-row"><span class="label">Efectivo</span><span class="value" id="cEfectivo">S/ 0.00</span></div>
+                            <div class="metodo-bar"><div class="fill" id="barEfectivo" style="width:0%;background:#16A34A;"></div></div>
+                            <div class="stat-row"><span class="label">Tarjeta</span><span class="value" id="cTarjeta">S/ 0.00</span></div>
+                            <div class="metodo-bar"><div class="fill" id="barTarjeta" style="width:0%;background:#2563EB;"></div></div>
+                            <div class="stat-row"><span class="label">Yape / Plin</span><span class="value" id="cDigital">S/ 0.00</span></div>
+                            <div class="metodo-bar"><div class="fill" id="barDigital" style="width:0%;background:#7C3AED;"></div></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Totales del turno</div>
+                        <div class="stat-row"><span class="label">Total ventas</span><span class="value" id="cTotalVentas">S/ 0.00</span></div>
+                        <div class="stat-row"><span class="label">N° transacciones</span><span class="value" id="cTransacciones">0</span></div>
+                        <div class="stat-row"><span class="label">Fondo inicial</span><span class="value" id="cFondoInicial">S/ 0.00</span></div>
+                        <div class="stat-row total"><span class="label">Efectivo esperado</span><span class="value" id="cEfectivoEsperado">S/ 0.00</span></div>
+                    </div>
+                </div>
+
+                <!-- Declarar fondo final -->
+                <div class="cierre-campo">
+                    <label for="cFondoFinal">Declarar fondo final (S/)</label>
+                    <input type="number" id="cFondoFinal" step="0.50" min="0" placeholder="0.00">
+                    <div style="font-size:10px;color:var(--color-text-tertiary);margin-top:2px;">Monto contado en efectivo al cierre del turno</div>
+                </div>
+
+                <!-- Diferencia -->
+                <div class="diferencia-box">
+                    <span class="label">Diferencia</span>
+                    <span class="value ok" id="cDiferencia">S/ 0.00</span>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="cierre-campo">
+                    <label for="cObservaciones">Observaciones de cierre (Opcional)</label>
+                    <textarea id="cObservaciones" placeholder="Comentarios adicionales..."></textarea>
+                </div>
+
+                <!-- Botones -->
+                <div class="caja-actions">
+                    <button class="btn btn-danger" id="btnCerrarTurno" onclick="ejecutarCierre()">
+                        <i class="ti ti-lock"></i> Cerrar Turno
+                    </button>
+                    <button class="btn btn-outline" onclick="cancelarCierre()">
+                        <i class="ti ti-x"></i> Cancelar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT DE CIERRE                                         -->
+    <!-- ============================================================ -->
+    <script>
+        // ================================================================
+        // VARIABLES GLOBALES
+        // ================================================================
+        var turnoActual = null;
+        var ventasTurno = [];
+        var efectivoEsperado = 0;
+
+        // ================================================================
+        // OBTENER ID DEL USUARIO
+        // ================================================================
+        function obtenerUserId() {
+            var id = window.idUsuarioGlobal || 2;
+            console.log('🆔 Usuario ID para Cierre:', id);
+            return id;
+        }
+
+        // ================================================================
+        // CARGAR DATOS DEL TURNO
+        // ================================================================
+        function cargarDatosCierre() {
+            var userId = obtenerUserId();
+            if (!userId) {
+                mostrarToast('⚠️ No se pudo identificar al usuario', 'warning');
+                return;
+            }
+
+            fetch('/api/turnos-caja/usuario/' + userId + '/activo')
+                .then(function(response) {
+                    if (response.status === 404) {
+                        mostrarSinTurno();
+                        return null;
+                    }
+                    if (!response.ok) throw new Error('Error al obtener turno');
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data && data.activo && data.turno) {
+                        turnoActual = data.turno;
+                        mostrarTurnoActivo(turnoActual);
+                        cargarVentasDelTurno(turnoActual.idTurnoCaja);
+                    } else {
+                        mostrarSinTurno();
+                    }
+                })
+                .catch(function(error) {
+                    console.error('❌ Error al cargar turno:', error);
+                    mostrarToast('❌ Error al cargar turno: ' + error.message, 'error');
+                    mostrarSinTurno();
+                });
+        }
+
+        // ================================================================
+        // CARGAR VENTAS DEL TURNO
+        // ================================================================
+        function cargarVentasDelTurno(idTurno) {
+            fetch('/api/ventas/turno/' + idTurno)
+                .then(function(response) {
+                    if (!response.ok) throw new Error('Error al cargar ventas del turno');
+                    return response.json();
+                })
+                .then(function(data) {
+                    ventasTurno = data || [];
+                    actualizarTotales(ventasTurno);
+                    actualizarMetodos(ventasTurno);
+                })
+                .catch(function(error) {
+                    console.error('❌ Error al cargar ventas del turno:', error);
+                    ventasTurno = [];
+                    actualizarTotales(ventasTurno);
+                    actualizarMetodos(ventasTurno);
+                    mostrarToast('❌ Error al cargar ventas del turno', 'error');
+                });
+        }
+
+        // ================================================================
+        // MOSTRAR TURNO ACTIVO
+        // ================================================================
+        function mostrarTurnoActivo(turno) {
+            // Datos del turno
+            document.getElementById('cCajero').textContent = turno.cajero?.nombres + ' ' + (turno.cajero?.apellidos || '') || '--';
+            document.getElementById('cTurno').textContent = '#' + turno.idTurnoCaja;
+            document.getElementById('cApertura').textContent = turno.fechaApertura + ' ' + (turno.horaApertura || '');
+            document.getElementById('cCaja').textContent = turno.caja?.nombreCaja || '--';
+            document.getElementById('cTienda').textContent = turno.tienda?.nombreTienda || '--';
+
+            document.getElementById('cFondoInicial').textContent = 'S/ ' + (turno.fondoInicial || 0).toFixed(2);
+
+            // Habilitar botón
+            document.getElementById('btnCerrarTurno').disabled = false;
+
+            // Calcular diferencia al cambiar el fondo final
+            document.getElementById('cFondoFinal').addEventListener('input', calcularDiferencia);
+            // También al cargar, recalcular
+            setTimeout(calcularDiferencia, 100);
+        }
+
+        // ================================================================
+        // MOSTRAR SIN TURNO
+        // ================================================================
+        function mostrarSinTurno() {
+            document.getElementById('cCajero').textContent = '--';
+            document.getElementById('cTurno').textContent = '--';
+            document.getElementById('cApertura').textContent = '--';
+            document.getElementById('cCaja').textContent = '--';
+            document.getElementById('cTienda').textContent = '--';
+
+            document.getElementById('cFondoInicial').textContent = 'S/ 0.00';
+            document.getElementById('cTotalVentas').textContent = 'S/ 0.00';
+            document.getElementById('cTransacciones').textContent = '0';
+            document.getElementById('cEfectivoEsperado').textContent = 'S/ 0.00';
+            document.getElementById('cEfectivo').textContent = 'S/ 0.00';
+            document.getElementById('cTarjeta').textContent = 'S/ 0.00';
+            document.getElementById('cDigital').textContent = 'S/ 0.00';
+            document.getElementById('barEfectivo').style.width = '0%';
+            document.getElementById('barTarjeta').style.width = '0%';
+            document.getElementById('barDigital').style.width = '0%';
+
+            document.getElementById('cFondoFinal').value = '';
+            document.getElementById('cDiferencia').textContent = 'S/ 0.00';
+            document.getElementById('cDiferencia').className = 'value ok';
+            document.getElementById('btnCerrarTurno').disabled = true;
+        }
+
+        // ================================================================
+        // ACTUALIZAR TOTALES
+        // ================================================================
+        function actualizarTotales(ventas) {
+            var total = 0;
+            ventas.forEach(function(v) {
+                total += v.total || 0;
+            });
+
+            var fondoInicial = turnoActual ? (turnoActual.fondoInicial || 0) : 0;
+            efectivoEsperado = fondoInicial + total;
+
+            document.getElementById('cTotalVentas').textContent = 'S/ ' + total.toFixed(2);
+            document.getElementById('cTransacciones').textContent = ventas.length;
+            document.getElementById('cEfectivoEsperado').textContent = 'S/ ' + efectivoEsperado.toFixed(2);
+
+            // Sugerir fondo final = efectivo esperado
+            document.getElementById('cFondoFinal').value = efectivoEsperado.toFixed(2);
+            calcularDiferencia();
+        }
+
+        // ================================================================
+        // ACTUALIZAR MÉTODOS DE PAGO (con barras)
+        // ================================================================
+        function actualizarMetodos(ventas) {
+            var efectivo = 0,
+                tarjeta = 0,
+                digital = 0;
+            ventas.forEach(function(v) {
+                var metodo = (v.metodoPago || '').toLowerCase();
+                var monto = v.total || 0;
+                if (metodo === 'efectivo') efectivo += monto;
+                else if (metodo === 'tarjeta') tarjeta += monto;
+                else if (metodo === 'yape' || metodo === 'plin' || metodo === 'yapeplin') digital += monto;
+                else {
+                    // Si no tiene método, lo tratamos como efectivo (o puedes ajustar)
+                    efectivo += monto;
+                }
+            });
+
+            var total = efectivo + tarjeta + digital;
+            document.getElementById('cEfectivo').textContent = 'S/ ' + efectivo.toFixed(2);
+            document.getElementById('cTarjeta').textContent = 'S/ ' + tarjeta.toFixed(2);
+            document.getElementById('cDigital').textContent = 'S/ ' + digital.toFixed(2);
+
+            if (total > 0) {
+                document.getElementById('barEfectivo').style.width = (efectivo / total * 100) + '%';
+                document.getElementById('barTarjeta').style.width = (tarjeta / total * 100) + '%';
+                document.getElementById('barDigital').style.width = (digital / total * 100) + '%';
+            } else {
+                document.getElementById('barEfectivo').style.width = '0%';
+                document.getElementById('barTarjeta').style.width = '0%';
+                document.getElementById('barDigital').style.width = '0%';
+            }
+        }
+
+        // ================================================================
+        // CALCULAR DIFERENCIA
+        // ================================================================
+        function calcularDiferencia() {
+            var fondoFinal = parseFloat(document.getElementById('cFondoFinal').value) || 0;
+            var diferencia = fondoFinal - efectivoEsperado;
+
+            var diffEl = document.getElementById('cDiferencia');
+            diffEl.textContent = (diferencia >= 0 ? 'S/ ' : '-S/ ') + Math.abs(diferencia).toFixed(2);
+            if (Math.abs(diferencia) < 0.01) {
+                diffEl.className = 'value ok';
+            } else if (diferencia > 0) {
+                diffEl.className = 'value ok';
+            } else {
+                diffEl.className = 'value error';
+            }
+        }
+
+        // ================================================================
+        // EJECUTAR CIERRE
+        // ================================================================
+        function ejecutarCierre() {
+            if (!turnoActual || !turnoActual.idTurnoCaja) {
+                mostrarToast('⚠️ No hay turno activo para cerrar', 'warning');
+                return;
+            }
+
+            var fondoFinal = parseFloat(document.getElementById('cFondoFinal').value) || 0;
+            var observaciones = document.getElementById('cObservaciones').value || '';
+
+            if (fondoFinal <= 0) {
+                mostrarToast('⚠️ El fondo final debe ser mayor a 0', 'warning');
+                return;
+            }
+
+            if (!confirm('¿Estás seguro de que deseas cerrar el turno?\nEsta acción no se puede deshacer.')) {
+                return;
+            }
+
+            var btn = document.getElementById('btnCerrarTurno');
+            var originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Cerrando...';
+
+            var url = '/api/turnos-caja/' + turnoActual.idTurnoCaja +
+                '/cerrar?fondoFinal=' + fondoFinal +
+                '&observaciones=' + encodeURIComponent(observaciones);
+
+            fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    return response.json().then(function(err) {
+                        throw new Error(err.error || 'Error al cerrar turno');
+                    });
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                mostrarToast('✅ Turno cerrado correctamente', 'success');
+                // Actualizar estado en el layout
+                if (window.actualizarEstadoCaja) {
+                    window.actualizarEstadoCaja(false);
+                }
+                // Recargar datos para mostrar el turno cerrado
+                setTimeout(function() {
+                    cargarDatosCierre();
+                    mostrarToast('📊 Datos actualizados', 'info');
+                }, 500);
+            })
+            .catch(function(error) {
+                mostrarToast('❌ Error: ' + error.message, 'error');
+                console.error('Error:', error);
+            })
+            .finally(function() {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        }
+
+        // ================================================================
+        // CANCELAR CIERRE
+        // ================================================================
+        function cancelarCierre() {
+            if (confirm('¿Cancelar cierre de caja?')) {
+                mostrarToast('Cierre cancelado', 'info');
+            }
+        }
+
+        // ================================================================
+        // TOAST NOTIFICATIONS (usando contenedor global)
+        // ================================================================
+        function mostrarToast(mensaje, tipo) {
+            tipo = tipo || 'info';
+            var container = document.getElementById('toastContainerGlobal');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainerGlobal';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + tipo;
+            toast.textContent = mensaje;
+            container.appendChild(toast);
+
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3000);
+        }
+
+        // ================================================================
+        // INICIALIZACIÓN
+        // ================================================================
+        function inicializarCierre() {
+            console.log('🔄 Inicializando Cierre...');
+            setTimeout(function() {
+                cargarDatosCierre();
+            }, 100);
+        }
+
+        window.inicializarCierre = inicializarCierre;
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', inicializarCierre);
+        } else {
+            inicializarCierre();
+        }
+    </script>
+</div>
+</html>
