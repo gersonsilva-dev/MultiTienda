@@ -49,6 +49,13 @@ public class UsuarioService {
     public Usuario actualizar(Usuario usuario) {
         return usuarioRepository.save(usuario);
     }
+    
+    public Usuario obtenerUsuarioActual() {
+        // Usa el ID 3 que es tu usuario de prueba
+        // Cuando tengas sesión, reemplázalo con:
+        // return (Usuario) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return usuarioRepository.findById(3).orElse(null);
+    }
 
     // ============================================================
     // ELIMINAR FÍSICAMENTE

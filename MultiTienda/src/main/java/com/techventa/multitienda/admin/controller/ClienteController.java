@@ -160,4 +160,42 @@ public class ClienteController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
+    
+ // Guardar o actualizar cliente (crear si no existe)
+    @PostMapping("/guardar")
+    public ResponseEntity<Object> guardarCliente(@RequestBody Cliente cliente) {
+        try {
+            // Buscar por documento o RUC
+            Optional<Cliente> existente = Optional.empty();
+            
+            if (cliente.getNumeroDocumento() != null && !cliente.getNumeroDocumento().isEmpty()) {
+                existente = clienteService.buscarPorDocumento(cliente.getNumeroDocumento());
+            } else if (cliente.getRuc() != null && !cliente.getRuc().isEmpty()) {
+                existente = clienteService.buscarPorRuc(cliente.getRuc());
+            }
+            
+            if (existente.isPresent()) {
+                // Actualizar datos del cliente existente
+                Cliente clienteExistente = existente.get();
+                if (cliente.getNombres() != null) clienteExistente.setNombres(cliente.getNombres());
+                if (cliente.getApellidos() != null) clienteExistente.setApellidos(cliente.getApellidos());
+                if (cliente.getRazonSocial() != null) clienteExistente.setRazonSocial(cliente.getRazonSocial());
+                if (cliente.getCorreoElectronico() != null) clienteExistente.setCorreoElectronico(cliente.getCorreoElectronico());
+                if (cliente.getTelefono() != null) clienteExistente.setTelefono(cliente.getTelefono());
+                if (cliente.getDireccion() != null) clienteExistente.setDireccion(cliente.getDireccion());
+                
+                Cliente actualizado = clienteService.actualizar(clienteExistente);
+                return ResponseEntity.ok(actualizado);
+            } else {
+                // Crear nuevo cliente
+                cliente.setActivo(true);
+                Cliente nuevoCliente = clienteService.crear(cliente);
+                return ResponseEntity.status(HttpStatus.CREATED).body(nuevoCliente);
+            }
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al guardar el cliente: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
 }
