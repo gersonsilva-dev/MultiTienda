@@ -259,6 +259,189 @@
             display: none !important;
         }
 
+        /* ============================================================ */
+        /* 🔥 MODAL DE CONFIRMACIÓN DE CIERRE (ELEGANTE)                */
+        /* ============================================================ */
+        .modal-cierre-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            z-index: 10001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-cierre-overlay.active {
+            display: flex;
+        }
+
+        .modal-cierre-box {
+            background: #ffffff;
+            border-radius: 20px;
+            max-width: 460px;
+            width: 100%;
+            padding: 32px 28px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+            animation: modalIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-cierre-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-cierre-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-cierre-header h3 i {
+            font-size: 22px;
+            color: #DC2626;
+        }
+
+        .modal-cierre-close {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--color-text-tertiary);
+            transition: color 0.2s;
+        }
+
+        .modal-cierre-close:hover {
+            color: var(--color-text-primary);
+        }
+
+        .modal-cierre-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-cierre-body .mensaje-advertencia {
+            background: #FEF2F2;
+            border: 1px solid #FCA5A5;
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            color: #B91C1C;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .modal-cierre-body .mensaje-advertencia i {
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .modal-cierre-body .resumen-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+        }
+
+        .modal-cierre-body .resumen-grid .item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-cierre-body .resumen-grid .item .label {
+            font-size: 9px;
+            color: var(--color-text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .modal-cierre-body .resumen-grid .item .value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .modal-cierre-body .resumen-grid .item .value.danger {
+            color: #DC2626;
+        }
+        .modal-cierre-body .resumen-grid .item .value.success {
+            color: #16A34A;
+        }
+
+        .modal-cierre-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .modal-cierre-footer .btn-modal {
+            flex: 1;
+            padding: 11px;
+            border-radius: 99px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .modal-cierre-footer .btn-modal-cancelar {
+            background: var(--color-background-secondary);
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border-tertiary);
+        }
+
+        .modal-cierre-footer .btn-modal-cancelar:hover {
+            background: var(--color-border-tertiary);
+        }
+
+        .modal-cierre-footer .btn-modal-confirmar {
+            background: #DC2626;
+            color: #fff;
+        }
+
+        .modal-cierre-footer .btn-modal-confirmar:hover {
+            background: #B91C1C;
+        }
+
+        .modal-cierre-footer .btn-modal-confirmar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         @media (max-width: 768px) {
             .cierre-stats {
                 grid-template-columns: 1fr;
@@ -267,12 +450,20 @@
                 grid-template-columns: 1fr 1fr;
             }
         }
+
         @media (max-width: 480px) {
             .caja-resumen-info {
                 grid-template-columns: 1fr;
             }
             .caja-actions .btn {
                 min-width: 100px;
+            }
+            .modal-cierre-box {
+                margin: 16px;
+                padding: 20px;
+            }
+            .modal-cierre-body .resumen-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -340,7 +531,7 @@
 
                 <!-- Botones -->
                 <div class="caja-actions">
-                    <button class="btn btn-danger" id="btnCerrarTurno" onclick="ejecutarCierre()">
+                    <button class="btn btn-danger" id="btnCerrarTurno" onclick="abrirModalConfirmacion()">
                         <i class="ti ti-lock"></i> Cerrar Turno
                     </button>
                     <button class="btn btn-outline" onclick="cancelarCierre()">
@@ -353,6 +544,60 @@
     </div>
 
     <!-- ============================================================ -->
+    <!-- 🔥 MODAL DE CONFIRMACIÓN DE CIERRE                            -->
+    <!-- ============================================================ -->
+    <div class="modal-cierre-overlay" id="modalConfirmacionCierre">
+        <div class="modal-cierre-box">
+            <div class="modal-cierre-header">
+                <h3><i class="ti ti-alert-triangle"></i> Confirmar cierre de turno</h3>
+                <button class="modal-cierre-close" onclick="cerrarModalConfirmacion()">✕</button>
+            </div>
+            <div class="modal-cierre-body">
+                <div class="mensaje-advertencia">
+                    <i class="ti ti-info-circle"></i>
+                    <span>Esta acción no se puede deshacer. Revisa los datos antes de confirmar.</span>
+                </div>
+
+                <!-- Resumen en el modal -->
+                <div class="resumen-grid" id="modalResumen">
+                    <div class="item">
+                        <span class="label">Cajero</span>
+                        <span class="value" id="mCajero">--</span>
+                    </div>
+                    <div class="item">
+                        <span class="label">Turno</span>
+                        <span class="value" id="mTurno">--</span>
+                    </div>
+                    <div class="item">
+                        <span class="label">Total ventas</span>
+                        <span class="value" id="mTotalVentas">S/ 0.00</span>
+                    </div>
+                    <div class="item">
+                        <span class="label">Efectivo esperado</span>
+                        <span class="value" id="mEfectivoEsperado">S/ 0.00</span>
+                    </div>
+                    <div class="item">
+                        <span class="label">Fondo declarado</span>
+                        <span class="value" id="mFondoDeclarado">S/ 0.00</span>
+                    </div>
+                    <div class="item">
+                        <span class="label">Diferencia</span>
+                        <span class="value" id="mDiferencia">S/ 0.00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-cierre-footer">
+                <button class="btn-modal btn-modal-cancelar" onclick="cerrarModalConfirmacion()">
+                    <i class="ti ti-x"></i> Cancelar
+                </button>
+                <button class="btn-modal btn-modal-confirmar" id="btnConfirmarCierre" onclick="ejecutarCierre()">
+                    <i class="ti ti-check"></i> Confirmar cierre
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
     <!-- JAVASCRIPT DE CIERRE                                         -->
     <!-- ============================================================ -->
     <script>
@@ -360,8 +605,8 @@
         // VARIABLES GLOBALES
         // ================================================================
         var turnoActual = null;
-        var ventasTurno = [];
         var efectivoEsperado = 0;
+        var fondoDeclarado = 0;
 
         // ================================================================
         // OBTENER ID DEL USUARIO
@@ -395,7 +640,7 @@
                     if (data && data.activo && data.turno) {
                         turnoActual = data.turno;
                         mostrarTurnoActivo(turnoActual);
-                        cargarVentasDelTurno(turnoActual.idTurnoCaja);
+                        actualizarConDatosDelTurno(turnoActual);
                     } else {
                         mostrarSinTurno();
                     }
@@ -408,47 +653,56 @@
         }
 
         // ================================================================
-        // CARGAR VENTAS DEL TURNO
+        // ACTUALIZAR CON DATOS DEL TURNO
         // ================================================================
-        function cargarVentasDelTurno(idTurno) {
-            fetch('/api/ventas/turno/' + idTurno)
-                .then(function(response) {
-                    if (!response.ok) throw new Error('Error al cargar ventas del turno');
-                    return response.json();
-                })
-                .then(function(data) {
-                    ventasTurno = data || [];
-                    actualizarTotales(ventasTurno);
-                    actualizarMetodos(ventasTurno);
-                })
-                .catch(function(error) {
-                    console.error('❌ Error al cargar ventas del turno:', error);
-                    ventasTurno = [];
-                    actualizarTotales(ventasTurno);
-                    actualizarMetodos(ventasTurno);
-                    mostrarToast('❌ Error al cargar ventas del turno', 'error');
-                });
+        function actualizarConDatosDelTurno(turno) {
+            var efectivo = turno.totalVentasEfectivo || 0;
+            var tarjeta = turno.totalVentasTarjeta || 0;
+            var yape = turno.totalVentasYape || 0;
+            var plin = turno.totalVentasPlin || 0;
+            var digital = yape + plin;
+            var totalVentas = efectivo + tarjeta + digital;
+
+            document.getElementById('cEfectivo').textContent = 'S/ ' + efectivo.toFixed(2);
+            document.getElementById('cTarjeta').textContent = 'S/ ' + tarjeta.toFixed(2);
+            document.getElementById('cDigital').textContent = 'S/ ' + digital.toFixed(2);
+
+            if (totalVentas > 0) {
+                document.getElementById('barEfectivo').style.width = (efectivo / totalVentas * 100) + '%';
+                document.getElementById('barTarjeta').style.width = (tarjeta / totalVentas * 100) + '%';
+                document.getElementById('barDigital').style.width = (digital / totalVentas * 100) + '%';
+            } else {
+                document.getElementById('barEfectivo').style.width = '0%';
+                document.getElementById('barTarjeta').style.width = '0%';
+                document.getElementById('barDigital').style.width = '0%';
+            }
+
+            document.getElementById('cTotalVentas').textContent = 'S/ ' + totalVentas.toFixed(2);
+            document.getElementById('cTransacciones').textContent = '0';
+
+            var fondoInicial = turno.fondoInicial || 0;
+            efectivoEsperado = fondoInicial + totalVentas;
+            document.getElementById('cEfectivoEsperado').textContent = 'S/ ' + efectivoEsperado.toFixed(2);
+
+            document.getElementById('cFondoFinal').value = efectivoEsperado.toFixed(2);
+            calcularDiferencia();
         }
 
         // ================================================================
         // MOSTRAR TURNO ACTIVO
         // ================================================================
         function mostrarTurnoActivo(turno) {
-            // Datos del turno
             document.getElementById('cCajero').textContent = turno.cajero?.nombres + ' ' + (turno.cajero?.apellidos || '') || '--';
             document.getElementById('cTurno').textContent = '#' + turno.idTurnoCaja;
-            document.getElementById('cApertura').textContent = turno.fechaApertura + ' ' + (turno.horaApertura || '');
+            document.getElementById('cApertura').textContent = (turno.fechaApertura || '') + ' ' + (turno.horaApertura || '');
             document.getElementById('cCaja').textContent = turno.caja?.nombreCaja || '--';
             document.getElementById('cTienda').textContent = turno.tienda?.nombreTienda || '--';
 
             document.getElementById('cFondoInicial').textContent = 'S/ ' + (turno.fondoInicial || 0).toFixed(2);
 
-            // Habilitar botón
             document.getElementById('btnCerrarTurno').disabled = false;
 
-            // Calcular diferencia al cambiar el fondo final
             document.getElementById('cFondoFinal').addEventListener('input', calcularDiferencia);
-            // También al cargar, recalcular
             setTimeout(calcularDiferencia, 100);
         }
 
@@ -480,62 +734,6 @@
         }
 
         // ================================================================
-        // ACTUALIZAR TOTALES
-        // ================================================================
-        function actualizarTotales(ventas) {
-            var total = 0;
-            ventas.forEach(function(v) {
-                total += v.total || 0;
-            });
-
-            var fondoInicial = turnoActual ? (turnoActual.fondoInicial || 0) : 0;
-            efectivoEsperado = fondoInicial + total;
-
-            document.getElementById('cTotalVentas').textContent = 'S/ ' + total.toFixed(2);
-            document.getElementById('cTransacciones').textContent = ventas.length;
-            document.getElementById('cEfectivoEsperado').textContent = 'S/ ' + efectivoEsperado.toFixed(2);
-
-            // Sugerir fondo final = efectivo esperado
-            document.getElementById('cFondoFinal').value = efectivoEsperado.toFixed(2);
-            calcularDiferencia();
-        }
-
-        // ================================================================
-        // ACTUALIZAR MÉTODOS DE PAGO (con barras)
-        // ================================================================
-        function actualizarMetodos(ventas) {
-            var efectivo = 0,
-                tarjeta = 0,
-                digital = 0;
-            ventas.forEach(function(v) {
-                var metodo = (v.metodoPago || '').toLowerCase();
-                var monto = v.total || 0;
-                if (metodo === 'efectivo') efectivo += monto;
-                else if (metodo === 'tarjeta') tarjeta += monto;
-                else if (metodo === 'yape' || metodo === 'plin' || metodo === 'yapeplin') digital += monto;
-                else {
-                    // Si no tiene método, lo tratamos como efectivo (o puedes ajustar)
-                    efectivo += monto;
-                }
-            });
-
-            var total = efectivo + tarjeta + digital;
-            document.getElementById('cEfectivo').textContent = 'S/ ' + efectivo.toFixed(2);
-            document.getElementById('cTarjeta').textContent = 'S/ ' + tarjeta.toFixed(2);
-            document.getElementById('cDigital').textContent = 'S/ ' + digital.toFixed(2);
-
-            if (total > 0) {
-                document.getElementById('barEfectivo').style.width = (efectivo / total * 100) + '%';
-                document.getElementById('barTarjeta').style.width = (tarjeta / total * 100) + '%';
-                document.getElementById('barDigital').style.width = (digital / total * 100) + '%';
-            } else {
-                document.getElementById('barEfectivo').style.width = '0%';
-                document.getElementById('barTarjeta').style.width = '0%';
-                document.getElementById('barDigital').style.width = '0%';
-            }
-        }
-
-        // ================================================================
         // CALCULAR DIFERENCIA
         // ================================================================
         function calcularDiferencia() {
@@ -551,33 +749,66 @@
             } else {
                 diffEl.className = 'value error';
             }
+
+            // Guardar valores para el modal
+            fondoDeclarado = fondoFinal;
         }
 
         // ================================================================
-        // EJECUTAR CIERRE
+        // 🔥 ABRIR MODAL DE CONFIRMACIÓN (MEJORADO)
         // ================================================================
-        function ejecutarCierre() {
+        function abrirModalConfirmacion() {
             if (!turnoActual || !turnoActual.idTurnoCaja) {
                 mostrarToast('⚠️ No hay turno activo para cerrar', 'warning');
                 return;
             }
 
             var fondoFinal = parseFloat(document.getElementById('cFondoFinal').value) || 0;
-            var observaciones = document.getElementById('cObservaciones').value || '';
-
             if (fondoFinal <= 0) {
                 mostrarToast('⚠️ El fondo final debe ser mayor a 0', 'warning');
                 return;
             }
 
-            if (!confirm('¿Estás seguro de que deseas cerrar el turno?\nEsta acción no se puede deshacer.')) {
-                return;
+            // Llenar el modal con los datos actuales
+            document.getElementById('mCajero').textContent = document.getElementById('cCajero').textContent;
+            document.getElementById('mTurno').textContent = document.getElementById('cTurno').textContent;
+            document.getElementById('mTotalVentas').textContent = document.getElementById('cTotalVentas').textContent;
+            document.getElementById('mEfectivoEsperado').textContent = document.getElementById('cEfectivoEsperado').textContent;
+            document.getElementById('mFondoDeclarado').textContent = 'S/ ' + fondoFinal.toFixed(2);
+
+            var diferencia = fondoFinal - efectivoEsperado;
+            var diffEl = document.getElementById('mDiferencia');
+            diffEl.textContent = (diferencia >= 0 ? 'S/ ' : '-S/ ') + Math.abs(diferencia).toFixed(2);
+            if (Math.abs(diferencia) < 0.01) {
+                diffEl.className = 'value success';
+            } else if (diferencia > 0) {
+                diffEl.className = 'value success';
+            } else {
+                diffEl.className = 'value danger';
             }
 
-            var btn = document.getElementById('btnCerrarTurno');
+            // Mostrar modal
+            document.getElementById('modalConfirmacionCierre').classList.add('active');
+        }
+
+        // ================================================================
+        // CERRAR MODAL DE CONFIRMACIÓN
+        // ================================================================
+        function cerrarModalConfirmacion() {
+            document.getElementById('modalConfirmacionCierre').classList.remove('active');
+        }
+
+        // ================================================================
+        // EJECUTAR CIERRE (desde el modal)
+        // ================================================================
+        function ejecutarCierre() {
+            var btn = document.getElementById('btnConfirmarCierre');
             var originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Cerrando...';
+
+            var fondoFinal = parseFloat(document.getElementById('cFondoFinal').value) || 0;
+            var observaciones = document.getElementById('cObservaciones').value || '';
 
             var url = '/api/turnos-caja/' + turnoActual.idTurnoCaja +
                 '/cerrar?fondoFinal=' + fondoFinal +
@@ -597,11 +828,10 @@
             })
             .then(function(data) {
                 mostrarToast('✅ Turno cerrado correctamente', 'success');
-                // Actualizar estado en el layout
+                cerrarModalConfirmacion();
                 if (window.actualizarEstadoCaja) {
                     window.actualizarEstadoCaja(false);
                 }
-                // Recargar datos para mostrar el turno cerrado
                 setTimeout(function() {
                     cargarDatosCierre();
                     mostrarToast('📊 Datos actualizados', 'info');

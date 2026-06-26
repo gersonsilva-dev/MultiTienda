@@ -227,18 +227,163 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
-        @media (max-width: 768px) {
-            .topbar-left { font-size: 11px; }
-            .topbar-item.hide-mobile { display: none; }
-            .tab span { display: none; }
-            .tab i { font-size: 17px; }
-            .tab { padding: 10px 12px; }
+        /* ============================================================ */
+        /* 🔥 MODAL GLOBAL DE CONFIRMACIÓN / ALERTA                     */
+        /* ============================================================ */
+        .modal-global-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            z-index: 20000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-global-overlay.active {
+            display: flex;
+        }
+
+        .modal-global-box {
+            background: #ffffff;
+            border-radius: 20px;
+            max-width: 420px;
+            width: 100%;
+            padding: 32px 28px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-global-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-global-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-global-header h3 i {
+            font-size: 22px;
+        }
+
+        .modal-global-header h3 .icon-warning {
+            color: #F59E0B;
+        }
+        .modal-global-header h3 .icon-danger {
+            color: #DC2626;
+        }
+        .modal-global-header h3 .icon-info {
+            color: #3B82F6;
+        }
+
+        .modal-global-close {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--color-text-tertiary);
+            transition: color 0.2s;
+        }
+        .modal-global-close:hover {
+            color: var(--color-text-primary);
+        }
+
+        .modal-global-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-global-body .mensaje {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+            padding: 4px 0;
+        }
+
+        .modal-global-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            justify-content: flex-end;
+        }
+
+        .modal-global-footer .btn-modal {
+            padding: 10px 24px;
+            border-radius: 99px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-width: 80px;
+        }
+
+        .modal-global-footer .btn-modal-cancelar {
+            background: var(--color-background-secondary);
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border-tertiary);
+        }
+
+        .modal-global-footer .btn-modal-cancelar:hover {
+            background: var(--color-border-tertiary);
+        }
+
+        .modal-global-footer .btn-modal-confirmar {
+            background: #16A34A;
+            color: #fff;
+        }
+
+        .modal-global-footer .btn-modal-confirmar:hover {
+            background: #15803D;
+        }
+
+        .modal-global-footer .btn-modal-confirmar.danger {
+            background: #DC2626;
+        }
+
+        .modal-global-footer .btn-modal-confirmar.danger:hover {
+            background: #B91C1C;
         }
 
         @media (max-width: 480px) {
-            .topbar { padding: 0 8px; }
-            .topbar-right { gap: 8px; }
-            .topbar-item { font-size: 9px; }
+            .modal-global-box {
+                margin: 16px;
+                padding: 20px;
+            }
+            .modal-global-footer {
+                flex-direction: column-reverse;
+            }
+            .modal-global-footer .btn-modal {
+                width: 100%;
+            }
         }
 
         /* ============================================================ */
@@ -429,17 +574,17 @@
             .caja-row { grid-template-columns: 1fr; }
         }
     </style>
-	<script>
-	        // 🔥 REDIRECCIÓN AUTOMÁTICA: /views/* → /api/views/*
-	        (function() {
-	            const path = window.location.pathname;
-	            if (path.startsWith('/views/') && !path.startsWith('/api/views/')) {
-	                const newPath = '/api' + path;
-	                console.log('🔄 Redirigiendo de', path, 'a', newPath);
-	                window.location.replace(newPath);
-	            }
-	        })();
-	    </script>
+    <script>
+        // 🔥 REDIRECCIÓN AUTOMÁTICA: /views/* → /api/views/*
+        (function() {
+            const path = window.location.pathname;
+            if (path.startsWith('/views/') && !path.startsWith('/api/views/')) {
+                const newPath = '/api' + path;
+                console.log('🔄 Redirigiendo de', path, 'a', newPath);
+                window.location.replace(newPath);
+            }
+        })();
+    </script>
 </head>
 <body>
 
@@ -493,208 +638,290 @@
             </button>
         </div>
 
-		    <!-- ========== CONTENIDO ========== -->
-		    <div class="body">
-		        <div class="content-area" id="contentArea">
-		            <div th:replace="~{${content}}"></div>
-		        </div>
-		    </div>
+        <!-- ========== CONTENIDO ========== -->
+        <div class="body">
+            <div class="content-area" id="contentArea">
+                <div th:replace="~{${content}}"></div>
+            </div>
+        </div>
 
-		    <!-- 🔥 CONTENEDOR DE TOASTS GLOBAL -->
-		    <div id="toastContainerGlobal" class="toast-container"></div>
+        <!-- 🔥 CONTENEDOR DE TOASTS GLOBAL -->
+        <div id="toastContainerGlobal" class="toast-container"></div>
 
-		</div>
+        <!-- ============================================================ -->
+        <!-- 🔥 MODAL GLOBAL DE CONFIRMACIÓN / ALERTA                      -->
+        <!-- ============================================================ -->
+        <div class="modal-global-overlay" id="modalGlobal">
+            <div class="modal-global-box">
+                <div class="modal-global-header">
+                    <h3>
+                        <i class="ti ti-alert-triangle icon-warning" id="modalGlobalIcon"></i>
+                        <span id="modalGlobalTitle">Atención</span>
+                    </h3>
+                    <button class="modal-global-close" onclick="cerrarModalGlobal(false)">✕</button>
+                </div>
+                <div class="modal-global-body">
+                    <div class="mensaje" id="modalGlobalBody">Mensaje</div>
+                </div>
+                <div class="modal-global-footer" id="modalGlobalFooter">
+                    <button class="btn-modal btn-modal-confirmar" onclick="cerrarModalGlobal(true)">Aceptar</button>
+                </div>
+            </div>
+        </div>
 
     </div>
 
-	<!-- ============================================================ -->
-	<!-- JAVASCRIPT DEL LAYOUT (VERSIÓN COMPLETA Y CORREGIDA)        -->
-	<!-- ============================================================ -->
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT DEL LAYOUT (VERSIÓN COMPLETA Y CORREGIDA)        -->
+    <!-- ============================================================ -->
 
-	<!-- PRIMERO: principal.js -->
-	<script th:src="@{/js/principal.js}"></script>
+    <!-- PRIMERO: principal.js -->
+    <script th:src="@{/js/principal.js}"></script>
 
-	<!-- SEGUNDO: script inline -->
-	<script th:inline="javascript">
-	    /*<![CDATA[*/
+    <!-- SEGUNDO: script inline -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
 
-	    // === GUARDAR DATOS DEL USUARIO GLOBALMENTE ===
-	    window.idUsuarioGlobal = null;
-	    try {
-	        window.idUsuarioGlobal = /*[[${usuario.idUsuario}]]*/ null;
-	    } catch(e) {
-	        console.warn('No se pudo obtener idUsuario');
-	    }
-	    console.log('ID Usuario global:', window.idUsuarioGlobal);
+        // === GUARDAR DATOS DEL USUARIO GLOBALMENTE ===
+        window.idUsuarioGlobal = null;
+        try {
+            window.idUsuarioGlobal = /*[[${usuario.idUsuario}]]*/ null;
+        } catch(e) {
+            console.warn('No se pudo obtener idUsuario');
+        }
+        console.log('ID Usuario global:', window.idUsuarioGlobal);
 
-	    // === VARIABLES GLOBALES ===
-	    let cajaAbierta = false;
-	    let paginaActual = 'venta';
+        // === VARIABLES GLOBALES ===
+        let cajaAbierta = false;
+        let paginaActual = 'venta';
 
-	    const tabApertura = document.getElementById('tabApertura');
-	    const tabCierre = document.getElementById('tabCierre');
-	    const tabs = document.querySelectorAll('.tab');
+        const tabApertura = document.getElementById('tabApertura');
+        const tabCierre = document.getElementById('tabCierre');
+        const tabs = document.querySelectorAll('.tab');
 
-	    let idUsuario = null;
-	    try {
-	        idUsuario = /*[[${usuario.idUsuario}]]*/ null;
-	    } catch(e) {
-	        console.warn('No se pudo obtener idUsuario');
-	    }
-	    console.log('ID Usuario:', idUsuario);
+        let idUsuario = null;
+        try {
+            idUsuario = /*[[${usuario.idUsuario}]]*/ null;
+        } catch(e) {
+            console.warn('No se pudo obtener idUsuario');
+        }
+        console.log('ID Usuario:', idUsuario);
 
-	    const statusText = document.getElementById('statusText');
-	    const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
+        const statusIcon = document.getElementById('statusIcon');
 
-	    // === ACTUALIZAR ESTADO DE CAJA ===
-	    window.actualizarEstadoCaja = function(abierta) {
-	        cajaAbierta = abierta;
-	        
-	        if (statusText) {
-	            statusText.textContent = abierta ? 'Caja abierta' : 'Caja cerrada';
-	            statusText.style.color = abierta ? '#4ADE80' : '#EF4444';
-	        }
-	        if (statusIcon) {
-	            statusIcon.className = abierta ? 'ti ti-circle-filled status-online' : 'ti ti-circle-filled status-offline';
-	        }
-	        
-	        if (tabApertura) {
-	            tabApertura.style.display = abierta ? 'none' : 'flex';
-	        }
-	        if (tabCierre) {
-	            tabCierre.style.display = abierta ? 'flex' : 'none';
-	        }
-	        
-	        tabs.forEach(tab => {
-	            const page = tab.dataset.page;
-	            if (tab.style.display !== 'none') {
-	                tab.classList.toggle('active', tab.dataset.page === paginaActual);
-	            }
-	        });
-	    };
+        // === FUNCIONES DEL MODAL GLOBAL ===
+        function mostrarAlerta(mensaje, titulo = 'Atención', icono = 'ti-alert-triangle') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('modalGlobal');
+                document.getElementById('modalGlobalTitle').textContent = titulo;
+                document.getElementById('modalGlobalBody').textContent = mensaje;
+                const icon = document.getElementById('modalGlobalIcon');
+                icon.className = 'ti ' + icono;
+                // Resetear color según icono
+                if (icono === 'ti-alert-triangle') icon.style.color = '#F59E0B';
+                else if (icono === 'ti-circle-x') icon.style.color = '#DC2626';
+                else icon.style.color = '#3B82F6';
+                
+                document.getElementById('modalGlobalFooter').innerHTML = `
+                    <button class="btn-modal btn-modal-confirmar" onclick="cerrarModalGlobal(true)">Aceptar</button>
+                `;
+                modal.classList.add('active');
+                window._modalResolve = resolve;
+            });
+        }
 
-	    // === FUNCIÓN PARA ACTUALIZAR PESTAÑA ACTIVA ===
-	    function actualizarPestanaActiva(pagina) {
-	        paginaActual = pagina;
-	        tabs.forEach(tab => {
-	            const page = tab.dataset.page;
-	            if (tab.style.display !== 'none') {
-	                tab.classList.toggle('active', page === pagina);
-	            }
-	        });
-	    }
+        function mostrarConfirmacion(mensaje, callback, titulo = 'Confirmar') {
+            const modal = document.getElementById('modalGlobal');
+            document.getElementById('modalGlobalTitle').textContent = titulo;
+            document.getElementById('modalGlobalBody').textContent = mensaje;
+            const icon = document.getElementById('modalGlobalIcon');
+            icon.className = 'ti ti-alert-triangle';
+            icon.style.color = '#DC2626';
+            
+            document.getElementById('modalGlobalFooter').innerHTML = `
+                <button class="btn-modal btn-modal-cancelar" onclick="cerrarModalGlobal(false)">Cancelar</button>
+                <button class="btn-modal btn-modal-confirmar danger" onclick="cerrarModalGlobal(true)">Confirmar</button>
+            `;
+            modal.classList.add('active');
+            window._modalCallback = callback;
+        }
 
-	    // === FUNCIÓN DE NAVEGACIÓN (RECARGA COMPLETA) ===
-	    window.cambiarVista = function(pagina) {
-	        if (!cajaAbierta && pagina !== 'apertura') {
-	            alert('⚠️ Primero debes abrir la caja en "Apertura"');
-	            return;
-	        }
-	        if (cajaAbierta && pagina === 'apertura') {
-	            alert('⚠️ La caja ya está abierta. Ve a "Nueva venta"');
-	            return;
-	        }
-	        
-	        // 🔥 RECARGA COMPLETA CON LA RUTA CORRECTA
-	        window.location.href = '/api/views/' + pagina;
-	    };
+        function cerrarModalGlobal(aceptado) {
+            document.getElementById('modalGlobal').classList.remove('active');
+            if (typeof window._modalResolve === 'function') {
+                window._modalResolve(aceptado);
+                window._modalResolve = null;
+            }
+            if (typeof window._modalCallback === 'function') {
+                if (aceptado) window._modalCallback();
+                window._modalCallback = null;
+            }
+        }
 
-	    // === RELOJ ===
-	    function actualizarReloj() {
-	        const el = document.getElementById('reloj');
-	        if (!el) return;
-	        const ahora = new Date();
-	        const h = String(ahora.getHours()).padStart(2, '0');
-	        const m = String(ahora.getMinutes()).padStart(2, '0');
-	        el.textContent = h + ':' + m;
-	    }
+        // Cerrar modal con ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cerrarModalGlobal(false);
+            }
+        });
 
-	    // === CERRAR SESIÓN ===
-	    window.cerrarSesion = function() {
-	        if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-	            window.location.href = '/logout';
-	        }
-	    };
+        // === ACTUALIZAR ESTADO DE CAJA ===
+        window.actualizarEstadoCaja = function(abierta) {
+            cajaAbierta = abierta;
+            
+            if (statusText) {
+                statusText.textContent = abierta ? 'Caja abierta' : 'Caja cerrada';
+                statusText.style.color = abierta ? '#4ADE80' : '#EF4444';
+            }
+            if (statusIcon) {
+                statusIcon.className = abierta ? 'ti ti-circle-filled status-online' : 'ti ti-circle-filled status-offline';
+            }
+            
+            if (tabApertura) {
+                tabApertura.style.display = abierta ? 'none' : 'flex';
+            }
+            if (tabCierre) {
+                tabCierre.style.display = abierta ? 'flex' : 'none';
+            }
+            
+            tabs.forEach(tab => {
+                const page = tab.dataset.page;
+                if (tab.style.display !== 'none') {
+                    tab.classList.toggle('active', tab.dataset.page === paginaActual);
+                }
+            });
+        };
 
-	    // === INICIALIZACIÓN (COMPLETA Y CORREGIDA) ===
-	    function init() {
-	        // Iniciar reloj
-	        actualizarReloj();
-	        setInterval(actualizarReloj, 30000);
+        // === FUNCIÓN PARA ACTUALIZAR PESTAÑA ACTIVA ===
+        function actualizarPestanaActiva(pagina) {
+            paginaActual = pagina;
+            tabs.forEach(tab => {
+                const page = tab.dataset.page;
+                if (tab.style.display !== 'none') {
+                    tab.classList.toggle('active', page === pagina);
+                }
+            });
+        }
 
-	        // Detectar página actual desde la URL
-	        const path = window.location.pathname;
-	        const pageMatch = path.match(/\/views\/([a-zA-Z0-9]+)/);
-	        if (pageMatch) {
-	            paginaActual = pageMatch[1];
-	        } else {
-	            paginaActual = 'venta';
-	        }
-	        console.log('📄 Página actual detectada:', paginaActual);
+        // === FUNCIÓN DE NAVEGACIÓN (RECARGA COMPLETA) ===
+        window.cambiarVista = function(pagina) {
+            if (!cajaAbierta && pagina !== 'apertura') {
+                // 🔥 Reemplazado alert() por modal elegante
+                mostrarAlerta('⚠️ Primero debes abrir la caja en "Apertura"', 'Acceso denegado', 'ti-alert-triangle');
+                return;
+            }
+            if (cajaAbierta && pagina === 'apertura') {
+                // 🔥 Reemplazado alert() por modal elegante
+                mostrarAlerta('⚠️ La caja ya está abierta. Ve a "Nueva venta"', 'Acceso denegado', 'ti-alert-triangle');
+                return;
+            }
+            
+            // 🔥 RECARGA COMPLETA CON LA RUTA CORRECTA
+            window.location.href = '/api/views/' + pagina;
+        };
 
-	        // Actualizar pestaña activa
-	        tabs.forEach(tab => {
-	            tab.classList.toggle('active', tab.dataset.page === paginaActual);
-	        });
+        // === RELOJ ===
+        function actualizarReloj() {
+            const el = document.getElementById('reloj');
+            if (!el) return;
+            const ahora = new Date();
+            const h = String(ahora.getHours()).padStart(2, '0');
+            const m = String(ahora.getMinutes()).padStart(2, '0');
+            el.textContent = h + ':' + m;
+        }
 
-	        // Verificar turno activo con el endpoint correcto
-	        if (idUsuario) {
-	            console.log('🔍 Verificando turno activo para usuario:', idUsuario);
-	            fetch('/api/turnos-caja/usuario/' + idUsuario + '/activo')
-	                .then(response => {
-	                    if (response.ok) {
-	                        return response.json();
-	                    } else if (response.status === 404) {
-	                        return null;
-	                    } else {
-	                        throw new Error('Error al verificar turno: ' + response.status);
-	                    }
-	                })
-	                .then(data => {
-	                    if (data && data.activo && data.turno) {
-	                        console.log('✅ Turno activo encontrado:', data.turno);
-	                        actualizarEstadoCaja(true);
-	                        // Si estamos en apertura, redirigir a venta
-	                        if (paginaActual === 'apertura') {
-	                            window.location.href = '/api/views/venta';
-	                        }
-	                    } else {
-	                        console.log('⚠️ No hay turno activo');
-	                        actualizarEstadoCaja(false);
-	                        // Si no estamos en apertura, redirigir
-	                        if (paginaActual !== 'apertura') {
-	                            window.location.href = '/api/views/apertura';
-	                        }
-	                    }
-	                })
-	                .catch(error => {
-	                    console.error('❌ Error al verificar turno:', error);
-	                    actualizarEstadoCaja(false);
-	                    if (paginaActual !== 'apertura') {
-	                        window.location.href = '/api/views/apertura';
-	                    }
-	                });
-	        } else {
-	            console.warn('⚠️ No hay idUsuario');
-	            window.location.href = '/login';
-	        }
+        // === CERRAR SESIÓN (mejorado con modal) ===
+        window.cerrarSesion = function() {
+            // 🔥 Reemplazado confirm() por modal elegante
+            mostrarConfirmacion(
+                '¿Estás seguro de que deseas cerrar sesión?',
+                function() {
+                    window.location.href = '/logout';
+                },
+                'Cerrar sesión'
+            );
+        };
 
-	        console.log('✅ Layout POS inicializado correctamente');
-	    }
+        // === INICIALIZACIÓN (COMPLETA Y CORREGIDA) ===
+        function init() {
+            // Iniciar reloj
+            actualizarReloj();
+            setInterval(actualizarReloj, 30000);
 
-	    // Ejecutar cuando el DOM esté listo
-	    if (document.readyState === 'loading') {
-	        document.addEventListener('DOMContentLoaded', init);
-	    } else {
-	        init();
-	    }
+            // Detectar página actual desde la URL
+            const path = window.location.pathname;
+            const pageMatch = path.match(/\/views\/([a-zA-Z0-9]+)/);
+            if (pageMatch) {
+                paginaActual = pageMatch[1];
+            } else {
+                paginaActual = 'venta';
+            }
+            console.log('📄 Página actual detectada:', paginaActual);
 
-	    /*]]>*/
-	</script>
+            // Actualizar pestaña activa
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.page === paginaActual);
+            });
 
-	<!-- jsPDF para generar PDFs -->
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+            // Verificar turno activo con el endpoint correcto
+            if (idUsuario) {
+                console.log('🔍 Verificando turno activo para usuario:', idUsuario);
+                fetch('/api/turnos-caja/usuario/' + idUsuario + '/activo')
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else if (response.status === 404) {
+                            return null;
+                        } else {
+                            throw new Error('Error al verificar turno: ' + response.status);
+                        }
+                    })
+                    .then(data => {
+                        if (data && data.activo && data.turno) {
+                            console.log('✅ Turno activo encontrado:', data.turno);
+                            actualizarEstadoCaja(true);
+                            // Si estamos en apertura, redirigir a venta
+                            if (paginaActual === 'apertura') {
+                                window.location.href = '/api/views/venta';
+                            }
+                        } else {
+                            console.log('⚠️ No hay turno activo');
+                            actualizarEstadoCaja(false);
+                            // Si no estamos en apertura, redirigir
+                            if (paginaActual !== 'apertura') {
+                                window.location.href = '/api/views/apertura';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Error al verificar turno:', error);
+                        actualizarEstadoCaja(false);
+                        if (paginaActual !== 'apertura') {
+                            window.location.href = '/api/views/apertura';
+                        }
+                    });
+            } else {
+                console.warn('⚠️ No hay idUsuario');
+                window.location.href = '/login';
+            }
+
+            console.log('✅ Layout POS inicializado correctamente');
+        }
+
+        // Ejecutar cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        /*]]>*/
+    </script>
+
+    <!-- jsPDF para generar PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 </body>
 </html>
