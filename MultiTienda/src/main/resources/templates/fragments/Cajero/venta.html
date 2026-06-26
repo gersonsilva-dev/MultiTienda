@@ -1587,7 +1587,7 @@
             }
 
             renderizarCarrito();
-            mostrarToast('✅ ' + producto.nombreProducto + ' agregado', 'success');
+            //mostrarToast('✅ ' + producto.nombreProducto + ' agregado', 'success');
             ocultarResultados();
             var searchInp = document.getElementById('searchInp');
             if (searchInp) searchInp.value = '';
@@ -1703,7 +1703,7 @@
 
 		    if (mejorDescuento > 0) {
 		        var nombreOferta = mejorOferta?.nombreOferta || 'Oferta aplicada';
-		        mostrarToast('🎯 ' + nombreOferta + ' - S/ ' + mejorDescuento.toFixed(2), 'success');
+		        //mostrarToast('🎯 ' + nombreOferta + ' - S/ ' + mejorDescuento.toFixed(2), 'success');
 		    }
 
 		    return { descuento: mejorDescuento };
@@ -1862,7 +1862,7 @@
             document.querySelectorAll('.pay-card').forEach(function(c) { c.classList.remove('sel'); });
             if (el) el.classList.add('sel');
             metodoPago = metodo;
-            mostrarToast('💳 Método: ' + metodo.toUpperCase(), 'info');
+            //mostrarToast('💳 Método: ' + metodo.toUpperCase(), 'info');
         }
 
         // ================================================================

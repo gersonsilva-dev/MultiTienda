@@ -255,4 +255,9 @@ public class VentaService {
         }
         return ventasDTO;
     }
+    
+    public List<Venta> listarPorCajeroYTurno(Integer idCajero, Integer idTurnoCaja) {
+        // Asumiendo que Venta tiene relación con TurnoCaja y Cajero
+        return ventaRepository.findByCajero_IdUsuarioAndTurnoCaja_IdTurnoCaja(idCajero, idTurnoCaja);
+    }
 }

@@ -631,11 +631,7 @@
                             <div class="value success" id="mvDiferencia">S/ 0.00</div>
                         </div>
                     </div>
-                    <div class="mv-caja-actions">
-                        <button class="btn-retiro" onclick="abrirModalRetiro()">
-                            <i class="ti ti-arrow-up-circle"></i> Solicitar retiro de caja
-                        </button>
-                    </div>
+
                 </div>
 
                 <!-- PAGOS RECIBIDOS -->
@@ -723,20 +719,20 @@
         // ================================================================
         // CARGAR DATOS PRINCIPALES
         // ================================================================
-        function cargarMisVentas() {
-            var fecha = new Date();
-            var fechaEl = document.getElementById('mvFecha');
-            if (fechaEl) {
-                fechaEl.textContent = fecha.toLocaleDateString('es-PE', {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                });
-            }
-            cargarVentasDelDia();
-            cargarEstadoCaja();
-        }
+		function cargarMisVentas() {
+		    var fecha = new Date();
+		    var fechaEl = document.getElementById('mvFecha');
+		    if (fechaEl) {
+		        fechaEl.textContent = fecha.toLocaleDateString('es-PE', {
+		            weekday: 'long',
+		            day: 'numeric',
+		            month: 'long',
+		            year: 'numeric'
+		        });
+		    }
+		    // 🔥 SOLO cargar estado de caja (allí se cargarán las ventas después)
+		    cargarEstadoCaja();
+		}
 		// ================================================================
 		// 🔥 RETIRO DE CAJA - ALERTA AUTOMÁTICA
 		// ================================================================
@@ -813,41 +809,25 @@
 		        return;
 		    }
 
-		    console.log('🔍 Buscando ventas para userId:', userId);
+		    // 🔥 Construir URL con filtro de turno si existe
+		    var url = '/api/ventas/cajero/' + userId;
+		    if (turnoActual && turnoActual.idTurnoCaja) {
+		        url += '?idTurnoCaja=' + turnoActual.idTurnoCaja;
+		    }
 
-		    // 🔥 Obtener fecha actual LOCAL (sin zona horaria)
-		    var hoy = new Date();
-		    var hoyStr = hoy.getFullYear() + '-' + 
-		                 String(hoy.getMonth() + 1).padStart(2, '0') + '-' + 
-		                 String(hoy.getDate()).padStart(2, '0');
-		    console.log('📅 Fecha de hoy (local):', hoyStr);
+		    console.log('🔍 Buscando ventas con URL:', url);
 
-		    fetch('/api/ventas/cajero/' + userId)
+		    fetch(url)
 		        .then(function(response) {
-		            console.log('📡 Respuesta del servidor:', response.status);
 		            if (!response.ok) throw new Error('Error al cargar ventas: ' + response.status);
 		            return response.json();
 		        })
 		        .then(function(data) {
-		            console.log('📦 Total de ventas recibidas:', data.length);
-
-		            // 🔥 FILTRAR comparando fecha LOCAL
-		            var ventasFiltradas = data.filter(function(v) {
-		                if (!v.fechaVenta) return false;
-		                // Convertir fecha de la venta a local y extraer YYYY-MM-DD
-		                var fechaVenta = new Date(v.fechaVenta);
-		                var fechaVentaStr = fechaVenta.getFullYear() + '-' + 
-		                                    String(fechaVenta.getMonth() + 1).padStart(2, '0') + '-' + 
-		                                    String(fechaVenta.getDate()).padStart(2, '0');
-		                return fechaVentaStr === hoyStr;
-		            });
-
-		            console.log('✅ Ventas de hoy:', ventasFiltradas.length);
-		            ventasDelDia = ventasFiltradas;
+		            // 🔥 Ya no necesitas filtrar por fecha porque el backend filtra por turno
+		            ventasDelDia = data;
 		            renderizarTabla(ventasDelDia);
 		            actualizarResumen(ventasDelDia);
 		            
-		            // 🔥 Verificar límite después de cargar ventas
 		            setTimeout(function() {
 		                verificarLimiteEfectivo();
 		            }, 500);
@@ -985,7 +965,6 @@
 
 		    document.getElementById('mvFondoInicial').textContent = 'S/ ' + (turno.fondoInicial || 0).toFixed(2);
 
-		    // 🔥 EFECTIVO ACTUAL = fondoInicial + totalVentasEfectivo - retiros
 		    var retiros = parseFloat(document.getElementById('mvRetiros').textContent.replace('S/ ', '')) || 0;
 		    var efectivoActual = (turno.fondoInicial || 0) + (turno.totalVentasEfectivo || 0) - retiros;
 		    document.getElementById('mvEfectivoActual').textContent = 'S/ ' + efectivoActual.toFixed(2);
@@ -993,34 +972,44 @@
 		    document.getElementById('mvDiferencia').textContent = 'S/ 0.00';
 
 		    cargarPagos(turno);
+		    
+		    // 🔥 Ahora que turnoActual está listo, cargar ventas
+		    cargarVentasDelDia();
+		    
 		    setTimeout(function() {
 		        verificarLimiteEfectivo();
 		    }, 500);
 		}
 
-        function mostrarCajaCerrada() {
-            var badge = document.getElementById('mvEstadoCaja');
-            if (badge) {
-                badge.textContent = 'Cerrada';
-                badge.style.background = '#FEE2E2';
-                badge.style.color = '#DC2626';
-            }
+		function mostrarCajaCerrada() {
+		    var badge = document.getElementById('mvEstadoCaja');
+		    if (badge) {
+		        badge.textContent = 'Cerrada';
+		        badge.style.background = '#FEE2E2';
+		        badge.style.color = '#DC2626';
+		    }
 
-            var campos = ['mvFondoInicial', 'mvEfectivoActual', 'mvRetiros', 'mvDiferencia'];
-            campos.forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.textContent = 'S/ 0.00';
-            });
+		    var campos = ['mvFondoInicial', 'mvEfectivoActual', 'mvRetiros', 'mvDiferencia'];
+		    campos.forEach(function(id) {
+		        var el = document.getElementById(id);
+		        if (el) el.textContent = 'S/ 0.00';
+		    });
 
-            ['mvPagoEfectivo', 'mvPagoTarjeta', 'mvPagoDigital'].forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.textContent = 'S/ 0.00';
-            });
-            ['mvBarEfectivo', 'mvBarTarjeta', 'mvBarDigital'].forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.style.width = '0%';
-            });
-        }
+		    ['mvPagoEfectivo', 'mvPagoTarjeta', 'mvPagoDigital'].forEach(function(id) {
+		        var el = document.getElementById(id);
+		        if (el) el.textContent = 'S/ 0.00';
+		    });
+		    ['mvBarEfectivo', 'mvBarTarjeta', 'mvBarDigital'].forEach(function(id) {
+		        var el = document.getElementById(id);
+		        if (el) el.style.width = '0%';
+		    });
+		    
+		    // 🔥 Limpiar tabla y resumen si no hay turno
+		    ventasDelDia = [];
+		    renderizarTabla([]);
+		    actualizarResumen([]);
+		    ocultarAlertaRetiro();
+		}
 
         // ================================================================
         // CARGAR PAGOS RECIBIDOS

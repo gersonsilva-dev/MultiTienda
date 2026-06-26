@@ -29,9 +29,18 @@ public class VentaController {
         return ResponseEntity.ok(ventaService.listarActivas());
     }
 
+ // En VentaController.java
     @GetMapping("/cajero/{idCajero}")
-    public ResponseEntity<List<Venta>> listarPorCajero(@PathVariable Integer idCajero) {
-        return ResponseEntity.ok(ventaService.listarPorCajero(idCajero));
+    public ResponseEntity<List<Venta>> listarPorCajero(
+            @PathVariable Integer idCajero,
+            @RequestParam(required = false) Integer idTurnoCaja) {
+        List<Venta> ventas;
+        if (idTurnoCaja != null) {
+            ventas = ventaService.listarPorCajeroYTurno(idCajero, idTurnoCaja);
+        } else {
+            ventas = ventaService.listarPorCajero(idCajero);
+        }
+        return ResponseEntity.ok(ventas);
     }
 
     @GetMapping("/tienda/{idTienda}")

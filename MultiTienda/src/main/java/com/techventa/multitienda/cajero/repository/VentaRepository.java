@@ -76,4 +76,9 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
     @Query("SELECT v FROM Venta v LEFT JOIN FETCH v.detalles d LEFT JOIN FETCH d.producto p WHERE v.cajero.idUsuario = :idCajero")
     List<Venta> findByCajero_IdUsuarioWithDetails(@Param("idCajero") Integer idCajero);
     
+    
+    
+    
+    List<Venta> findByCajero_IdUsuarioAndTurnoCaja_IdTurnoCaja(Integer idCajero, Integer idTurnoCaja);
+    
 }
