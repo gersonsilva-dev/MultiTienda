@@ -1654,50 +1654,60 @@
             if (btnTotal) btnTotal.textContent = 'S/ ' + total.toFixed(2);
         }
 
-        // ================================================================
-        // CALCULAR DESCUENTOS
-        // ================================================================
-        function calcularDescuentos(subtotal, items) {
-            var descuentoTotal = 0;
-            
-            if (!ofertasActivas || ofertasActivas.length === 0) {
-                return { descuento: 0 };
-            }
+		// ================================================================
+		// CALCULAR DESCUENTOS (VERSIÓN MEJORADA)
+		// ================================================================
+		function calcularDescuentos(subtotal, items) {
+		    var mejorDescuento = 0;
+		    var mejorOferta = null;
+		    
+		    if (!ofertasActivas || ofertasActivas.length === 0) {
+		        return { descuento: 0 };
+		    }
 
-            ofertasActivas.forEach(function(oferta) {
-                var tipo = oferta.tipoDescuento?.idTipoDescuento || 0;
-                var valor = oferta.valorDescuento || 0;
-                var montoMinimo = oferta.montoMinimo || 0;
-                var cantidadCompra = oferta.cantidadCompra || 2;
+		    ofertasActivas.forEach(function(oferta) {
+		        var tipo = oferta.tipoDescuento?.idTipoDescuento || 0;
+		        var valor = oferta.valorDescuento || 0;
+		        var montoMinimo = oferta.montoMinimo || 0;
+		        var cantidadCompra = oferta.cantidadCompra || 2;
+		        var descuentoOferta = 0;
 
-                if (tipo === 3) {
-                    items.forEach(function(item) {
-                        var gratis = Math.floor(item.cantidad / cantidadCompra);
-                        if (gratis > 0) {
-                            descuentoTotal += gratis * item.precio;
-                        }
-                    });
-                } else if (tipo === 1) {
-                    if (subtotal >= montoMinimo && valor > 0) {
-                        descuentoTotal += subtotal * (valor / 100);
-                    }
-                } else if (tipo === 2) {
-                    if (subtotal >= montoMinimo && valor > 0) {
-                        descuentoTotal += Math.min(valor, subtotal);
-                    }
-                }
-            });
+		        if (tipo === 3) { // 2x1
+		            items.forEach(function(item) {
+		                var gratis = Math.floor(item.cantidad / cantidadCompra);
+		                if (gratis > 0) {
+		                    descuentoOferta += gratis * item.precio;
+		                }
+		            });
+		        } else if (tipo === 1) { // Porcentaje
+		            if (subtotal >= montoMinimo && valor > 0) {
+		                descuentoOferta = subtotal * (valor / 100);
+		            }
+		        } else if (tipo === 2) { // Monto fijo
+		            if (subtotal >= montoMinimo && valor > 0) {
+		                descuentoOferta = Math.min(valor, subtotal);
+		            }
+		        }
 
-            if (descuentoTotal > subtotal) {
-                descuentoTotal = subtotal;
-            }
+		        // Seleccionar la mejor oferta (la que da mayor descuento)
+		        if (descuentoOferta > mejorDescuento) {
+		            mejorDescuento = descuentoOferta;
+		            mejorOferta = oferta;
+		        }
+		    });
 
-            if (descuentoTotal > 0) {
-                mostrarToast('🎯 Descuento aplicado: -S/ ' + descuentoTotal.toFixed(2), 'success');
-            }
+		    // Limitar descuento al subtotal
+		    if (mejorDescuento > subtotal) {
+		        mejorDescuento = subtotal;
+		    }
 
-            return { descuento: descuentoTotal };
-        }
+		    if (mejorDescuento > 0) {
+		        var nombreOferta = mejorOferta?.nombreOferta || 'Oferta aplicada';
+		        mostrarToast('🎯 ' + nombreOferta + ' - S/ ' + mejorDescuento.toFixed(2), 'success');
+		    }
+
+		    return { descuento: mejorDescuento };
+		}
 
         // ================================================================
         // FUNCIONES DE CLIENTE

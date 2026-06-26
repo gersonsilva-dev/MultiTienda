@@ -4,9 +4,12 @@ import com.techventa.multitienda.admin.model.Cliente;
 import com.techventa.multitienda.admin.model.Tienda;
 import com.techventa.multitienda.admin.model.Usuario;
 import com.techventa.multitienda.admin.model.Caja;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "ventas")
@@ -80,7 +83,12 @@ public class Venta {
 
     @Column(name = "metodo_pago", length = 20)
     private String metodoPago;
-    
+
+    // 🔥 RELACIÓN CON DETALLES (CON @JsonIgnore)
+    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore  // 🔥 Evita el bucle infinito
+    private List<DetalleVenta> detalles = new ArrayList<>();
+
     public Venta() {}
 
     // Getters y Setters
@@ -122,13 +130,10 @@ public class Venta {
     public void setActivo(Boolean activo) { this.activo = activo; }
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
-
-	public String getMetodoPago() {
-		return metodoPago;
-	}
-
-	public void setMetodoPago(String metodoPago) {
-		this.metodoPago = metodoPago;
-	}
+    public String getMetodoPago() { return metodoPago; }
+    public void setMetodoPago(String metodoPago) { this.metodoPago = metodoPago; }
     
+    // 🔥 Getter y Setter para detalles
+    public List<DetalleVenta> getDetalles() { return detalles; }
+    public void setDetalles(List<DetalleVenta> detalles) { this.detalles = detalles; }
 }

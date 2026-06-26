@@ -3,7 +3,7 @@
 <div th:fragment="content" th:remove="tag">
     <style>
         /* ============================================================ */
-        /* ESTILOS DE DEVOLUCIÓN (tomados del index.html)               */
+        /* ESTILOS DE DEVOLUCIÓN                                        */
         /* ============================================================ */
         .full-view {
             flex: 1;
@@ -50,6 +50,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
 
         .ch {
@@ -60,24 +61,25 @@
             border-bottom: 1px solid var(--color-border-tertiary);
             gap: 8px;
             flex-shrink: 0;
+            background: var(--color-background-secondary);
         }
 
         .ct {
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             color: var(--color-text-primary);
         }
 
         .cb {
             font-size: 9px;
             font-weight: 700;
-            padding: 2px 8px;
+            padding: 2px 10px;
             border-radius: 99px;
         }
-
         .cb-ok { background: var(--color-background-success); color: var(--color-text-success); }
         .cb-warn { background: var(--color-background-warning); color: var(--color-text-warning); }
         .cb-danger { background: var(--color-background-danger); color: var(--color-text-danger); }
+        .cb-info { background: var(--color-background-info); color: var(--color-text-info); }
 
         .btn {
             flex: 1;
@@ -92,13 +94,14 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
+            transition: all 0.2s;
         }
 
         .btn-prim {
             background: #16A34A;
             color: #fff;
         }
-        .btn-prim:hover { background: #15803D; }
+        .btn-prim:hover { background: #15803D; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(22,163,74,0.3); }
 
         .btn-outline {
             background: transparent;
@@ -125,6 +128,7 @@
             display: inline-flex;
             align-items: center;
             gap: 3px;
+            transition: all 0.2s;
         }
         .btn-sm:hover { background: var(--color-background-secondary); }
         .btn-sm.primary {
@@ -148,10 +152,15 @@
             background: var(--color-background-secondary);
             border: 1px solid var(--color-border-tertiary);
             border-radius: 99px;
-            padding: 6px 11px;
+            padding: 6px 12px;
+            transition: border-color 0.2s;
+        }
+        .search-box .inp:focus-within {
+            border-color: #16A34A;
+            box-shadow: 0 0 0 3px rgba(22,163,74,0.1);
         }
         .search-box .inp i {
-            font-size: 13px;
+            font-size: 14px;
             color: var(--color-text-tertiary);
         }
         .search-box .inp input {
@@ -167,20 +176,22 @@
         .comp-info {
             background: var(--color-background-secondary);
             border-radius: var(--border-radius-md);
-            padding: 10px;
+            padding: 10px 12px;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
+            gap: 6px;
+            border: 1px solid var(--color-border-tertiary);
         }
         .comp-info .item {
             display: flex;
             flex-direction: column;
         }
         .comp-info .label {
-            font-size: 9px;
+            font-size: 8px;
             color: var(--color-text-tertiary);
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
         .comp-info .value {
             font-size: 12px;
@@ -208,21 +219,22 @@
             text-align: left;
             background: var(--color-background-secondary);
             border-bottom: 1px solid var(--color-border-tertiary);
+            letter-spacing: 0.04em;
         }
         .prod-table-wrap td {
             padding: 5px 8px;
             font-size: 11px;
             color: var(--color-text-primary);
             border-bottom: 1px solid var(--color-border-tertiary);
+            vertical-align: middle;
         }
         .prod-table-wrap tr:last-child td { border-bottom: none; }
         .prod-table-wrap tr:hover td { background: var(--color-background-secondary); }
         .prod-table-wrap tr.seleccionado td { background: #DCFCE7; }
 
-        /* Checkbox personalizado */
         .prod-table-wrap input[type="checkbox"] {
-            width: 14px;
-            height: 14px;
+            width: 15px;
+            height: 15px;
             accent-color: #16A34A;
             cursor: pointer;
         }
@@ -245,10 +257,11 @@
             font-size: 12px;
             color: var(--color-text-primary);
             outline: none;
+            transition: border-color 0.2s;
         }
         .fsel:focus, .ftxt:focus {
             border-color: #16A34A;
-            box-shadow: 0 0 0 2px rgba(22,163,74,0.15);
+            box-shadow: 0 0 0 2px rgba(22,163,74,0.1);
         }
         .ftxt {
             resize: vertical;
@@ -267,6 +280,12 @@
         .al-warn {
             background: var(--color-background-warning);
             color: var(--color-text-warning);
+            border: 1px solid #FCD34D;
+        }
+        .al-info {
+            background: var(--color-background-info);
+            color: var(--color-text-info);
+            border: 1px solid #93C5FD;
         }
         .al-t { font-weight: 500; color: var(--color-text-primary); }
         .al-s { font-size: 10px; color: var(--color-text-secondary); margin-top: 1px; }
@@ -284,7 +303,7 @@
 
         .badge-estado {
             display: inline-block;
-            padding: 2px 8px;
+            padding: 2px 10px;
             border-radius: 99px;
             font-size: 9px;
             font-weight: 700;
@@ -293,6 +312,149 @@
         .badge-estado.pendiente { background: #FEF3C7; color: #B45309; }
         .badge-estado.rechazada { background: #FEE2E2; color: #DC2626; }
 
+        /* ============================================================ */
+        /* 🔥 MODAL DE CONFIRMACIÓN DEVOLUCIÓN                          */
+        /* ============================================================ */
+        .modal-dev-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            z-index: 10002;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-dev-overlay.active { display: flex; }
+
+        .modal-dev-box {
+            background: #ffffff;
+            border-radius: 20px;
+            max-width: 420px;
+            width: 100%;
+            padding: 32px 28px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-dev-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-dev-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-dev-header h3 i { font-size: 22px; color: #16A34A; }
+
+        .modal-dev-close {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--color-text-tertiary);
+            transition: color 0.2s;
+        }
+        .modal-dev-close:hover { color: var(--color-text-primary); }
+
+        .modal-dev-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-dev-body .mensaje {
+            background: #ECFDF5;
+            border: 1px solid #A7F3D0;
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            color: #065F46;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .modal-dev-body .mensaje i { font-size: 18px; flex-shrink: 0; margin-top: 1px; color: #16A34A; }
+
+        .modal-dev-body .resumen-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+        }
+
+        .modal-dev-body .resumen-grid .item {
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-dev-body .resumen-grid .item .label {
+            font-size: 9px;
+            color: var(--color-text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .modal-dev-body .resumen-grid .item .value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+        .modal-dev-body .resumen-grid .item .value.danger { color: #DC2626; }
+
+        .modal-dev-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .modal-dev-footer .btn-modal {
+            flex: 1;
+            padding: 11px;
+            border-radius: 99px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .modal-dev-footer .btn-modal-cancelar {
+            background: var(--color-background-secondary);
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border-tertiary);
+        }
+        .modal-dev-footer .btn-modal-cancelar:hover { background: var(--color-border-tertiary); }
+
+        .modal-dev-footer .btn-modal-confirmar {
+            background: #16A34A;
+            color: #fff;
+        }
+        .modal-dev-footer .btn-modal-confirmar:hover { background: #15803D; }
+        .modal-dev-footer .btn-modal-confirmar:disabled { opacity: 0.6; cursor: not-allowed; }
+
         @media (max-width: 900px) {
             .two-col { grid-template-columns: 1fr; }
             .comp-info { grid-template-columns: 1fr 1fr; }
@@ -300,6 +462,8 @@
         @media (max-width: 480px) {
             .comp-info { grid-template-columns: 1fr; }
             .search-box { flex-wrap: wrap; }
+            .modal-dev-box { margin: 16px; padding: 20px; }
+            .modal-dev-body .resumen-grid { grid-template-columns: 1fr; }
         }
     </style>
 
@@ -309,7 +473,7 @@
     <div class="full-view">
         <div class="page-head">
             <div>
-                <div class="pt">Registrar devolución</div>
+                <div class="pt"><i class="ti ti-arrow-back" style="color:#F59E0B;"></i> Registrar devolución</div>
                 <div class="psub">Busca la boleta o factura y selecciona el producto a devolver</div>
             </div>
             <button class="btn btn-outline" onclick="recargarDevoluciones()" title="Actualizar datos">
@@ -334,12 +498,12 @@
 
                 <!-- Buscar comprobante -->
                 <div class="card">
-                    <div class="ch"><div class="ct">Buscar comprobante</div></div>
+                    <div class="ch"><div class="ct"><i class="ti ti-receipt"></i> Buscar comprobante</div></div>
                     <div style="padding:12px;display:flex;flex-direction:column;gap:10px;">
                         <div class="search-box">
                             <div class="inp">
                                 <i class="ti ti-receipt"></i>
-                                <input type="text" id="codigoBusqueda" placeholder="N° de boleta o factura (ej. 4840)">
+                                <input type="text" id="codigoBusqueda" placeholder="N° de boleta o factura (ej. VEN-XXXX)" autofocus>
                             </div>
                             <button class="btn btn-prim" style="min-width:80px;padding:6px 14px;" onclick="buscarComprobante()">
                                 <i class="ti ti-search"></i> Buscar
@@ -349,7 +513,7 @@
                         <!-- Datos del comprobante encontrado -->
                         <div id="comprobanteInfo" style="display:none;">
                             <div class="comp-info">
-                                <div class="item"><span class="label">Boleta</span><span class="value" id="dBoleta">--</span></div>
+                                <div class="item"><span class="label">N° Comprobante</span><span class="value" id="dBoleta">--</span></div>
                                 <div class="item"><span class="label">Fecha</span><span class="value" id="dFecha">--</span></div>
                                 <div class="item"><span class="label">Total</span><span class="value" id="dTotal">S/ 0.00</span></div>
                                 <div class="item"><span class="label">Comprobante</span><span class="value" id="dComprobante">--</span></div>
@@ -381,7 +545,7 @@
 
                 <!-- Motivo de devolución -->
                 <div class="card">
-                    <div class="ch"><div class="ct">Motivo de devolución</div></div>
+                    <div class="ch"><div class="ct"><i class="ti ti-edit"></i> Motivo de devolución</div></div>
                     <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
                         <div>
                             <div class="fl">Motivo</div>
@@ -390,6 +554,7 @@
                                 <option value="Producto vencido">Producto vencido</option>
                                 <option value="Error de cobro">Error de cobro</option>
                                 <option value="Cliente cambió de opinión">Cliente cambió de opinión</option>
+                                <option value="Producto incorrecto">Producto incorrecto</option>
                                 <option value="Otro">Otro</option>
                             </select>
                         </div>
@@ -397,7 +562,7 @@
                             <div class="fl">Observaciones</div>
                             <textarea class="ftxt" id="observacionesDev" placeholder="Descripción adicional…"></textarea>
                         </div>
-                        <button class="btn btn-prim" style="width:100%;justify-content:center;" onclick="solicitarDevolucion()">
+                        <button class="btn btn-prim" style="width:100%;justify-content:center;" onclick="abrirModalConfirmacionDev()">
                             <i class="ti ti-send"></i> Solicitar aprobación al supervisor
                         </button>
                     </div>
@@ -410,16 +575,16 @@
                 <!-- Resumen de devolución -->
                 <div class="card">
                     <div class="ch">
-                        <div class="ct">Resumen</div>
+                        <div class="ct"><i class="ti ti-clipboard"></i> Resumen</div>
                         <div class="cb cb-warn" id="estadoResumen">Pendiente aprobación</div>
                     </div>
                     <div style="padding:12px;display:flex;flex-direction:column;gap:5px;">
                         <div class="resumen-item"><span class="label">Producto</span><span class="value" id="resProducto">--</span></div>
                         <div class="resumen-item"><span class="label">Monto a devolver</span><span class="value" style="color:var(--color-text-danger);" id="resMonto">S/ 0.00</span></div>
                         <div class="resumen-item"><span class="label">Devolución vía</span><span class="value" id="resVia">Efectivo</span></div>
-                        <div class="alert al-warn" style="margin-top:6px;padding:6px 10px;font-size:10px;">
+                        <div class="alert al-info" style="margin-top:6px;padding:6px 10px;font-size:10px;">
                             <i class="ti ti-clock" style="font-size:12px;"></i>
-                            <span id="resEstadoMsg">Esperando aprobación del supervisor.</span>
+                            <span id="resEstadoMsg">Selecciona un producto para devolver.</span>
                         </div>
                     </div>
                 </div>
@@ -427,10 +592,10 @@
                 <!-- Devoluciones del día -->
                 <div class="card">
                     <div class="ch">
-                        <div class="ct">Devoluciones del día</div>
+                        <div class="ct"><i class="ti ti-history"></i> Devoluciones del día</div>
                         <div class="cb cb-warn" id="contadorDev">0</div>
                     </div>
-                    <div style="overflow-x:auto;">
+                    <div style="overflow-x:auto;max-height:250px;overflow-y:auto;">
                         <table style="width:100%;border-collapse:collapse;font-size:11px;">
                             <thead>
                                 <tr>
@@ -450,365 +615,550 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- JAVASCRIPT DE DEVOLUCIONES                                   -->
+    <!-- 🔥 MODAL DE CONFIRMACIÓN DEVOLUCIÓN                           -->
     <!-- ============================================================ -->
-    <script>
-        // ================================================================
-        // VARIABLES GLOBALES
-        // ================================================================
-        var ventaSeleccionada = null;      // objeto venta
-        var productosSeleccionados = [];   // ids de productos seleccionados
-        var devolucionesHoy = [];
+    <div class="modal-dev-overlay" id="modalConfirmacionDev">
+        <div class="modal-dev-box">
+            <div class="modal-dev-header">
+                <h3><i class="ti ti-send"></i> Confirmar devolución</h3>
+                <button class="modal-dev-close" onclick="cerrarModalDev()">✕</button>
+            </div>
+            <div class="modal-dev-body">
+                <div class="mensaje">
+                    <i class="ti ti-info-circle"></i>
+                    <span>Se enviará una solicitud de devolución al supervisor para su aprobación.</span>
+                </div>
+                <div class="resumen-grid" id="modalDevResumen">
+                    <div class="item"><span class="label">Producto</span><span class="value" id="mDevProducto">--</span></div>
+                    <div class="item"><span class="label">Monto</span><span class="value danger" id="mDevMonto">S/ 0.00</span></div>
+                    <div class="item"><span class="label">Motivo</span><span class="value" id="mDevMotivo">--</span></div>
+                    <div class="item"><span class="label">Devolución vía</span><span class="value" id="mDevVia">Efectivo</span></div>
+                </div>
+            </div>
+            <div class="modal-dev-footer">
+                <button class="btn-modal btn-modal-cancelar" onclick="cerrarModalDev()">
+                    <i class="ti ti-x"></i> Cancelar
+                </button>
+                <button class="btn-modal btn-modal-confirmar" id="btnConfirmarDev" onclick="ejecutarDevolucion()">
+                    <i class="ti ti-check"></i> Confirmar solicitud
+                </button>
+            </div>
+        </div>
+    </div>
 
-        // ================================================================
-        // OBTENER ID DEL USUARIO
-        // ================================================================
-        function obtenerUserId() {
-            return window.idUsuarioGlobal || 2;
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT DE DEVOLUCIONES (DEFINITIVO)                     -->
+    <!-- ============================================================ -->
+   <script>
+// ================================================================
+// VARIABLES GLOBALES
+// ================================================================
+var ventaSeleccionada = null;
+var productosSeleccionados = [];
+var devolucionesHoy = [];
+var todasLasVentas = [];
+var totalDevGlobal = 0;  // 🔥 NUEVA VARIABLE GLOBAL
+
+// ================================================================
+// OBTENER ID DEL USUARIO
+// ================================================================
+function obtenerUserId() {
+    return window.idUsuarioGlobal || 2;
+}
+
+// ================================================================
+// CARGAR TODAS LAS VENTAS DEL CAJERO (CON DETALLES)
+// ================================================================
+function cargarTodasLasVentas() {
+    var userId = obtenerUserId();
+    if (!userId) {
+        console.warn('⚠️ No hay userId');
+        return Promise.reject('No hay userId');
+    }
+
+    return fetch('/api/ventas/cajero/' + userId + '/detalles')
+        .then(function(response) {
+            if (!response.ok) throw new Error('Error al cargar ventas del cajero: ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            todasLasVentas = data;
+            console.log('✅ Ventas con detalles cargadas:', todasLasVentas.length);
+            return todasLasVentas;
+        })
+        .catch(function(error) {
+            console.error('❌ Error al cargar ventas:', error);
+            todasLasVentas = [];
+            return Promise.reject(error);
+        });
+}
+
+// ================================================================
+// BUSCAR COMPROBANTE
+// ================================================================
+function buscarComprobante() {
+    var codigo = document.getElementById('codigoBusqueda').value.trim().toUpperCase();
+    if (!codigo) {
+        mostrarToast('⚠️ Ingresa el número de comprobante', 'warning');
+        return;
+    }
+
+    mostrarToast('🔍 Buscando...', 'info');
+
+    if (todasLasVentas.length > 0) {
+        buscarEnVentasCargadas(codigo);
+        return;
+    }
+
+    cargarTodasLasVentas()
+        .then(function() {
+            buscarEnVentasCargadas(codigo);
+        })
+        .catch(function(error) {
+            console.error('❌ Error:', error);
+            document.getElementById('comprobanteInfo').style.display = 'none';
+            document.getElementById('mensajeError').textContent = '❌ Error al cargar ventas';
+            document.getElementById('mensajeError').style.display = 'block';
+            mostrarToast('❌ Error al cargar ventas: ' + error.message, 'error');
+        });
+}
+
+function buscarEnVentasCargadas(codigo) {
+    var venta = todasLasVentas.find(function(v) {
+        return v.codigoVenta && v.codigoVenta.toUpperCase() === codigo;
+    });
+
+    if (!venta) {
+        document.getElementById('comprobanteInfo').style.display = 'none';
+        document.getElementById('mensajeError').textContent = '❌ Comprobante no encontrado';
+        document.getElementById('mensajeError').style.display = 'block';
+        mostrarToast('❌ Comprobante no encontrado', 'error');
+        return;
+    }
+
+    // Verificar si la venta ya fue cancelada o devuelta
+    var estadoNombre = venta.estado || venta.estadoVenta?.nombreEstado || '';
+    if (estadoNombre === 'CANCELADO') {
+        mostrarToast('⚠️ Esta venta ya fue cancelada', 'warning');
+        return;
+    }
+    if (estadoNombre === 'REEMBOLSADO') {
+        mostrarToast('⚠️ Esta venta ya fue devuelta', 'warning');
+        return;
+    }
+
+    if (!venta.detalles || venta.detalles.length === 0) {
+        console.warn('⚠️ La venta no tiene detalles:', venta);
+        document.getElementById('comprobanteInfo').style.display = 'block';
+        document.getElementById('mensajeError').style.display = 'none';
+        document.getElementById('dBoleta').textContent = venta.codigoVenta || '--';
+        document.getElementById('dFecha').textContent = venta.fechaVenta ? venta.fechaVenta.split('T')[0] : '--';
+        document.getElementById('dTotal').textContent = 'S/ ' + (venta.total || 0).toFixed(2);
+        document.getElementById('dComprobante').textContent = venta.tipoComprobante?.nombreComprobante || 'Boleta';
+        document.getElementById('dCajero').textContent = venta.cajero?.nombres + ' ' + (venta.cajero?.apellidos || '') || '--';
+        document.getElementById('dPago').textContent = venta.metodoPago || 'Efectivo';
+        
+        var tbody = document.getElementById('productosTabla');
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--color-text-warning);">⚠️ Esta venta no tiene productos para devolver</td></tr>';
+        mostrarToast('⚠️ Esta venta no tiene productos', 'warning');
+        return;
+    }
+
+    ventaSeleccionada = venta;
+    mostrarComprobante(venta);
+    mostrarToast('✅ Comprobante encontrado', 'success');
+}
+
+// ================================================================
+// MOSTRAR COMPROBANTE Y PRODUCTOS
+// ================================================================
+function mostrarComprobante(venta) {
+    var infoDiv = document.getElementById('comprobanteInfo');
+    infoDiv.style.display = 'block';
+    document.getElementById('mensajeError').style.display = 'none';
+
+    document.getElementById('dBoleta').textContent = venta.codigoVenta || '--';
+    document.getElementById('dFecha').textContent = venta.fechaVenta ? venta.fechaVenta.split('T')[0] : '--';
+    document.getElementById('dTotal').textContent = 'S/ ' + (venta.total || 0).toFixed(2);
+    document.getElementById('dComprobante').textContent = venta.tipoComprobante?.nombreComprobante || 'Boleta';
+    document.getElementById('dCajero').textContent = venta.cajero?.nombres + ' ' + (venta.cajero?.apellidos || '') || '--';
+    document.getElementById('dPago').textContent = venta.metodoPago || 'Efectivo';
+
+    var tbody = document.getElementById('productosTabla');
+    
+    console.log('📦 Productos en la venta:', venta.detalles);
+    
+    if (!venta.detalles || venta.detalles.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--color-text-tertiary);">⚠️ No hay productos en esta venta</td></tr>';
+        return;
+    }
+
+    productosSeleccionados = [];
+    totalDevGlobal = 0;
+    
+    tbody.innerHTML = venta.detalles.map(function(d, idx) {
+        var nombre = d.producto?.nombreProducto || d.producto || 'Producto #' + (idx+1);
+        var cantidad = d.cantidad || 0;
+        var precio = d.precioUnitario || 0;
+        var subtotal = d.subtotalLinea || (cantidad * precio);
+        return '<tr onclick="toggleProducto(this, ' + idx + ')" style="cursor:pointer;">' +
+            '<td style="text-align:center;"><input type="checkbox" data-index="' + idx + '" onchange="toggleCheckbox(this)"></td>' +
+            '<td>' + nombre + '</td>' +
+            '<td style="text-align:center;">' + cantidad + '</td>' +
+            '<td style="text-align:right;">S/ ' + subtotal.toFixed(2) + '</td>' +
+            '</tr>';
+    }).join('');
+
+    limpiarResumen();
+}
+
+// ================================================================
+// TOGGLE CHECKBOX EN FILA
+// ================================================================
+function toggleProducto(tr, idx) {
+    var cb = tr.querySelector('input[type="checkbox"]');
+    if (cb) {
+        cb.checked = !cb.checked;
+        actualizarSeleccion(cb);
+    }
+}
+
+function toggleCheckbox(cb) {
+    actualizarSeleccion(cb);
+}
+
+function actualizarSeleccion(cb) {
+    var idx = parseInt(cb.getAttribute('data-index'));
+    if (cb.checked) {
+        if (!productosSeleccionados.includes(idx)) {
+            productosSeleccionados.push(idx);
         }
+        cb.closest('tr').classList.add('seleccionado');
+    } else {
+        productosSeleccionados = productosSeleccionados.filter(function(i) { return i !== idx; });
+        cb.closest('tr').classList.remove('seleccionado');
+    }
+    actualizarResumen();
+}
 
-        // ================================================================
-        // BUSCAR COMPROBANTE
-        // ================================================================
-        function buscarComprobante() {
-            var codigo = document.getElementById('codigoBusqueda').value.trim();
-            if (!codigo) {
-                mostrarToast('⚠️ Ingresa el número de comprobante', 'warning');
-                return;
-            }
+// ================================================================
+// ACTUALIZAR RESUMEN
+// ================================================================
+function actualizarResumen() {
+    if (!ventaSeleccionada || !ventaSeleccionada.detalles) {
+        limpiarResumen();
+        return;
+    }
+    var selected = productosSeleccionados;
+    if (selected.length === 0) {
+        limpiarResumen();
+        document.getElementById('resProducto').textContent = '--';
+        document.getElementById('resMonto').textContent = 'S/ 0.00';
+        document.getElementById('estadoResumen').textContent = 'Sin selección';
+        document.getElementById('estadoResumen').className = 'cb cb-warn';
+        document.getElementById('resEstadoMsg').textContent = 'Selecciona al menos un producto.';
+        return;
+    }
 
-            mostrarToast('🔍 Buscando...', 'info');
+    var totalDev = 0;
+    var nombres = [];
+    selected.forEach(function(idx) {
+        var d = ventaSeleccionada.detalles[idx];
+        var subtotal = d.subtotalLinea || (d.cantidad * d.precioUnitario);
+        totalDev += subtotal;
+        nombres.push(d.producto?.nombreProducto || d.producto || 'Producto');
+    });
 
-            fetch('/api/ventas/codigo/' + encodeURIComponent(codigo))
-                .then(function(response) {
-                    if (!response.ok) {
-                        if (response.status === 404) throw new Error('Comprobante no encontrado');
-                        throw new Error('Error al buscar comprobante');
-                    }
-                    return response.json();
-                })
-                .then(function(venta) {
-                    ventaSeleccionada = venta;
-                    mostrarComprobante(venta);
-                    mostrarToast('✅ Comprobante encontrado', 'success');
-                })
-                .catch(function(error) {
-                    console.error('❌ Error:', error);
-                    document.getElementById('comprobanteInfo').style.display = 'none';
-                    document.getElementById('mensajeError').textContent = '❌ ' + error.message;
-                    document.getElementById('mensajeError').style.display = 'block';
-                    mostrarToast('❌ ' + error.message, 'error');
-                });
+    document.getElementById('resProducto').textContent = nombres.join(', ');
+    document.getElementById('resMonto').textContent = '-S/ ' + totalDev.toFixed(2);
+    document.getElementById('estadoResumen').textContent = 'Pendiente aprobación';
+    document.getElementById('estadoResumen').className = 'cb cb-warn';
+    document.getElementById('resEstadoMsg').textContent = 'Esperando aprobación del supervisor.';
+    document.getElementById('resVia').textContent = ventaSeleccionada.metodoPago || 'Efectivo';
+}
+
+function limpiarResumen() {
+    document.getElementById('resProducto').textContent = '--';
+    document.getElementById('resMonto').textContent = 'S/ 0.00';
+    document.getElementById('estadoResumen').textContent = 'Pendiente aprobación';
+    document.getElementById('estadoResumen').className = 'cb cb-warn';
+    document.getElementById('resEstadoMsg').textContent = 'Selecciona un producto para devolver.';
+    document.getElementById('resVia').textContent = '--';
+}
+
+// ================================================================
+// 🔥 MAPEAR MOTIVO A ID (DEBE COINCIDIR CON TU BD)
+// ================================================================
+function obtenerIdMotivo(nombreMotivo) {
+    var mapa = {
+        'Producto defectuoso': 1,
+        'Producto vencido': 2,
+        'Error de cobro': 3,
+        'Cliente cambió de opinión': 4,
+        'Producto incorrecto': 5,
+        'Otro': 6
+    };
+    return mapa[nombreMotivo] || 1;
+}
+
+// ================================================================
+// 🔥 ABRIR MODAL DE CONFIRMACIÓN
+// ================================================================
+function abrirModalConfirmacionDev() {
+    if (!ventaSeleccionada) {
+        mostrarToast('⚠️ Primero busca un comprobante', 'warning');
+        return;
+    }
+    if (!ventaSeleccionada.detalles || ventaSeleccionada.detalles.length === 0) {
+        mostrarToast('⚠️ Esta venta no tiene productos para devolver', 'warning');
+        return;
+    }
+    if (productosSeleccionados.length === 0) {
+        mostrarToast('⚠️ Selecciona al menos un producto para devolver', 'warning');
+        return;
+    }
+
+    totalDevGlobal = 0;
+    var nombres = [];
+    productosSeleccionados.forEach(function(idx) {
+        var d = ventaSeleccionada.detalles[idx];
+        var subtotal = d.subtotalLinea || (d.cantidad * d.precioUnitario);
+        totalDevGlobal += subtotal;
+        nombres.push(d.producto?.nombreProducto || d.producto || 'Producto');
+    });
+
+    document.getElementById('mDevProducto').textContent = nombres.join(', ');
+    document.getElementById('mDevMonto').textContent = '-S/ ' + totalDevGlobal.toFixed(2);
+    document.getElementById('mDevMotivo').textContent = document.getElementById('motivoDevolucion').value;
+    document.getElementById('mDevVia').textContent = ventaSeleccionada.metodoPago || 'Efectivo';
+
+    document.getElementById('modalConfirmacionDev').classList.add('active');
+}
+
+function cerrarModalDev() {
+    document.getElementById('modalConfirmacionDev').classList.remove('active');
+}
+
+// ================================================================
+// 🔥 EJECUTAR DEVOLUCIÓN - VERSIÓN CORREGIDA
+// ================================================================
+function ejecutarDevolucion() {
+    var btn = document.getElementById('btnConfirmarDev');
+    var originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Enviando...';
+
+    var motivo = document.getElementById('motivoDevolucion').value;
+    var observaciones = document.getElementById('observacionesDev').value.trim();
+
+    // 🔥 CONSTRUIR DETALLES EN EL FORMATO QUE ESPERA EL BACKEND
+    var detallesDev = productosSeleccionados.map(function(idx) {
+        var d = ventaSeleccionada.detalles[idx];
+        
+        // Obtener el ID del detalle de venta
+        var idDetalleVenta = d.idDetalleVenta || d.idDetalle || d.id;
+        
+        // Calcular subtotal
+        var subtotal = d.subtotalLinea || (d.cantidad * d.precioUnitario);
+        
+        return {
+            detalleVenta: {
+                idDetalleVenta: idDetalleVenta
+            },
+            cantidad: d.cantidad || 1,
+            montoDevuelto: subtotal
+        };
+    });
+
+    // 🔥 CONSTRUIR LA SOLICITUD COMPLETA
+    var data = {
+        devolucion: {
+            venta: {
+                idVenta: ventaSeleccionada.idVenta
+            },
+            cajero: {
+                idUsuario: obtenerUserId()
+            },
+            cliente: {
+                idCliente: ventaSeleccionada.cliente?.idCliente || 1
+            },
+            motivoDevolucion: {
+                idMotivoDevolucion: obtenerIdMotivo(motivo)
+            },
+            montoDevolucion: totalDevGlobal,
+            observaciones: observaciones
+        },
+        detalles: detallesDev
+    };
+
+    console.log('📤 Enviando solicitud de devolución:', JSON.stringify(data, null, 2));
+
+    // 🔥 URL CORREGIDA: sin /api, solo /devoluciones
+    fetch('/devoluciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(function(response) {
+        if (!response.ok) {
+            return response.text().then(function(text) {
+                try {
+                    var err = JSON.parse(text);
+                    throw new Error(err.error || err.message || 'Error al solicitar devolución');
+                } catch(e) {
+                    throw new Error('Error ' + response.status + ': ' + text);
+                }
+            });
         }
-
-        // ================================================================
-        // MOSTRAR COMPROBANTE Y PRODUCTOS
-        // ================================================================
-        function mostrarComprobante(venta) {
-            var infoDiv = document.getElementById('comprobanteInfo');
-            infoDiv.style.display = 'block';
-            document.getElementById('mensajeError').style.display = 'none';
-
-            document.getElementById('dBoleta').textContent = venta.codigoVenta || '--';
-            document.getElementById('dFecha').textContent = venta.fechaVenta ? venta.fechaVenta.split('T')[0] : '--';
-            document.getElementById('dTotal').textContent = 'S/ ' + (venta.total || 0).toFixed(2);
-            document.getElementById('dComprobante').textContent = venta.tipoComprobante?.nombreComprobante || 'Boleta';
-            document.getElementById('dCajero').textContent = venta.cajero?.nombres + ' ' + (venta.cajero?.apellidos || '') || '--';
-            document.getElementById('dPago').textContent = venta.metodoPago || 'Efectivo';
-
-            // Productos
-            var tbody = document.getElementById('productosTabla');
-            if (!venta.detalles || venta.detalles.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--color-text-tertiary);">No hay productos en esta venta</td></tr>';
-                return;
-            }
-
-            productosSeleccionados = [];
-            tbody.innerHTML = venta.detalles.map(function(d, idx) {
-                var nombre = d.producto?.nombreProducto || 'Producto #' + (idx+1);
-                var cantidad = d.cantidad || 0;
-                var precio = d.precioUnitario || 0;
-                var subtotal = d.subtotalLinea || (cantidad * precio);
-                return '<tr onclick="toggleProducto(this, ' + idx + ')" style="cursor:pointer;">' +
-                    '<td style="text-align:center;"><input type="checkbox" data-index="' + idx + '" onchange="toggleCheckbox(this)"></td>' +
-                    '<td>' + nombre + '</td>' +
-                    '<td style="text-align:center;">' + cantidad + '</td>' +
-                    '<td style="text-align:right;">S/ ' + subtotal.toFixed(2) + '</td>' +
-                    '</tr>';
-            }).join('');
-
-            // Limpiar resumen anterior
-            limpiarResumen();
-            // Actualizar el resumen con el primer producto seleccionado automáticamente (opcional)
-            // Pero dejamos que el usuario seleccione manualmente
-        }
-
-        // ================================================================
-        // TOGGLE CHECKBOX EN FILA
-        // ================================================================
-        function toggleProducto(tr, idx) {
+        return response.json();
+    })
+    .then(function(result) {
+        console.log('✅ Devolución creada:', result);
+        mostrarToast('✅ Solicitud enviada al supervisor', 'success');
+        cerrarModalDev();
+        document.getElementById('estadoResumen').textContent = 'Enviada';
+        document.getElementById('estadoResumen').className = 'cb cb-ok';
+        document.getElementById('resEstadoMsg').textContent = 'Solicitud enviada. Espera la aprobación del supervisor.';
+        
+        // Limpiar selección
+        productosSeleccionados = [];
+        totalDevGlobal = 0;
+        document.querySelectorAll('#productosTabla tr').forEach(function(tr) {
+            tr.classList.remove('seleccionado');
             var cb = tr.querySelector('input[type="checkbox"]');
-            if (cb) {
-                cb.checked = !cb.checked;
-                actualizarSeleccion(cb);
-            }
-        }
+            if (cb) cb.checked = false;
+        });
+        actualizarResumen();
+    })
+    .catch(function(error) {
+        console.error('❌ Error:', error);
+        mostrarToast('❌ Error: ' + error.message, 'error');
+    })
+    .finally(function() {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
 
-        function toggleCheckbox(cb) {
-            actualizarSeleccion(cb);
-        }
+// ================================================================
+// CARGAR HISTORIAL DE DEVOLUCIONES
+// ================================================================
+function cargarHistorialDevoluciones() {
+    var userId = obtenerUserId();
+    if (!userId) {
+        devolucionesHoy = [];
+        renderizarHistorial([]);
+        return;
+    }
 
-        function actualizarSeleccion(cb) {
-            var idx = parseInt(cb.getAttribute('data-index'));
-            if (cb.checked) {
-                if (!productosSeleccionados.includes(idx)) {
-                    productosSeleccionados.push(idx);
-                }
-                cb.closest('tr').classList.add('seleccionado');
-            } else {
-                productosSeleccionados = productosSeleccionados.filter(function(i) { return i !== idx; });
-                cb.closest('tr').classList.remove('seleccionado');
-            }
-            actualizarResumen();
-        }
+    fetch('/devoluciones/cajero/' + userId)
+        .then(function(response) {
+            if (!response.ok) throw new Error('Error al cargar devoluciones');
+            return response.json();
+        })
+        .then(function(data) {
+            devolucionesHoy = data || [];
+            renderizarHistorial(devolucionesHoy);
+        })
+        .catch(function(error) {
+            console.error('❌ Error al cargar historial:', error);
+            devolucionesHoy = [];
+            renderizarHistorial([]);
+        });
+}
 
-        // ================================================================
-        // ACTUALIZAR RESUMEN
-        // ================================================================
-        function actualizarResumen() {
-            if (!ventaSeleccionada || !ventaSeleccionada.detalles) {
-                limpiarResumen();
-                return;
-            }
-            var selected = productosSeleccionados;
-            if (selected.length === 0) {
-                limpiarResumen();
-                document.getElementById('resProducto').textContent = '--';
-                document.getElementById('resMonto').textContent = 'S/ 0.00';
-                document.getElementById('estadoResumen').textContent = 'Sin selección';
-                document.getElementById('estadoResumen').className = 'cb cb-warn';
-                document.getElementById('resEstadoMsg').textContent = 'Selecciona al menos un producto.';
-                return;
-            }
+function renderizarHistorial(devoluciones) {
+    var tbody = document.getElementById('historialDevoluciones');
+    var contador = document.getElementById('contadorDev');
+    contador.textContent = devoluciones.length;
 
-            var totalDev = 0;
-            var nombres = [];
-            selected.forEach(function(idx) {
-                var d = ventaSeleccionada.detalles[idx];
-                var subtotal = d.subtotalLinea || (d.cantidad * d.precioUnitario);
-                totalDev += subtotal;
-                nombres.push(d.producto?.nombreProducto || 'Producto');
-            });
+    if (!devoluciones || devoluciones.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:12px;color:var(--color-text-tertiary);">No hay devoluciones hoy</td></tr>';
+        return;
+    }
 
-            document.getElementById('resProducto').textContent = nombres.join(', ');
-            document.getElementById('resMonto').textContent = '-S/ ' + totalDev.toFixed(2);
-            document.getElementById('estadoResumen').textContent = 'Pendiente aprobación';
-            document.getElementById('estadoResumen').className = 'cb cb-warn';
-            document.getElementById('resEstadoMsg').textContent = 'Esperando aprobación del supervisor.';
-            document.getElementById('resVia').textContent = ventaSeleccionada.metodoPago || 'Efectivo';
-        }
+    tbody.innerHTML = devoluciones.map(function(d) {
+        var estado = d.estadoDevolucion?.nombreEstado || 'PENDIENTE';
+        var claseEstado = estado === 'APROBADA' || estado === 'Aprobada' ? 'aprobada' :
+                          estado === 'RECHAZADA' || estado === 'Rechazada' ? 'rechazada' : 'pendiente';
+        var labelEstado = estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase();
+        return '<tr>' +
+            '<td style="padding:5px 10px;border-bottom:1px solid var(--color-border-tertiary);font-weight:500;">' + (d.venta?.codigoVenta || d.codigoDevolucion || '--') + '</td>' +
+            '<td style="padding:5px 10px;border-bottom:1px solid var(--color-border-tertiary);text-align:right;">S/ ' + (d.montoDevolucion || 0).toFixed(2) + '</td>' +
+            '<td style="padding:5px 10px;border-bottom:1px solid var(--color-border-tertiary);"><span class="badge-estado ' + claseEstado + '">' + labelEstado + '</span></td>' +
+            '</tr>';
+    }).join('');
+}
 
-        function limpiarResumen() {
-            document.getElementById('resProducto').textContent = '--';
-            document.getElementById('resMonto').textContent = 'S/ 0.00';
-            document.getElementById('estadoResumen').textContent = 'Pendiente aprobación';
-            document.getElementById('estadoResumen').className = 'cb cb-warn';
-            document.getElementById('resEstadoMsg').textContent = 'Selecciona un producto para devolver.';
-            document.getElementById('resVia').textContent = '--';
-        }
+// ================================================================
+// RECARGAR DATOS
+// ================================================================
+function recargarDevoluciones() {
+    mostrarToast('🔄 Actualizando datos...', 'info');
+    cargarHistorialDevoluciones();
+    cargarTodasLasVentas()
+        .catch(function() {});
+    if (ventaSeleccionada) {
+        buscarEnVentasCargadas(ventaSeleccionada.codigoVenta);
+    }
+}
 
-        // ================================================================
-        // SOLICITAR DEVOLUCIÓN
-        // ================================================================
-        function solicitarDevolucion() {
-            if (!ventaSeleccionada) {
-                mostrarToast('⚠️ Primero busca un comprobante', 'warning');
-                return;
-            }
-            if (productosSeleccionados.length === 0) {
-                mostrarToast('⚠️ Selecciona al menos un producto para devolver', 'warning');
-                return;
-            }
+// ================================================================
+// TOAST NOTIFICATIONS
+// ================================================================
+function mostrarToast(mensaje, tipo) {
+    tipo = tipo || 'info';
+    var container = document.getElementById('toastContainerGlobal');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainerGlobal';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
 
-            var motivo = document.getElementById('motivoDevolucion').value;
-            var observaciones = document.getElementById('observacionesDev').value.trim();
+    var toast = document.createElement('div');
+    toast.className = 'toast toast-' + tipo;
+    toast.textContent = mensaje;
+    container.appendChild(toast);
 
-            // Construir payload
-            var detallesDev = productosSeleccionados.map(function(idx) {
-                var d = ventaSeleccionada.detalles[idx];
-                return {
-                    idDetalleVenta: d.idDetalleVenta || null,
-                    idProducto: d.producto?.idProducto || null,
-                    cantidad: d.cantidad || 1,
-                    precioUnitario: d.precioUnitario || 0,
-                    subtotal: d.subtotalLinea || (d.cantidad * d.precioUnitario)
-                };
-            });
+    setTimeout(function() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(20px)';
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 3000);
+}
 
-            var data = {
-                idVenta: ventaSeleccionada.idVenta,
-                idCajero: obtenerUserId(),
-                motivo: motivo,
-                observaciones: observaciones,
-                detalles: detallesDev
-            };
-
-            var btn = document.querySelector('.btn-prim[onclick="solicitarDevolucion()"]');
-            var originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Enviando...';
-
-            fetch('/api/devoluciones/solicitar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(function(response) {
-                if (!response.ok) {
-                    return response.json().then(function(err) {
-                        throw new Error(err.error || 'Error al solicitar devolución');
-                    });
-                }
-                return response.json();
-            })
-            .then(function(result) {
-                mostrarToast('✅ Solicitud enviada al supervisor', 'success');
-                // Actualizar resumen con estado
-                document.getElementById('estadoResumen').textContent = 'Enviada';
-                document.getElementById('estadoResumen').className = 'cb cb-ok';
-                document.getElementById('resEstadoMsg').textContent = 'Solicitud enviada. Espera la aprobación del supervisor.';
-                // Recargar historial
-                cargarHistorialDevoluciones();
-                // Limpiar selección o mantener visible
+// ================================================================
+// INICIALIZACIÓN
+// ================================================================
+function inicializarDevolucion() {
+    console.log('🔄 Inicializando Devoluciones...');
+    setTimeout(function() {
+        cargarHistorialDevoluciones();
+        cargarTodasLasVentas()
+            .then(function() {
+                console.log('✅ Ventas pre-cargadas:', todasLasVentas.length);
             })
             .catch(function(error) {
-                mostrarToast('❌ Error: ' + error.message, 'error');
-                console.error('Error:', error);
-            })
-            .finally(function() {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
+                console.error('❌ Error al pre-cargar ventas:', error);
             });
-        }
-
-        // ================================================================
-        // CARGAR HISTORIAL DE DEVOLUCIONES DEL DÍA
-        // ================================================================
-        function cargarHistorialDevoluciones() {
-            var userId = obtenerUserId();
-            if (!userId) {
-                console.warn('⚠️ No hay userId para cargar devoluciones');
-                return;
+        
+        document.getElementById('codigoBusqueda').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                buscarComprobante();
             }
+        });
+        limpiarResumen();
+    }, 100);
+}
 
-            fetch('/api/devoluciones/cajero/' + userId + '/hoy')
-                .then(function(response) {
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            devolucionesHoy = [];
-                            renderizarHistorial([]);
-                            return;
-                        }
-                        throw new Error('Error al cargar historial');
-                    }
-                    return response.json();
-                })
-                .then(function(data) {
-                    devolucionesHoy = data || [];
-                    renderizarHistorial(devolucionesHoy);
-                })
-                .catch(function(error) {
-                    console.error('❌ Error al cargar historial:', error);
-                    devolucionesHoy = [];
-                    renderizarHistorial([]);
-                });
-        }
+window.inicializarDevolucion = inicializarDevolucion;
 
-        function renderizarHistorial(devoluciones) {
-            var tbody = document.getElementById('historialDevoluciones');
-            var contador = document.getElementById('contadorDev');
-            contador.textContent = devoluciones.length;
-
-            if (!devoluciones || devoluciones.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:12px;color:var(--color-text-tertiary);">No hay devoluciones hoy</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = devoluciones.map(function(d) {
-                var estado = d.estado || 'PENDIENTE';
-                var claseEstado = estado === 'APROBADA' ? 'aprobada' :
-                                  estado === 'RECHAZADA' ? 'rechazada' : 'pendiente';
-                var labelEstado = estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase();
-                return '<tr>' +
-                    '<td style="padding:5px 10px;border-bottom:1px solid var(--color-border-tertiary);font-weight:500;">' + (d.codigoVenta || '--') + '</td>' +
-                    '<td style="padding:5px 10px;border-bottom:1px solid var(--color-border-tertiary);text-align:right;">S/ ' + (d.montoTotal || 0).toFixed(2) + '</td>' +
-                    '<td style="padding:5px 10px;border-bottom:1px solid var(--color-border-tertiary);"><span class="badge-estado ' + claseEstado + '">' + labelEstado + '</span></td>' +
-                    '</tr>';
-            }).join('');
-        }
-
-        // ================================================================
-        // RECARGAR DATOS
-        // ================================================================
-        function recargarDevoluciones() {
-            mostrarToast('🔄 Actualizando datos...', 'info');
-            cargarHistorialDevoluciones();
-            // Si hay una venta seleccionada, refrescar su información (opcional)
-            if (ventaSeleccionada) {
-                // podríamos volver a buscar por código
-            }
-        }
-
-        // ================================================================
-        // TOAST NOTIFICATIONS (global)
-        // ================================================================
-        function mostrarToast(mensaje, tipo) {
-            tipo = tipo || 'info';
-            var container = document.getElementById('toastContainerGlobal');
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'toastContainerGlobal';
-                container.className = 'toast-container';
-                document.body.appendChild(container);
-            }
-
-            var toast = document.createElement('div');
-            toast.className = 'toast toast-' + tipo;
-            toast.textContent = mensaje;
-            container.appendChild(toast);
-
-            setTimeout(function() {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(20px)';
-                setTimeout(function() { toast.remove(); }, 300);
-            }, 3000);
-        }
-
-        // ================================================================
-        // INICIALIZACIÓN
-        // ================================================================
-        function inicializarDevolucion() {
-            console.log('🔄 Inicializando Devoluciones...');
-            setTimeout(function() {
-                cargarHistorialDevoluciones();
-                // Configurar evento de búsqueda al presionar Enter
-                document.getElementById('codigoBusqueda').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        buscarComprobante();
-                    }
-                });
-                // Limpiar resumen inicial
-                limpiarResumen();
-            }, 100);
-        }
-
-        window.inicializarDevolucion = inicializarDevolucion;
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', inicializarDevolucion);
-        } else {
-            inicializarDevolucion();
-        }
-    </script>
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', inicializarDevolucion);
+} else {
+    inicializarDevolucion();
+}
+</script>
 </div>
 </html>

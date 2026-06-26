@@ -1,5 +1,6 @@
 package com.techventa.multitienda.cajero.controller;
 
+import com.techventa.multitienda.cajero.dto.VentaDTO;
 import com.techventa.multitienda.cajero.model.DetalleVenta;
 import com.techventa.multitienda.cajero.model.Venta;
 import com.techventa.multitienda.cajero.service.VentaService;
@@ -95,4 +96,10 @@ public class VentaController {
         public List<DetalleVenta> getDetalles() { return detalles; }
         public void setDetalles(List<DetalleVenta> detalles) { this.detalles = detalles; }
     }
+ // En VentaController.java - reemplazar el método detalles
+    @GetMapping("/cajero/{idCajero}/detalles")
+    public ResponseEntity<List<VentaDTO>> listarPorCajeroConDetalles(@PathVariable Integer idCajero) {
+        return ResponseEntity.ok(ventaService.listarPorCajeroConDetallesDTO(idCajero));
+    }
+    
 }

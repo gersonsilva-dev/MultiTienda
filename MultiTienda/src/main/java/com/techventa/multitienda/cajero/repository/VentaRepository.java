@@ -71,4 +71,9 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
            "GROUP BY u.idUsuario, u.nombres, u.apellidos")
     List<Object[]> findResumenVentasPorCajero(@Param("inicio") LocalDateTime inicio,
                                                @Param("fin") LocalDateTime fin);
+    
+ // En VentaRepository.java
+    @Query("SELECT v FROM Venta v LEFT JOIN FETCH v.detalles d LEFT JOIN FETCH d.producto p WHERE v.cajero.idUsuario = :idCajero")
+    List<Venta> findByCajero_IdUsuarioWithDetails(@Param("idCajero") Integer idCajero);
+    
 }

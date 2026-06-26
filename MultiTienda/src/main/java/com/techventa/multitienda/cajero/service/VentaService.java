@@ -1,5 +1,7 @@
 package com.techventa.multitienda.cajero.service;
 
+import com.techventa.multitienda.cajero.dto.DetalleVentaDTO;
+import com.techventa.multitienda.cajero.dto.VentaDTO;
 import com.techventa.multitienda.cajero.model.*;
 import com.techventa.multitienda.cajero.repository.*;
 import com.techventa.multitienda.admin.model.*;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -63,6 +66,8 @@ public class VentaService {
     public Optional<Venta> buscarPorId(Integer id) { return ventaRepository.findById(id); }
     
     public Optional<Venta> buscarPorCodigo(String codigo) { return ventaRepository.findByCodigoVenta(codigo); }
+    
+    
 
     @Transactional
     public Venta registrarVenta(Venta venta, List<DetalleVenta> detalles) {
@@ -230,5 +235,24 @@ public class VentaService {
             return ventaRepository.save(venta);
         }
         return null;
+    }
+    
+ // En VentaService.java - agregar método que retorna DTOs
+    public List<VentaDTO> listarPorCajeroConDetallesDTO(Integer idCajero) {
+        List<Venta> ventas = ventaRepository.findByCajero_IdUsuarioWithDetails(idCajero);
+        List<VentaDTO> ventasDTO = new ArrayList<>();
+        
+        for (Venta v : ventas) {
+            VentaDTO dto = new VentaDTO(v);
+            List<DetalleVentaDTO> detallesDTO = new ArrayList<>();
+            if (v.getDetalles() != null) {
+                for (DetalleVenta det : v.getDetalles()) {
+                    detallesDTO.add(new DetalleVentaDTO(det));
+                }
+            }
+            dto.setDetalles(detallesDTO);
+            ventasDTO.add(dto);
+        }
+        return ventasDTO;
     }
 }

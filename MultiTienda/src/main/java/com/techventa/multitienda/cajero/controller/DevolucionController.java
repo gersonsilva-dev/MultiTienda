@@ -103,4 +103,5 @@ public class DevolucionController {
         public List<DetalleDevolucion> getDetalles() { return detalles; }
         public void setDetalles(List<DetalleDevolucion> detalles) { this.detalles = detalles; }
     }
+    
 }
