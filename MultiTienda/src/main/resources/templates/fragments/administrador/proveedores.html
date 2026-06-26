@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Proveedores</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">📦 Proveedores</div>
+        <div class="page-subtitle">Gestiona los proveedores del sistema</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalProveedor()"><i class="fas fa-plus"></i> Nuevo proveedor</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-toolbar">
+        <div class="toolbar-left">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar proveedor..." id="buscarProveedor" oninput="filtrarProveedores()">
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <span id="totalRegistros">0 registros</span>
+        </div>
+    </div>
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Razón Social</th><th>RUC</th><th>Teléfono</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tablaProveedores">
+                <tr><td colspan="6" style="text-align:center;padding:40px;">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalProveedor">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalProveedorTitle">Nuevo Proveedor</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalProveedor()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formProveedor">
+                <input type="hidden" id="proveedorId">
+                <div class="form-group">
+                    <label class="form-label">Razón Social</label>
+                    <input class="form-control" id="provRazonSocial" placeholder="Razón social" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">RUC</label>
+                    <input class="form-control" id="provRuc" placeholder="11 dígitos" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dirección</label>
+                    <input class="form-control" id="provDireccion" placeholder="Dirección fiscal">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Teléfono</label>
+                    <input class="form-control" id="provTelefono" placeholder="Teléfono">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Correo</label>
+                    <input class="form-control" id="provCorreo" type="email" placeholder="correo@proveedor.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contacto</label>
+                    <input class="form-control" id="provContacto" placeholder="Nombre del contacto">
+                </div>
+				
+				
+				
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalProveedor()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarProveedor()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let proveedoresData = [];
+	
+	function cambiarEstado(id, nuevoEstado) {
+	    if (!confirm(`¿${nuevoEstado ? 'Activar' : 'Desactivar'} este proveedor?`)) return;
+	    fetch(`/api/proveedores/${id}/estado?activo=${nuevoEstado}`, {
+	        method: 'PUT'
+	    })
+	    .then(r => {
+	        if (!r.ok) {
+	            return r.text().then(text => { throw new Error(text); });
+	        }
+	        return r.json();
+	    })
+	    .then(() => {
+	        cargarProveedores();
+	        alert('✅ Estado actualizado');
+	    })
+	    .catch((error) => {
+	        console.error('Error:', error);
+	        alert('❌ Error: ' + error.message);
+	    });
+	}
+
+    function cargarProveedores() {
+        fetch('/api/proveedores')
+            .then(r => r.json())
+            .then(d => {
+                proveedoresData = d;
+                renderizarProveedores(d);
+                document.getElementById('totalRegistros').textContent = d.length + ' registros';
+            })
+            .catch(() => document.getElementById('tablaProveedores').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
+    }
+
+    function renderizarProveedores(data) {
+        const tbody = document.getElementById('tablaProveedores');
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">No hay proveedores</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.map(p => `
+            <tr>
+                <td>${p.idProveedor}</td>
+                <td><strong>${p.razonSocial}</strong></td>
+                <td><span class="badge badge-info">${p.ruc}</span></td>
+                <td>${p.telefono || '-'}</td>
+                <td><span class="badge ${p.activo ? 'badge-success' : 'badge-danger'}">${p.activo ? 'Activo' : 'Inactivo'}</span></td>
+				<td>
+				    <button class="btn btn-primary btn-sm" onclick="editarProveedor(${p.idProveedor})"><i class="fas fa-edit"></i></button>
+				    <button class="btn btn-success btn-sm" onclick="cambiarEstado(${p.idProveedor}, ${!p.activo})">
+				        <i class="fas ${p.activo ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
+				    </button>
+				    <button class="btn btn-danger btn-sm" onclick="eliminarProveedor(${p.idProveedor})"><i class="fas fa-trash"></i></button>
+				</td>
+				
+				
+            </tr>
+        `).join('');
+    }
+
+    function filtrarProveedores() {
+        const term = document.getElementById('buscarProveedor').value.toLowerCase();
+        const filtrados = proveedoresData.filter(p => (p.razonSocial?.toLowerCase() || '').includes(term) || (p.ruc || '').includes(term));
+        renderizarProveedores(filtrados);
+        document.getElementById('totalRegistros').textContent = filtrados.length + ' registros';
+    }
+
+    function abrirModalProveedor() {
+        document.getElementById('modalProveedorTitle').textContent = 'Nuevo Proveedor';
+        document.getElementById('formProveedor').reset();
+        document.getElementById('proveedorId').value = '';
+        document.getElementById('modalProveedor').classList.add('open');
+    }
+
+    function cerrarModalProveedor() { document.getElementById('modalProveedor').classList.remove('open'); }
+
+    function editarProveedor(id) {
+        const p = proveedoresData.find(x => x.idProveedor === id);
+        if (!p) return;
+        document.getElementById('modalProveedorTitle').textContent = 'Editar Proveedor';
+        document.getElementById('proveedorId').value = p.idProveedor;
+        document.getElementById('provRazonSocial').value = p.razonSocial || '';
+        document.getElementById('provRuc').value = p.ruc || '';
+        document.getElementById('provDireccion').value = p.direccionFiscal || '';
+        document.getElementById('provTelefono').value = p.telefono || '';
+        document.getElementById('provCorreo').value = p.correo || '';
+        document.getElementById('provContacto').value = p.nombreContacto || '';
+        document.getElementById('modalProveedor').classList.add('open');
+    }
+
+    function guardarProveedor() {
+        const id = document.getElementById('proveedorId').value;
+        const data = {
+            razonSocial: document.getElementById('provRazonSocial').value,
+            ruc: document.getElementById('provRuc').value,
+            direccionFiscal: document.getElementById('provDireccion').value,
+            telefono: document.getElementById('provTelefono').value,
+            correo: document.getElementById('provCorreo').value,
+            nombreContacto: document.getElementById('provContacto').value
+        };
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/proveedores/${id}` : '/api/proveedores';
+        fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(r => r.json())
+            .then(() => { cerrarModalProveedor(); cargarProveedores(); showToast('success', 'Éxito', id ? 'Actualizado' : 'Creado'); })
+            .catch(() => showToast('error', 'Error', 'No se pudo guardar'));
+    }
+
+    function eliminarProveedor(id) {
+        if (!confirm('¿Eliminar este proveedor?')) return;
+        fetch(`/api/proveedores/${id}`, { method: 'DELETE' })
+            .then(() => { cargarProveedores(); showToast('success', 'Eliminado', 'Proveedor eliminado'); })
+            .catch(() => showToast('error', 'Error', 'No se pudo eliminar'));
+    }
+
+    cargarProveedores();
+</script>
+</body>
+</html>

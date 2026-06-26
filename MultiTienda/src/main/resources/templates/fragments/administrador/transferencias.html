@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Transferencias</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">🔄 Transferencias</div>
+        <div class="page-subtitle">Movimientos de stock entre tiendas</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalTransferencia()"><i class="fas fa-plus"></i> Nueva transferencia</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Código</th><th>Origen</th><th>Destino</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tablaTransferencias">
+                <tr><td colspan="6" style="text-align:center;padding:40px;">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalTransferencia">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTransferenciaTitle">Nueva Transferencia</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalTransferencia()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formTransferencia">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Tienda Origen</label>
+                        <select class="form-control" id="transOrigen"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tienda Destino</label>
+                        <select class="form-control" id="transDestino"></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Producto</label>
+                    <select class="form-control" id="transProducto"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cantidad</label>
+                    <input class="form-control" id="transCantidad" type="number" placeholder="Cantidad" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Observaciones</label>
+                    <textarea class="form-control" id="transObservaciones" rows="2" placeholder="Observaciones..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalTransferencia()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarTransferencia()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function cargarTransferencias() {
+        fetch('/api/transferencias')
+            .then(r => r.json())
+            .then(d => {
+                const tbody = document.getElementById('tablaTransferencias');
+                if (!d || d.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">No hay transferencias</td></tr>';
+                    return;
+                }
+				tbody.innerHTML = d.map(t => `
+				    <tr>
+				        <td>${t.idTransferencia}</td>
+				        <td><span class="badge badge-info">${t.codigoTransferencia || '-'}</span></td>
+				        <td>${t.tiendaOrigen?.nombreTienda || '-'}</td>
+				        <td>${t.tiendaDestino?.nombreTienda || '-'}</td>
+				        <td><span class="badge ${t.estadoTransferencia?.nombreEstado === 'RECIBIDO' ? 'badge-success' : 'badge-warning'}">${t.estadoTransferencia?.nombreEstado || 'PENDIENTE'}</span></td>
+				        <td>
+				            <button class="btn btn-success btn-sm" onclick="actualizarEstado(${t.idTransferencia}, 'EN_TRANSITO')"><i class="fas fa-truck"></i></button>
+				            <button class="btn btn-primary btn-sm" onclick="actualizarEstado(${t.idTransferencia}, 'RECIBIDO')"><i class="fas fa-check"></i></button>
+				            <button class="btn btn-danger btn-sm" onclick="eliminarTransferencia(${t.idTransferencia})"><i class="fas fa-trash"></i></button>
+				        </td>
+				    </tr>
+				`).join('');
+            })
+            .catch(() => document.getElementById('tablaTransferencias').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
+    }
+
+    function cargarTiendas() {
+        return fetch('/api/tiendas')
+            .then(r => r.json())
+            .then(d => {
+                const options = d.map(t => `<option value="${t.idTienda}">${t.nombreTienda}</option>`).join('');
+                document.getElementById('transOrigen').innerHTML = options;
+                document.getElementById('transDestino').innerHTML = options;
+            })
+            .catch(() => {});
+    }
+
+    function cargarProductos() {
+        return fetch('/api/productos')
+            .then(r => r.json())
+            .then(d => {
+                const select = document.getElementById('transProducto');
+                if (d && d.length > 0) {
+                    select.innerHTML = d.map(p => `<option value="${p.idProducto}">${p.nombreProducto}</option>`).join('');
+                } else {
+                    select.innerHTML = '<option value="">No hay productos</option>';
+                }
+            })
+            .catch(() => {
+                document.getElementById('transProducto').innerHTML = '<option value="">Error al cargar</option>';
+            });
+    }
+
+    function abrirModalTransferencia() {
+        document.getElementById('modalTransferenciaTitle').textContent = 'Nueva Transferencia';
+        document.getElementById('formTransferencia').reset();
+
+        Promise.all([
+            cargarTiendas(),
+            cargarProductos()
+        ]).then(() => {
+            document.getElementById('modalTransferencia').classList.add('open');
+        }).catch(() => {
+            document.getElementById('modalTransferencia').classList.add('open');
+        });
+    }
+
+    function cerrarModalTransferencia() {
+        document.getElementById('modalTransferencia').classList.remove('open');
+    }
+
+	function guardarTransferencia() {
+	    const origen = document.getElementById('transOrigen').value;
+	    const destino = document.getElementById('transDestino').value;
+	    const producto = document.getElementById('transProducto').value;
+	    const cantidad = document.getElementById('transCantidad').value;
+	
+	    if (!origen || !destino || !producto || !cantidad) {
+	        alert('Todos los campos son obligatorios');
+	        return;
+	    }
+	
+	    // Construir el objeto correctamente
+	    const data = {
+	        transferencia: {
+	            tiendaOrigen: { idTienda: parseInt(origen) },
+	            tiendaDestino: { idTienda: parseInt(destino) },
+	            observaciones: document.getElementById('transObservaciones').value,
+	            almaceneroSolicita: { idUsuario: 6 }
+	        },
+	        detalles: [{
+	            producto: { idProducto: parseInt(producto) },
+	            cantidad: parseInt(cantidad)
+	        }]
+	    };
+	
+	    fetch('/api/transferencias', {
+	        method: 'POST',
+	        headers: { 'Content-Type': 'application/json' },
+	        body: JSON.stringify(data)
+	    })
+	    .then(r => {
+	        if (!r.ok) {
+	            return r.text().then(text => { throw new Error(text); });
+	        }
+	        return r.json();
+	    })
+	    .then(() => {
+	        cerrarModalTransferencia();
+	        cargarTransferencias();
+	    })
+	    .catch((error) => {
+	        console.error('Error:', error);
+	        alert('❌ Error al guardar: ' + error.message);
+	    });
+	}
+	function actualizarEstado(id, estado) {
+	    if (!confirm(`¿Cambiar a "${estado}"?`)) return;
+	    fetch(`/api/transferencias/${id}/estado?estado=${estado}`, { 
+	        method: 'PUT' 
+	    })
+	    .then(r => {
+	        if (!r.ok) {
+	            return r.text().then(text => { throw new Error(text); });
+	        }
+	        return r.json();
+	    })
+	    .then(() => {
+	        cargarTransferencias();
+	    })
+	    .catch((error) => {
+	        console.error('Error:', error);
+	    });
+	}
+	
+	function eliminarTransferencia(id) {
+	    if (!confirm('¿Eliminar esta transferencia?')) return;
+	    fetch(`/api/transferencias/${id}`, { method: 'DELETE' })
+	        .then(() => {
+	            cargarTransferencias();
+	            alert('✅ Transferencia eliminada');
+	        })
+	        .catch(() => alert('❌ Error al eliminar'));
+	}
+
+    cargarTransferencias();
+</script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mermas</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">🗑️ Mermas</div>
+        <div class="page-subtitle">Control de pérdidas de inventario</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalMerma()"><i class="fas fa-plus"></i> Registrar merma</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Producto</th><th>Cantidad</th><th>Motivo</th><th>Tienda</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tablaMermas">
+                <tr><td colspan="7" style="text-align:center;padding:40px;">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalMerma">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalMermaTitle">Registrar Merma</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalMerma()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formMerma">
+                <input type="hidden" id="mermaId">
+                <div class="form-group">
+                    <label class="form-label">Producto</label>
+                    <select class="form-control" id="mermaProducto"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cantidad</label>
+                    <input class="form-control" id="mermaCantidad" type="number" placeholder="Cantidad" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Motivo</label>
+                    <select class="form-control" id="mermaMotivo">
+                        <option value="1">PRODUCTO VENCIDO</option>
+                        <option value="2">PRODUCTO DAÑADO</option>
+                        <option value="3">ROBO</option>
+                        <option value="4">ERROR DE INVENTARIO</option>
+                        <option value="5">DESPERFECTO EN TRANSPORTE</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tienda</label>
+                    <select class="form-control" id="mermaTienda"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Observaciones</label>
+                    <textarea class="form-control" id="mermaObservaciones" rows="2" placeholder="Observaciones..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalMerma()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarMerma()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function cargarMermas() {
+        fetch('/api/mermas')
+            .then(r => r.json())
+            .then(d => {
+                const tbody = document.getElementById('tablaMermas');
+                if (!d || d.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No hay mermas</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = d.map(m => `
+                    <tr>
+                        <td>${m.idMerma}</td>
+                        <td>${m.producto?.nombreProducto || '-'}</td>
+                        <td><strong>${m.cantidad}</strong></td>
+                        <td>${m.motivoMerma?.nombreMotivo || '-'}</td>
+                        <td>${m.tienda?.nombreTienda || '-'}</td>
+                        <td><span class="badge ${m.estadoAutorizacion === 'APROBADO' ? 'badge-success' : 'badge-warning'}">${m.estadoAutorizacion || 'PENDIENTE'}</span></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarMerma(${m.idMerma})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(() => document.getElementById('tablaMermas').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
+    }
+
+    function cargarProductos() {
+        fetch('/api/productos')
+            .then(r => r.json())
+            .then(d => {
+                const select = document.getElementById('mermaProducto');
+                if (d && d.length > 0) {
+                    select.innerHTML = d.map(p => `<option value="${p.idProducto}">${p.nombreProducto}</option>`).join('');
+                } else {
+                    select.innerHTML = '<option value="">No hay productos</option>';
+                }
+            })
+            .catch(() => {
+                document.getElementById('mermaProducto').innerHTML = '<option value="">Error al cargar</option>';
+            });
+    }
+
+    function cargarTiendas() {
+        fetch('/api/tiendas')
+            .then(r => r.json())
+            .then(d => {
+                const select = document.getElementById('mermaTienda');
+                if (d && d.length > 0) {
+                    select.innerHTML = d.map(t => `<option value="${t.idTienda}">${t.nombreTienda}</option>`).join('');
+                } else {
+                    select.innerHTML = '<option value="">No hay tiendas</option>';
+                }
+            })
+            .catch(() => {
+                document.getElementById('mermaTienda').innerHTML = '<option value="">Error al cargar</option>';
+            });
+    }
+
+    function abrirModalMerma() {
+        document.getElementById('modalMermaTitle').textContent = 'Registrar Merma';
+        document.getElementById('formMerma').reset();
+        document.getElementById('mermaId').value = '';
+
+        Promise.all([
+            cargarProductos(),
+            cargarTiendas()
+        ]).then(() => {
+            document.getElementById('modalMerma').classList.add('open');
+        }).catch(() => {
+            document.getElementById('modalMerma').classList.add('open');
+        });
+    }
+
+    function cerrarModalMerma() {
+        document.getElementById('modalMerma').classList.remove('open');
+    }
+
+    function guardarMerma() {
+        const productoId = document.getElementById('mermaProducto').value;
+        const cantidad = document.getElementById('mermaCantidad').value;
+        const motivoId = document.getElementById('mermaMotivo').value;
+        const tiendaId = document.getElementById('mermaTienda').value;
+
+        if (!productoId || !cantidad || !motivoId || !tiendaId) {
+            alert('Todos los campos son obligatorios');
+            return;
+        }
+
+        const data = {
+            producto: { idProducto: parseInt(productoId) },
+            cantidad: parseInt(cantidad),
+            motivoMerma: { idMotivoMerma: parseInt(motivoId) },
+            tienda: { idTienda: parseInt(tiendaId) },
+            observaciones: document.getElementById('mermaObservaciones').value,
+            almacenero: { idUsuario: 6 }
+        };
+
+        fetch('/api/mermas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(r => {
+            if (!r.ok) {
+                return r.text().then(text => { throw new Error(text); });
+            }
+            return r.json();
+        })
+        .then(() => {
+            cerrarModalMerma();
+            cargarMermas();
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('❌ Error al guardar: ' + error.message);
+        });
+    }
+
+    function eliminarMerma(id) {
+        if (!confirm('¿Eliminar esta merma?')) return;
+        fetch(`/api/mermas/${id}`, { method: 'DELETE' })
+            .then(() => {
+                cargarMermas();
+                alert('✅ Merma eliminada');
+            })
+            .catch(() => alert('❌ Error al eliminar'));
+    }
+
+    cargarMermas();
+</script>
+</body>
+</html>

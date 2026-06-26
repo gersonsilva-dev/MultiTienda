@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lotes</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">📦 Lotes</div>
+        <div class="page-subtitle">Gestión de lotes por producto</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalLote()"><i class="fas fa-plus"></i> Nuevo lote</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Número</th><th>Producto</th><th>Stock</th><th>Vencimiento</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tablaLotes">
+                <tr><td colspan="7" style="text-align:center;padding:40px;">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalLote">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalLoteTitle">Nuevo Lote</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalLote()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formLote">
+                <input type="hidden" id="loteId">
+                <div class="form-group">
+                    <label class="form-label">Número de Lote</label>
+                    <input class="form-control" id="loteNumero" placeholder="Número de lote" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Producto</label>
+                    <select class="form-control" id="loteProducto"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tienda</label>
+                    <select class="form-control" id="loteTienda"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stock</label>
+                    <input class="form-control" id="loteStock" type="number" placeholder="Cantidad" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fecha Vencimiento</label>
+                    <input class="form-control" id="loteVencimiento" type="date">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalLote()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarLote()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let lotesData = [];
+
+    function cargarSelectsLote() {
+        fetch('/api/productos')
+            .then(r => r.json())
+            .then(d => {
+                const select = document.getElementById('loteProducto');
+                select.innerHTML = d.map(p => `<option value="${p.idProducto}">${p.nombreProducto}</option>`).join('');
+            })
+            .catch(() => {});
+
+        fetch('/api/tiendas')
+            .then(r => r.json())
+            .then(d => {
+                const select = document.getElementById('loteTienda');
+                select.innerHTML = d.map(t => `<option value="${t.idTienda}">${t.nombreTienda}</option>`).join('');
+            })
+            .catch(() => {});
+    }
+
+    function cargarLotes() {
+        fetch('/api/lotes')
+            .then(r => r.json())
+            .then(d => {
+                lotesData = d;
+                const tbody = document.getElementById('tablaLotes');
+                if (!d || d.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No hay lotes</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = d.map(l => `
+                    <tr>
+                        <td>${l.idLote}</td>
+                        <td><strong>${l.numeroLote}</strong></td>
+                        <td>${l.producto?.nombreProducto || '-'}</td>
+                        <td>${l.stockLote}</td>
+                        <td>${l.fechaVencimiento || '-'}</td>
+                        <td><span class="badge ${l.activo ? 'badge-success' : 'badge-danger'}">${l.activo ? 'Activo' : 'Inactivo'}</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="editarLote(${l.idLote})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarLote(${l.idLote})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(() => document.getElementById('tablaLotes').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
+    }
+
+    function abrirModalLote() {
+        document.getElementById('modalLoteTitle').textContent = 'Nuevo Lote';
+        document.getElementById('formLote').reset();
+        document.getElementById('loteId').value = '';
+        cargarSelectsLote();
+        document.getElementById('modalLote').classList.add('open');
+    }
+
+    function cerrarModalLote() { document.getElementById('modalLote').classList.remove('open'); }
+
+    function editarLote(id) {
+        const l = lotesData.find(x => x.idLote === id);
+        if (!l) return;
+        document.getElementById('modalLoteTitle').textContent = 'Editar Lote';
+        document.getElementById('loteId').value = l.idLote;
+        document.getElementById('loteNumero').value = l.numeroLote || '';
+        document.getElementById('loteStock').value = l.stockLote || 0;
+        document.getElementById('loteVencimiento').value = l.fechaVencimiento || '';
+        cargarSelectsLote();
+        document.getElementById('loteProducto').value = l.producto?.idProducto || '';
+        document.getElementById('loteTienda').value = l.tienda?.idTienda || '';
+        document.getElementById('modalLote').classList.add('open');
+    }
+
+    function guardarLote() {
+        const id = document.getElementById('loteId').value;
+        const data = {
+            numeroLote: document.getElementById('loteNumero').value,
+            producto: { idProducto: parseInt(document.getElementById('loteProducto').value) },
+            tienda: { idTienda: parseInt(document.getElementById('loteTienda').value) },
+            stockLote: parseInt(document.getElementById('loteStock').value) || 0,
+            fechaVencimiento: document.getElementById('loteVencimiento').value || null
+        };
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/lotes/${id}` : '/api/lotes';
+        fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(r => r.json())
+            .then(() => { cerrarModalLote(); cargarLotes(); showToast('success', 'Éxito', id ? 'Actualizado' : 'Creado'); })
+            .catch(() => showToast('error', 'Error', 'No se pudo guardar'));
+    }
+
+    function eliminarLote(id) {
+        if (!confirm('¿Eliminar este lote?')) return;
+        fetch(`/api/lotes/${id}`, { method: 'DELETE' })
+            .then(() => { cargarLotes(); showToast('success', 'Eliminado', 'Lote eliminado'); })
+            .catch(() => showToast('error', 'Error', 'No se pudo eliminar'));
+    }
+
+    cargarLotes();
+</script>
+</body>
+</html>

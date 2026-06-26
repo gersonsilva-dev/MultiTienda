@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="content" th:remove="tag">
+    <style>
+        /* ============================================================ */
+        /* ESTILOS DE APERTURA                                          */
+        /* ============================================================ */
+        .caja-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 16px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .caja-card {
+            background: var(--color-background-primary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        .caja-card-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--color-border-tertiary);
+            background: var(--color-background-secondary);
+        }
+
+        .caja-card-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .caja-card-header h2 i { color: #16A34A; }
+
+        .caja-card-body {
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .caja-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .caja-campo {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .caja-campo label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--color-text-tertiary);
+        }
+
+        .caja-campo input,
+        .caja-campo select {
+            background: var(--color-background-secondary);
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            padding: 7px 12px;
+            font-size: 13px;
+            color: var(--color-text-primary);
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+
+        .caja-campo input:read-only {
+            font-weight: 500;
+            background: var(--color-background-secondary);
+        }
+
+        .caja-campo input:focus,
+        .caja-campo select:focus {
+            border-color: #16A34A;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+        }
+
+        .caja-resumen {
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .caja-resumen-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .caja-resumen-item .label {
+            font-size: 9px;
+            color: var(--color-text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .caja-resumen-item .value {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .caja-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px;
+            font-size: 13px;
+            border-radius: 99px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-success {
+            background: #16A34A;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #15803D;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border-tertiary) !important;
+        }
+        .btn-outline:hover {
+            background: var(--color-background-secondary);
+            border-color: var(--color-text-tertiary) !important;
+        }
+
+        .info-box {
+            background: var(--color-background-info);
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            border: 1px solid #93C5FD;
+        }
+
+        .info-box i {
+            font-size: 18px;
+            color: var(--color-text-info);
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .info-box .title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-info);
+        }
+
+        .info-box .sub {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        /* ============================================================ */
+        /* 🔥 MODAL DE CONFIRMACIÓN DE APERTURA                        */
+        /* ============================================================ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            z-index: 10001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #ffffff;
+            border-radius: 20px;
+            max-width: 420px;
+            width: 100%;
+            padding: 32px 28px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+            animation: modalIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-header h3 i {
+            font-size: 22px;
+        }
+
+        .modal-header h3 .icon-success { color: #16A34A; }
+        .modal-header h3 .icon-danger { color: #DC2626; }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--color-text-tertiary);
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--color-text-primary);
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-body .mensaje {
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .modal-body .mensaje i {
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .modal-body .mensaje.info {
+            background: #ECFDF5;
+            border: 1px solid #A7F3D0;
+            color: #065F46;
+        }
+
+        .modal-body .mensaje.info i { color: #16A34A; }
+
+        .modal-body .mensaje.warning {
+            background: #FEF2F2;
+            border: 1px solid #FCA5A5;
+            color: #991B1B;
+        }
+
+        .modal-body .mensaje.warning i { color: #DC2626; }
+
+        .modal-body .resumen-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 12px 14px;
+        }
+
+        .modal-body .resumen-grid .item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-body .resumen-grid .item .label {
+            font-size: 9px;
+            color: var(--color-text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .modal-body .resumen-grid .item .value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .modal-body .resumen-grid .item .value.success {
+            color: #16A34A;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .modal-footer .btn-modal {
+            flex: 1;
+            padding: 11px;
+            border-radius: 99px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .modal-footer .btn-modal-cancelar {
+            background: var(--color-background-secondary);
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border-tertiary);
+        }
+
+        .modal-footer .btn-modal-cancelar:hover {
+            background: var(--color-border-tertiary);
+        }
+
+        .modal-footer .btn-modal-confirmar {
+            color: #fff;
+        }
+
+        .modal-footer .btn-modal-confirmar.success {
+            background: #16A34A;
+        }
+        .modal-footer .btn-modal-confirmar.success:hover {
+            background: #15803D;
+        }
+
+        .modal-footer .btn-modal-confirmar.danger {
+            background: #DC2626;
+        }
+        .modal-footer .btn-modal-confirmar.danger:hover {
+            background: #B91C1C;
+        }
+
+        .modal-footer .btn-modal-confirmar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .caja-row { grid-template-columns: 1fr; }
+            .modal-body .resumen-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .caja-actions .btn { min-width: 100px; }
+            .modal-box { margin: 16px; padding: 20px; }
+        }
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- CONTENIDO PRINCIPAL                                           -->
+    <!-- ============================================================ -->
+    <div class="caja-container">
+        <div class="caja-card">
+            <div class="caja-card-header">
+                <h2><i class="ti ti-cash-register"></i> Apertura de Caja</h2>
+                <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:2px;">
+                    Para comenzar a vender, debes abrir tu turno de caja
+                </div>
+            </div>
+            <div class="caja-card-body">
+
+                <!-- Info del usuario -->
+                <div class="info-box">
+                    <i class="ti ti-info-circle"></i>
+                    <div>
+                        <div class="title" th:text="${usuario.nombres} + ' ' + ${usuario.apellidos}">
+                            Bienvenido, Cajero
+                        </div>
+                        <div class="sub">
+                            Asegúrate de que el fondo inicial coincida con el efectivo disponible en la caja.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tienda y Caja asignadas -->
+                <div class="caja-row">
+                    <div class="caja-campo">
+                        <label>Tienda asignada</label>
+                        <input type="text" class="form-control" 
+                               th:value="${usuario.tienda.nombreTienda}" readonly>
+                    </div>
+                    <div class="caja-campo">
+                        <label>Caja asignada</label>
+                        <input type="text" class="form-control" 
+                               th:value="${usuario.caja.nombreCaja}" readonly>
+                    </div>
+                </div>
+
+                <!-- Fecha y Hora -->
+                <div class="caja-row">
+                    <div class="caja-campo">
+                        <label>Fecha de apertura</label>
+                        <input type="text" id="fechaApertura" 
+                               th:value="${#dates.format(#dates.createNow(), 'dd/MM/yyyy')}" 
+                               readonly class="form-control">
+                    </div>
+                    <div class="caja-campo">
+                        <label>Hora de apertura</label>
+                        <input type="text" id="horaApertura" 
+                               th:value="${#dates.format(#dates.createNow(), 'HH:mm')}" 
+                               readonly class="form-control">
+                    </div>
+                </div>
+
+                <!-- Fondo Inicial -->
+                <div class="caja-campo">
+                    <label>Fondo inicial (S/)</label>
+                    <input type="number" id="fondoInicial" value="300.00" step="0.50" min="0" class="form-control">
+                    <div style="font-size:10px;color:var(--color-text-tertiary);margin-top:2px;">
+                        Monto en efectivo con el que inicia la caja
+                    </div>
+                </div>
+
+                <!-- Resumen -->
+                <div class="caja-resumen">
+                    <div class="caja-resumen-item">
+                        <span class="label">Cajero</span>
+                        <span class="value" th:text="${usuario.nombres} + ' ' + ${usuario.apellidos}">
+                            Juan Pérez
+                        </span>
+                    </div>
+                    <div class="caja-resumen-item">
+                        <span class="label">Estado</span>
+                        <span class="value" id="estadoCaja" style="color:var(--color-text-danger);">
+                            Cerrada
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="caja-actions">
+                    <button class="btn btn-success" id="btnAbrirTurno" onclick="abrirModalApertura()">
+                        <i class="ti ti-check"></i> Abrir Turno
+                    </button>
+                    <button class="btn btn-outline" onclick="abrirModalCancelar()">
+                        <i class="ti ti-x"></i> Cancelar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 🔥 MODAL DE CONFIRMACIÓN DE APERTURA                          -->
+    <!-- ============================================================ -->
+    <div class="modal-overlay" id="modalApertura">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>
+                    <i class="ti ti-cash-register icon-success"></i>
+                    Confirmar apertura
+                </h3>
+                <button class="modal-close" onclick="cerrarModal('modalApertura')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="mensaje info">
+                    <i class="ti ti-info-circle"></i>
+                    <span>Se abrirá un nuevo turno de caja con el fondo inicial indicado.</span>
+                </div>
+
+                <div class="resumen-grid">
+                    <div class="item">
+                        <span class="label">Cajero</span>
+                        <span class="value" id="mAperturaCajero">--</span>
+                    </div>
+                    <div class="item">
+                        <span class="label">Tienda</span>
+                        <span class="value" id="mAperturaTienda">--</span>
+                    </div>
+                    <div class="item">
+                        <span class="label">Caja</span>
+                        <span class="value" id="mAperturaCaja">--</span>
+                    </div>
+                    <div class="item">
+                        <span class="label">Fondo inicial</span>
+                        <span class="value success" id="mAperturaFondo">S/ 0.00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-modal-cancelar" onclick="cerrarModal('modalApertura')">
+                    <i class="ti ti-x"></i> Cancelar
+                </button>
+                <button class="btn-modal btn-modal-confirmar success" id="btnConfirmarApertura" onclick="ejecutarApertura()">
+                    <i class="ti ti-check"></i> Confirmar apertura
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 🔥 MODAL DE CANCELACIÓN DE APERTURA                          -->
+    <!-- ============================================================ -->
+    <div class="modal-overlay" id="modalCancelar">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>
+                    <i class="ti ti-alert-triangle icon-danger"></i>
+                    Cancelar apertura
+                </h3>
+                <button class="modal-close" onclick="cerrarModal('modalCancelar')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="mensaje warning">
+                    <i class="ti ti-alert-circle"></i>
+                    <span>¿Estás seguro de que deseas cancelar la apertura de caja?</span>
+                </div>
+                <div style="font-size:12px;color:var(--color-text-secondary);text-align:center;padding:4px 0;">
+                    No se abrirá ningún turno y la caja permanecerá cerrada.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-modal-cancelar" onclick="cerrarModal('modalCancelar')">
+                    <i class="ti ti-arrow-left"></i> Volver
+                </button>
+                <button class="btn-modal btn-modal-confirmar danger" onclick="confirmarCancelar()">
+                    <i class="ti ti-x"></i> Sí, cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT DE APERTURA                                       -->
+    <!-- ============================================================ -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        // ================================================================
+        // ABRIR MODAL DE CONFIRMACIÓN DE APERTURA
+        // ================================================================
+        function abrirModalApertura() {
+            var fondo = document.getElementById('fondoInicial').value;
+            if (parseFloat(fondo) <= 0) {
+                mostrarToast('⚠️ El fondo inicial debe ser mayor a 0.', 'warning');
+                return;
+            }
+
+            // Obtener datos del usuario desde la UI
+            var cajero = document.querySelector('.caja-resumen-item .value')?.textContent?.trim() || '--';
+            var tienda = document.querySelectorAll('.caja-campo input[readonly]')[0]?.value || '--';
+            var caja = document.querySelectorAll('.caja-campo input[readonly]')[1]?.value || '--';
+
+            document.getElementById('mAperturaCajero').textContent = cajero;
+            document.getElementById('mAperturaTienda').textContent = tienda;
+            document.getElementById('mAperturaCaja').textContent = caja;
+            document.getElementById('mAperturaFondo').textContent = 'S/ ' + parseFloat(fondo).toFixed(2);
+
+            abrirModal('modalApertura');
+        }
+
+        // ================================================================
+        // ABRIR MODAL DE CANCELACIÓN
+        // ================================================================
+        function abrirModalCancelar() {
+            abrirModal('modalCancelar');
+        }
+
+        // ================================================================
+        // FUNCIONES DE MODAL
+        // ================================================================
+        function abrirModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function cerrarModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ================================================================
+        // EJECUTAR APERTURA (desde el modal)
+        // ================================================================
+        function ejecutarApertura() {
+            var fondoInicial = document.getElementById('fondoInicial').value;
+
+            if (parseFloat(fondoInicial) <= 0) {
+                mostrarToast('⚠️ El fondo inicial debe ser mayor a 0.', 'warning');
+                cerrarModal('modalApertura');
+                return;
+            }
+
+            var btn = document.getElementById('btnConfirmarApertura');
+            var originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Abriendo...';
+
+            fetch('/api/turnos-caja/abrir', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fondoInicial: parseFloat(fondoInicial)
+                })
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    return response.json().then(function(err) {
+                        throw new Error(err.error || 'Error al abrir turno');
+                    });
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success) {
+                    mostrarToast('✅ ' + data.message, 'success');
+                    cerrarModal('modalApertura');
+                    if (window.actualizarEstadoCaja) {
+                        window.actualizarEstadoCaja(true);
+                    }
+                    window.location.href = '/api/views/venta';
+                } else {
+                    mostrarToast('❌ ' + (data.message || 'Error desconocido'), 'error');
+                    cerrarModal('modalApertura');
+                }
+            })
+            .catch(function(error) {
+                mostrarToast('❌ Error al abrir turno: ' + error.message, 'error');
+                console.error('Error:', error);
+                cerrarModal('modalApertura');
+            })
+            .finally(function() {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        }
+
+        // ================================================================
+        // CONFIRMAR CANCELACIÓN
+        // ================================================================
+        function confirmarCancelar() {
+            cerrarModal('modalCancelar');
+            mostrarToast('Apertura cancelada', 'info');
+        }
+
+        // ================================================================
+        // TOAST NOTIFICATIONS (usando contenedor global)
+        // ================================================================
+        function mostrarToast(mensaje, tipo) {
+            tipo = tipo || 'info';
+            var container = document.getElementById('toastContainerGlobal');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainerGlobal';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + tipo;
+            toast.textContent = mensaje;
+            container.appendChild(toast);
+
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3000);
+        }
+
+        // ================================================================
+        // CERRAR MODALES CON ESC
+        // ================================================================
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cerrarModal('modalApertura');
+                cerrarModal('modalCancelar');
+            }
+        });
+
+        // Cerrar modales al hacer clic en el overlay
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        /*]]>*/
+    </script>
+</div>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Roles</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">🔐 Roles</div>
+        <div class="page-subtitle">Gestiona los roles del sistema</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalRol()"><i class="fas fa-plus"></i> Nuevo rol</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Nombre</th><th>Nivel</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tablaRoles">
+                <tr><td colspan="5" style="text-align:center;padding:40px;">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalRol">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalRolTitle">Nuevo Rol</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalRol()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formRol">
+                <input type="hidden" id="rolId">
+                <div class="form-group">
+                    <label class="form-label">Nombre del rol</label>
+                    <input class="form-control" id="rolNombre" placeholder="Ej: GERENTE" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nivel de acceso</label>
+                    <input class="form-control" id="rolNivel" type="number" placeholder="1 = mayor" required>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalRol()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarRol()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let rolesData = [];
+
+    function cargarRoles() {
+        fetch('/api/roles')
+            .then(r => r.json())
+            .then(d => {
+                rolesData = d;
+                const tbody = document.getElementById('tablaRoles');
+                if (!d || d.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No hay roles</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = d.map(r => `
+                    <tr>
+                        <td>${r.idRol}</td>
+                        <td><span class="badge badge-primary">${r.nombreRol}</span></td>
+                        <td>${r.nivelAcceso}</td>
+                        <td><span class="badge ${r.activo ? 'badge-success' : 'badge-danger'}">${r.activo ? 'Activo' : 'Inactivo'}</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="editarRol(${r.idRol})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarRol(${r.idRol})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(() => document.getElementById('tablaRoles').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
+    }
+
+    function abrirModalRol() {
+        document.getElementById('modalRolTitle').textContent = 'Nuevo Rol';
+        document.getElementById('formRol').reset();
+        document.getElementById('rolId').value = '';
+        document.getElementById('modalRol').classList.add('open');
+    }
+
+    function cerrarModalRol() { document.getElementById('modalRol').classList.remove('open'); }
+
+    function editarRol(id) {
+        const r = rolesData.find(x => x.idRol === id);
+        if (!r) return;
+        document.getElementById('modalRolTitle').textContent = 'Editar Rol';
+        document.getElementById('rolId').value = r.idRol;
+        document.getElementById('rolNombre').value = r.nombreRol || '';
+        document.getElementById('rolNivel').value = r.nivelAcceso || '';
+        document.getElementById('modalRol').classList.add('open');
+    }
+
+    function guardarRol() {
+        const id = document.getElementById('rolId').value;
+        const data = { nombreRol: document.getElementById('rolNombre').value, nivelAcceso: parseInt(document.getElementById('rolNivel').value) };
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/roles/${id}` : '/api/roles';
+        fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(r => r.json())
+            .then(() => { cerrarModalRol(); cargarRoles(); showToast('success', 'Éxito', id ? 'Actualizado' : 'Creado'); })
+            .catch(() => showToast('error', 'Error', 'No se pudo guardar'));
+    }
+
+    function eliminarRol(id) {
+        if (!confirm('¿Eliminar este rol?')) return;
+        fetch(`/api/roles/${id}`, { method: 'DELETE' })
+            .then(() => { cargarRoles(); showToast('success', 'Eliminado', 'Rol eliminado'); })
+            .catch(() => showToast('error', 'Error', 'No se pudo eliminar'));
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarRoles);
+	
+	cargarRoles();
+	
+</script>
+</body>
+</html>

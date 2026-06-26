@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Turnos</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">🕐 Turnos</div>
+        <div class="page-subtitle">Gestiona los turnos de trabajo</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalTurno()"><i class="fas fa-plus"></i> Nuevo turno</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Nombre</th><th>Hora Inicio</th><th>Hora Fin</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tablaTurnos">
+                <tr><td colspan="6" style="text-align:center;padding:40px;">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalTurno">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTurnoTitle">Nuevo Turno</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalTurno()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formTurno">
+                <input type="hidden" id="turnoId">
+                <div class="form-group">
+                    <label class="form-label">Nombre</label>
+                    <input class="form-control" id="turnoNombre" placeholder="Ej: MAÑANA" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Hora Inicio</label>
+                        <input class="form-control" id="turnoInicio" type="time" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Hora Fin</label>
+                        <input class="form-control" id="turnoFin" type="time" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Estado</label>
+                    <select class="form-control" id="turnoEstado">
+                        <option value="1">Activo</option>
+                        <option value="2">Inactivo</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalTurno()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarTurno()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let turnosData = [];
+
+    function cargarTurnos() {
+        fetch('/api/turnos')
+            .then(r => r.json())
+            .then(d => {
+                turnosData = d;
+                const tbody = document.getElementById('tablaTurnos');
+                if (!d || d.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">No hay turnos</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = d.map(t => `
+                    <tr>
+                        <td>${t.idTurno}</td>
+                        <td><strong>${t.nombreTurno}</strong></td>
+                        <td>${t.horaInicio || '-'}</td>
+                        <td>${t.horaFin || '-'}</td>
+                        <td><span class="badge ${t.activo ? 'badge-success' : 'badge-danger'}">${t.activo ? 'Activo' : 'Inactivo'}</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="editarTurno(${t.idTurno})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarTurno(${t.idTurno})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(() => document.getElementById('tablaTurnos').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
+    }
+
+    function abrirModalTurno() {
+        document.getElementById('modalTurnoTitle').textContent = 'Nuevo Turno';
+        document.getElementById('formTurno').reset();
+        document.getElementById('turnoId').value = '';
+        document.getElementById('modalTurno').classList.add('open');
+    }
+
+    function cerrarModalTurno() { document.getElementById('modalTurno').classList.remove('open'); }
+
+    function editarTurno(id) {
+        const t = turnosData.find(x => x.idTurno === id);
+        if (!t) return;
+        document.getElementById('modalTurnoTitle').textContent = 'Editar Turno';
+        document.getElementById('turnoId').value = t.idTurno;
+        document.getElementById('turnoNombre').value = t.nombreTurno || '';
+        document.getElementById('turnoInicio').value = t.horaInicio || '';
+        document.getElementById('turnoFin').value = t.horaFin || '';
+        document.getElementById('turnoEstado').value = t.activo ? 1 : 2;
+        document.getElementById('modalTurno').classList.add('open');
+    }
+
+    function guardarTurno() {
+        const id = document.getElementById('turnoId').value;
+        const data = {
+            nombreTurno: document.getElementById('turnoNombre').value,
+            horaInicio: document.getElementById('turnoInicio').value,
+            horaFin: document.getElementById('turnoFin').value,
+            activo: document.getElementById('turnoEstado').value === '1'
+        };
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/turnos/${id}` : '/api/turnos';
+        fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(r => r.json())
+            .then(() => { cerrarModalTurno(); cargarTurnos(); showToast('success', 'Éxito', id ? 'Actualizado' : 'Creado'); })
+            .catch(() => showToast('error', 'Error', 'No se pudo guardar'));
+    }
+
+    function eliminarTurno(id) {
+        if (!confirm('¿Eliminar este turno?')) return;
+        fetch(`/api/turnos/${id}`, { method: 'DELETE' })
+            .then(() => { cargarTurnos(); showToast('success', 'Eliminado', 'Turno eliminado'); })
+            .catch(() => showToast('error', 'Error', 'No se pudo eliminar'));
+    }
+
+    cargarTurnos();
+</script>
+</body>
+</html>

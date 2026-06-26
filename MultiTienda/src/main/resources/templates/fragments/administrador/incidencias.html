@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Incidencias</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">⚠️ Incidencias</div>
+        <div class="page-subtitle">Reportes y seguimiento de problemas</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalIncidencia()"><i class="fas fa-plus"></i> Nueva incidencia</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Código</th><th>Título</th><th>Tipo</th><th>Prioridad</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tablaIncidencias">
+                <tr><td colspan="7" style="text-align:center;padding:40px;">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalIncidencia">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalIncidenciaTitle">Nueva Incidencia</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalIncidencia()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formIncidencia">
+                <input type="hidden" id="incidenciaId">
+                <div class="form-group">
+                    <label class="form-label">Título</label>
+                    <input class="form-control" id="incidenciaTitulo" placeholder="Título de la incidencia" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea class="form-control" id="incidenciaDescripcion" rows="3" placeholder="Describe el problema..." required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-control" id="incidenciaTipo">
+                            <option value="1">STOCK</option>
+                            <option value="2">PRECIO</option>
+                            <option value="3">CAJA</option>
+                            <option value="4">SISTEMA</option>
+                            <option value="5">PERSONAL</option>
+                            <option value="6">PRODUCTO</option>
+                            <option value="7">PROVEEDOR</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Prioridad</label>
+                        <select class="form-control" id="incidenciaPrioridad">
+                            <option value="1">BAJA</option>
+                            <option value="2">MEDIA</option>
+                            <option value="3">ALTA</option>
+                            <option value="4">URGENTE</option>
+                            <option value="5">CRÍTICA</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tienda</label>
+                    <select class="form-control" id="incidenciaTienda">
+                        <option value="1">Tienda Principal</option>
+                    </select>
+                </div>
+                <div class="form-group" id="estadoGroup">
+                    <label class="form-label">Estado</label>
+                    <select class="form-control" id="incidenciaEstado">
+                        <option value="1">ABIERTO</option>
+                        <option value="2">EN_PROCESO</option>
+                        <option value="3">RESUELTO</option>
+                        <option value="4">CERRADO</option>
+                        <option value="5">RECHAZADO</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalIncidencia()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarIncidencia()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let incidenciasData = [];
+
+    // ============================================================
+    // COLORES PARA PRIORIDADES (fondo suave, texto intenso)
+    // ============================================================
+    function getColorPrioridad(prioridad) {
+        const colores = {
+            'CRÍTICA': { bg: '#FFCDD2', text: '#B71C1C' },
+            'URGENTE': { bg: '#FFE0B2', text: '#E65100' },
+            'ALTA': { bg: '#FFE0B2', text: '#F57C00' },
+            'MEDIA': { bg: '#BBDEFB', text: '#1976D2' },
+            'BAJA': { bg: '#C8E6C9', text: '#388E3C' }
+        };
+        return colores[prioridad] || { bg: '#E0E0E0', text: '#616161' };
+    }
+
+    // ============================================================
+    // COLORES PARA ESTADOS (fondo suave, texto intenso)
+    // ============================================================
+    function getColorEstado(estado) {
+        const colores = {
+            'ABIERTO': { bg: '#FFF8E1', text: '#F57F17' },
+            'EN_PROCESO': { bg: '#E3F2FD', text: '#1565C0' },
+            'RESUELTO': { bg: '#E8F5E9', text: '#2E7D32' },
+            'CERRADO': { bg: '#F5F5F5', text: '#616161' },
+            'RECHAZADO': { bg: '#FFEBEE', text: '#C62828' }
+        };
+        return colores[estado] || { bg: '#FFF8E1', text: '#F57F17' };
+    }
+
+    function cargarIncidencias() {
+        fetch('/api/incidencias')
+            .then(r => r.json())
+            .then(d => {
+                incidenciasData = d;
+                const tbody = document.getElementById('tablaIncidencias');
+                if (!d || d.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No hay incidencias</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = d.map(i => {
+                    const estado = i.estadoIncidencia?.nombreEstado || 'ABIERTO';
+                    const prioridad = i.prioridad?.nombrePrioridad || 'MEDIA';
+                    const colorPrio = getColorPrioridad(prioridad);
+                    const colorEst = getColorEstado(estado);
+                    
+                    return `
+                    <tr>
+                        <td>${i.idIncidencia}</td>
+                        <td><span class="badge badge-info">${i.codigoIncidencia || '-'}</span></td>
+                        <td><strong>${i.titulo}</strong></td>
+                        <td>${i.tipoIncidencia?.nombreTipo || '-'}</td>
+                        <td>
+                            <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${colorPrio.bg};color:${colorPrio.text};font-size:0.75rem;font-weight:600;">
+                                ${prioridad}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${colorEst.bg};color:${colorEst.text};font-size:0.75rem;font-weight:600;">
+                                ${estado}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="editarIncidencia(${i.idIncidencia})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarIncidencia(${i.idIncidencia})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `}).join('');
+            })
+            .catch(() => document.getElementById('tablaIncidencias').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
+    }
+
+    function abrirModalIncidencia() {
+        document.getElementById('modalIncidenciaTitle').textContent = 'Nueva Incidencia';
+        document.getElementById('formIncidencia').reset();
+        document.getElementById('incidenciaId').value = '';
+        document.getElementById('estadoGroup').style.display = 'none';
+        document.getElementById('modalIncidencia').classList.add('open');
+    }
+
+    function editarIncidencia(id) {
+        const i = incidenciasData.find(x => x.idIncidencia === id);
+        if (!i) return;
+
+        document.getElementById('modalIncidenciaTitle').textContent = 'Editar Incidencia';
+        document.getElementById('incidenciaId').value = i.idIncidencia;
+        document.getElementById('incidenciaTitulo').value = i.titulo || '';
+        document.getElementById('incidenciaDescripcion').value = i.descripcionProblema || '';
+        document.getElementById('incidenciaTipo').value = i.tipoIncidencia?.idTipoIncidencia || '';
+        document.getElementById('incidenciaPrioridad').value = i.prioridad?.idPrioridad || '';
+        document.getElementById('incidenciaTienda').value = i.tienda?.idTienda || '';
+        document.getElementById('incidenciaEstado').value = i.estadoIncidencia?.idEstadoIncidencia || '';
+        document.getElementById('estadoGroup').style.display = 'block';
+        document.getElementById('modalIncidencia').classList.add('open');
+    }
+
+    function cerrarModalIncidencia() {
+        document.getElementById('modalIncidencia').classList.remove('open');
+    }
+
+    function guardarIncidencia() {
+        const id = document.getElementById('incidenciaId').value;
+        const data = {
+            titulo: document.getElementById('incidenciaTitulo').value,
+            descripcionProblema: document.getElementById('incidenciaDescripcion').value,
+            tipoIncidencia: { idTipoIncidencia: parseInt(document.getElementById('incidenciaTipo').value) },
+            prioridad: { idPrioridad: parseInt(document.getElementById('incidenciaPrioridad').value) },
+            tienda: { idTienda: parseInt(document.getElementById('incidenciaTienda').value) },
+            supervisor: { idUsuario: 6 }
+        };
+
+        if (id) {
+            data.estadoIncidencia = { idEstadoIncidencia: parseInt(document.getElementById('incidenciaEstado').value) };
+        }
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/incidencias/${id}` : '/api/incidencias';
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(r => {
+            if (!r.ok) {
+                return r.text().then(text => { throw new Error(text); });
+            }
+            return r.json();
+        })
+        .then(() => {
+            cerrarModalIncidencia();
+            cargarIncidencias();
+            showToast('success', 'Éxito', id ? 'Actualizada' : 'Creada');
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            showToast('error', 'Error', 'No se pudo guardar');
+        });
+    }
+
+    function eliminarIncidencia(id) {
+        if (!confirm('¿Eliminar esta incidencia?')) return;
+        fetch(`/api/incidencias/${id}`, { method: 'DELETE' })
+            .then(() => {
+                cargarIncidencias();
+                showToast('success', 'Eliminada', 'Incidencia eliminada');
+            })
+            .catch(() => showToast('error', 'Error', 'No se pudo eliminar'));
+    }
+
+    cargarIncidencias();
+</script>
+</body>
+</html>
