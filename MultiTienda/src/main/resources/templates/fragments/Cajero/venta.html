@@ -727,6 +727,175 @@
         .success-sub { font-size: 11px; color: var(--color-text-secondary); }
         .success-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
 
+        /* ============================================================ */
+        /* 🔥 MODAL DE ESCANEO DE PRODUCTO                              */
+        /* ============================================================ */
+        .modal-scan-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            z-index: 10002;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-scan-overlay.active {
+            display: flex;
+        }
+
+        .modal-scan-box {
+            background: #ffffff;
+            border-radius: 20px;
+            max-width: 440px;
+            width: 100%;
+            padding: 32px 28px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+            animation: modalIn 0.3s ease;
+        }
+
+        .modal-scan-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-scan-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-scan-header h3 i {
+            font-size: 22px;
+            color: #3B82F6;
+        }
+
+        .modal-scan-close {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--color-text-tertiary);
+            transition: color 0.2s;
+        }
+
+        .modal-scan-close:hover {
+            color: var(--color-text-primary);
+        }
+
+        .modal-scan-body {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .modal-scan-body .instruccion {
+            background: #EFF6FF;
+            border: 1px solid #93C5FD;
+            border-radius: var(--border-radius-md);
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #1D4ED8;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .modal-scan-body .instruccion i {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .modal-scan-body .campo-codigo {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .modal-scan-body .campo-codigo label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--color-text-tertiary);
+        }
+
+        .modal-scan-body .campo-codigo input {
+            padding: 10px 14px;
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            font-size: 14px;
+            color: var(--color-text-primary);
+            background: var(--color-background-secondary);
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        .modal-scan-body .campo-codigo input:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .modal-scan-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .modal-scan-footer .btn-modal {
+            flex: 1;
+            padding: 11px;
+            border-radius: 99px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .modal-scan-footer .btn-modal-cancelar {
+            background: var(--color-background-secondary);
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border-tertiary);
+        }
+
+        .modal-scan-footer .btn-modal-cancelar:hover {
+            background: var(--color-border-tertiary);
+        }
+
+        .modal-scan-footer .btn-modal-buscar {
+            background: #3B82F6;
+            color: #fff;
+        }
+
+        .modal-scan-footer .btn-modal-buscar:hover {
+            background: #2563EB;
+        }
+
+        .modal-scan-footer .btn-modal-buscar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .modal-scan-footer .btn-modal-buscar i {
+            font-size: 14px;
+        }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 1024px) {
             .venta-view { grid-template-columns: 1fr 300px; }
@@ -736,6 +905,7 @@
             .venta-right { max-height: 400px; }
             .pay-cards { grid-template-columns: 1fr 1fr; }
             .modal-box { margin: 16px; padding: 20px; }
+            .modal-scan-box { margin: 16px; padding: 20px; }
         }
         @media (max-width: 600px) {
             .cart-head { font-size: 8px; grid-template-columns: 1fr 50px 60px 60px 25px; }
@@ -744,6 +914,7 @@
             .scan-btn { width: 100%; justify-content: center; padding: 8px; }
             .pay-cards { grid-template-columns: 1fr 1fr; }
             .modal-row { grid-template-columns: 1fr; }
+            .modal-scan-footer { flex-direction: column; }
         }
 
         /* ===== TOAST NOTIFICATIONS ===== */
@@ -834,17 +1005,6 @@
             flex-direction: column;
             gap: 2px;
         }
-		
-		.boleta-preview {
-		    background: var(--color-background-secondary);
-		    border-radius: var(--border-radius-md);
-		    padding: 12px;
-		    font-size: 10px;
-		    color: var(--color-text-primary);
-		    border: 0.5px dashed var(--color-border-tertiary);
-		    max-height: 300px;
-		    overflow-y: auto;
-		}
     </style>
 
     <!-- ============================================================ -->
@@ -971,6 +1131,36 @@
     </div>
 
     <!-- ============================================================ -->
+    <!-- 🔥 MODAL DE ESCANEO DE PRODUCTO                              -->
+    <!-- ============================================================ -->
+    <div class="modal-scan-overlay" id="modalScan">
+        <div class="modal-scan-box">
+            <div class="modal-scan-header">
+                <h3><i class="ti ti-scan"></i> Escanear producto</h3>
+                <button class="modal-scan-close" onclick="cerrarModalScan()">✕</button>
+            </div>
+            <div class="modal-scan-body">
+                <div class="instruccion">
+                    <i class="ti ti-info-circle"></i>
+                    <span>Ingresa el código de barras del producto o escanéalo con el lector.</span>
+                </div>
+                <div class="campo-codigo">
+                    <label for="scanCodigo">Código de barras</label>
+                    <input type="text" id="scanCodigo" placeholder="Ej. 7501000100100" autofocus>
+                </div>
+            </div>
+            <div class="modal-scan-footer">
+                <button class="btn-modal btn-modal-cancelar" onclick="cerrarModalScan()">
+                    <i class="ti ti-x"></i> Cancelar
+                </button>
+                <button class="btn-modal btn-modal-buscar" id="btnBuscarScan" onclick="procesarEscaneo()">
+                    <i class="ti ti-search"></i> Buscar producto
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
     <!-- 🔥 MODAL DE PAGO MEJORADO 🔥                                -->
     <!-- ============================================================ -->
     <div class="modal-overlay" id="modalPago">
@@ -1074,9 +1264,9 @@
                         <div class="success-title">¡Compra registrada!</div>
                         <div class="success-sub">Boleta #<span id="successNumero">4841</span> · S/ <span id="successTotal">0.00</span> · <span id="successMetodo">Efectivo</span></div>
                         <div class="success-actions">
-							<button class="btn-prim" onclick="imprimirComprobante()" style="background:#16A34A;color:#fff;border:none;border-radius:99px;padding:8px 16px;font-weight:500;display:flex;align-items:center;gap:5px;cursor:pointer;">
-							    <i class="ti ti-printer"></i> Imprimir comprobante
-							</button>
+                            <button class="btn-prim" onclick="imprimirComprobante()" style="background:#16A34A;color:#fff;border:none;border-radius:99px;padding:8px 16px;font-weight:500;display:flex;align-items:center;gap:5px;cursor:pointer;">
+                                <i class="ti ti-printer"></i> Imprimir comprobante
+                            </button>
                             <button class="btn-sec2" onclick="cerrarModalPago()" style="background:transparent;border:1px solid var(--color-border-tertiary);border-radius:99px;padding:8px 16px;font-weight:500;display:flex;align-items:center;gap:5px;cursor:pointer;">
                                 <i class="ti ti-plus"></i> Nueva venta
                             </button>
@@ -1089,1126 +1279,1159 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- JAVASCRIPT DE VENTA - MEJORADO                              -->
+    <!-- JAVASCRIPT DE VENTA                                          -->
     <!-- ============================================================ -->
-	    <!-- ============================================================ -->
-	    <!-- JAVASCRIPT DE VENTA - MEJORADO                              -->
-	    <!-- ============================================================ -->
-	   <script>
-    // ================================================================
-    // VARIABLES GLOBALES (CON VERIFICACIÓN)
-    // ================================================================
-    if (typeof carrito === 'undefined') {
-        var carrito = [];
-    }
-    if (typeof suspensiones === 'undefined') {
-        var suspensiones = [];
-    }
-    var tipoComprobante = 'boleta';
-    var metodoPago = 'efectivo';
-    var productos = [];
-    var ofertasActivas = [];
-    var timeoutBusqueda = null;
-    var turnoActivo = null;
-    var clienteData = null;
-    var vuelto = 0;
-    var yapeTimerInterval = null;
-    var yapeSegundos = 60;
-    var montoRecibido = 0;
-
-    // 🔥 VARIABLE PARA GUARDAR LA ÚLTIMA VENTA (PARA REIMPRIMIR)
-    window.ultimaVentaData = null;
-
-    // ================================================================
-    // FUNCIÓN PARA OBTENER TURNO DEL LAYOUT
-    // ================================================================
-    function obtenerTurnoActivo() {
-        if (window.getTurnoActivo) {
-            return window.getTurnoActivo();
+    <script>
+        // ================================================================
+        // VARIABLES GLOBALES
+        // ================================================================
+        if (typeof carrito === 'undefined') {
+            var carrito = [];
         }
-        return turnoActivo;
-    }
+        if (typeof suspensiones === 'undefined') {
+            var suspensiones = [];
+        }
+        var tipoComprobante = 'boleta';
+        var metodoPago = 'efectivo';
+        var productos = [];
+        var ofertasActivas = [];
+        var timeoutBusqueda = null;
+        var turnoActivo = null;
+        var clienteData = null;
+        var vuelto = 0;
+        var yapeTimerInterval = null;
+        var yapeSegundos = 60;
+        var montoRecibido = 0;
 
-    // ================================================================
-    // CERRAR BÚSQUEDA CON ESC
-    // ================================================================
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            ocultarResultados();
+        window.ultimaVentaData = null;
+
+        // ================================================================
+        // FUNCIÓN PARA OBTENER TURNO DEL LAYOUT
+        // ================================================================
+        function obtenerTurnoActivo() {
+            if (window.getTurnoActivo) {
+                return window.getTurnoActivo();
+            }
+            return turnoActivo;
+        }
+
+        // ================================================================
+        // CERRAR BÚSQUEDA CON ESC
+        // ================================================================
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                ocultarResultados();
+                var inp = document.getElementById('searchInp');
+                if (inp) inp.blur();
+                cerrarModalScan();
+            }
+        });
+
+        // ================================================================
+        // LIMPIAR BÚSQUEDA (botón X)
+        // ================================================================
+        function limpiarBusqueda() {
             var inp = document.getElementById('searchInp');
-            if (inp) inp.blur();
+            if (inp) inp.value = '';
+            ocultarResultados();
         }
-    });
 
-    // ================================================================
-    // LIMPIAR BÚSQUEDA (botón X)
-    // ================================================================
-    function limpiarBusqueda() {
-        var inp = document.getElementById('searchInp');
-        if (inp) inp.value = '';
-        ocultarResultados();
-    }
+        // ================================================================
+        // CARGAR DATOS INICIALES
+        // ================================================================
+        function cargarDatosIniciales() {
+            var idUsuario = window.idUsuarioGlobal || 2;
+            
+            if (idUsuario) {
+                fetch('/api/turnos-caja/usuario/' + idUsuario + '/activo')
+                    .then(function(response) {
+                        if (response.status === 404) return null;
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data && data.activo) {
+                            turnoActivo = data.turno;
+                            console.log('✅ Turno activo:', turnoActivo);
+                            actualizarEstadoUI(true);
+                        } else {
+                            turnoActivo = null;
+                            actualizarEstadoUI(false);
+                        }
+                    })
+                    .catch(function(error) { console.error('❌ Error al verificar turno:', error); });
+            }
+            
+            cargarProductos();
+            cargarOfertas();
+        }
 
-    // ================================================================
-    // CARGAR DATOS INICIALES (CORREGIDO)
-    // ================================================================
-    function cargarDatosIniciales() {
-        var idUsuario = window.idUsuarioGlobal || 2;
-        
-        if (idUsuario) {
-            // ✅ CORREGIDO: /api/
-            fetch('/api/turnos-caja/usuario/' + idUsuario + '/activo')
+        // ================================================================
+        // CARGAR PRODUCTOS
+        // ================================================================
+        function cargarProductos() {
+            fetch('/api/productos')
                 .then(function(response) {
-                    if (response.status === 404) return null;
+                    if (!response.ok) throw new Error('Error al cargar productos');
                     return response.json();
                 })
                 .then(function(data) {
-                    if (data && data.activo) {
-                        turnoActivo = data.turno;
-                        console.log('✅ Turno activo:', turnoActivo);
-                        actualizarEstadoUI(true);
-                    } else {
-                        turnoActivo = null;
-                        actualizarEstadoUI(false);
-                    }
+                    productos = data;
+                    console.log('✅ Productos cargados:', productos.length);
                 })
-                .catch(function(error) { console.error('❌ Error al verificar turno:', error); });
-        }
-        
-        cargarProductos();
-        cargarOfertas();
-    }
-
-    // ================================================================
-    // CARGAR PRODUCTOS (CORREGIDO)
-    // ================================================================
-    function cargarProductos() {
-        // ✅ CORREGIDO: /api/
-        fetch('/api/productos')
-            .then(function(response) {
-                if (!response.ok) throw new Error('Error al cargar productos');
-                return response.json();
-            })
-            .then(function(data) {
-                productos = data;
-                console.log('✅ Productos cargados:', productos.length);
-            })
-            .catch(function(error) {
-                console.error('❌ Error:', error);
-                productos = [];
-                mostrarToast('❌ Error al cargar productos', 'error');
-            });
-    }
-
-    // ================================================================
-    // CARGAR OFERTAS (CORREGIDO)
-    // ================================================================
-    function cargarOfertas() {
-        var ofertasBody = document.getElementById('ofertasBody');
-        if (!ofertasBody) return;
-        
-        // ✅ CORREGIDO: /api/
-        fetch('/api/ofertas/activas')
-            .then(function(response) {
-                if (!response.ok) throw new Error('Error al cargar ofertas');
-                return response.json();
-            })
-            .then(function(ofertas) {
-                ofertasActivas = ofertas;
-                console.log('✅ Ofertas cargadas:', ofertas.length);
-                renderizarOfertas(ofertasBody, ofertas);
-            })
-            .catch(function(error) {
-                console.error('❌ Error al cargar ofertas:', error);
-                ofertasBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:red;padding:10px;">Error al cargar promociones</td></tr>';
-            });
-    }
-
-    function renderizarOfertas(container, ofertas) {
-        if (!ofertas || ofertas.length === 0) {
-            container.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:10px;">Sin promociones activas</td></tr>';
-            return;
+                .catch(function(error) {
+                    console.error('❌ Error:', error);
+                    productos = [];
+                    mostrarToast('❌ Error al cargar productos', 'error');
+                });
         }
 
-        container.innerHTML = ofertas.map(function(o) {
-            var tipo = o.tipoDescuento?.idTipoDescuento || 0;
-            var beneficio = '';
-            if (tipo === 1) beneficio = o.valorDescuento + '%';
-            else if (tipo === 2) beneficio = 'S/ ' + o.valorDescuento;
-            else if (tipo === 3) beneficio = '2x1';
-            else beneficio = o.valorDescuento + '%';
+        // ================================================================
+        // CARGAR OFERTAS
+        // ================================================================
+        function cargarOfertas() {
+            var ofertasBody = document.getElementById('ofertasBody');
+            if (!ofertasBody) return;
             
-            return '<tr><td><strong>' + o.nombreOferta + '</strong></td><td>' + (o.aplicaTodasTiendas ? 'Todas las tiendas' : 'Tienda específica') + '</td><td style="color:#16A34A;font-weight:600;">' + beneficio + '</td></tr>';
-        }).join('');
-    }
-
-    // ================================================================
-    // FUNCIONES DE BÚSQUEDA
-    // ================================================================
-    function buscarProductos() {
-        var termino = document.getElementById('searchInp')?.value?.trim()?.toLowerCase() || '';
-        var container = document.getElementById('resultsContainer');
-        if (!container) return;
-
-        if (!termino || termino.length < 1 || productos.length === 0) {
-            container.style.display = 'none';
-            return;
+            fetch('/api/ofertas/activas')
+                .then(function(response) {
+                    if (!response.ok) throw new Error('Error al cargar ofertas');
+                    return response.json();
+                })
+                .then(function(ofertas) {
+                    ofertasActivas = ofertas;
+                    console.log('✅ Ofertas cargadas:', ofertas.length);
+                    renderizarOfertas(ofertasBody, ofertas);
+                })
+                .catch(function(error) {
+                    console.error('❌ Error al cargar ofertas:', error);
+                    ofertasBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:red;padding:10px;">Error al cargar promociones</td></tr>';
+                });
         }
 
-        clearTimeout(timeoutBusqueda);
-        timeoutBusqueda = setTimeout(function() {
-            var resultados = productos.filter(function(p) {
-                return (p.nombreProducto && p.nombreProducto.toLowerCase().includes(termino)) || 
-                       (p.codigoBarras && p.codigoBarras.includes(termino)) ||
-                       (p.categoria && p.categoria.nombreCategoria && p.categoria.nombreCategoria.toLowerCase().includes(termino));
-            });
-
-            if (resultados.length === 0) {
-                container.innerHTML = '<div style="padding:12px;text-align:center;color:var(--color-text-tertiary);"><i class="ti ti-search"></i> No se encontraron productos</div>';
-                container.style.display = 'block';
+        function renderizarOfertas(container, ofertas) {
+            if (!ofertas || ofertas.length === 0) {
+                container.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--color-text-tertiary);padding:10px;">Sin promociones activas</td></tr>';
                 return;
             }
 
-            container.innerHTML = resultados.map(function(p) {
-                var precio = p.precioVenta || 0;
-                var categoria = p.categoria?.nombreCategoria || 'Sin categoría';
-                return '<div class="result-item" onclick="agregarProductoAlCarrito(' + p.idProducto + ')"><div class="ri-info"><div class="ri-name">' + p.nombreProducto + '</div><div><span class="ri-category">' + categoria + '</span> <span class="ri-stock">' + (p.codigoBarras || 'Sin código') + '</span></div></div><div class="ri-price">S/ ' + precio.toFixed(2) + '</div></div>';
+            container.innerHTML = ofertas.map(function(o) {
+                var tipo = o.tipoDescuento?.idTipoDescuento || 0;
+                var beneficio = '';
+                if (tipo === 1) beneficio = o.valorDescuento + '%';
+                else if (tipo === 2) beneficio = 'S/ ' + o.valorDescuento;
+                else if (tipo === 3) beneficio = '2x1';
+                else beneficio = o.valorDescuento + '%';
+                
+                return '<tr><td><strong>' + o.nombreOferta + '</strong></td><td>' + (o.aplicaTodasTiendas ? 'Todas las tiendas' : 'Tienda específica') + '</td><td style="color:#16A34A;font-weight:600;">' + beneficio + '</td></tr>';
             }).join('');
-            container.style.display = 'block';
-        }, 300);
-    }
-
-    function mostrarResultados() {
-        var container = document.getElementById('resultsContainer');
-        if (container && document.getElementById('searchInp')?.value?.trim()) {
-            container.style.display = 'block';
         }
-    }
 
-    function ocultarResultados() {
-        setTimeout(function() {
+        // ================================================================
+        // FUNCIONES DE BÚSQUEDA
+        // ================================================================
+        function buscarProductos() {
+            var termino = document.getElementById('searchInp')?.value?.trim()?.toLowerCase() || '';
             var container = document.getElementById('resultsContainer');
-            if (container) container.style.display = 'none';
-        }, 200);
-    }
+            if (!container) return;
 
-    // ================================================================
-    // ESCANEAR PRODUCTO (CORREGIDO)
-    // ================================================================
-    function escanearProducto() {
-        var codigo = prompt('📷 Escanea el código de barras:');
-        if (!codigo) return;
+            if (!termino || termino.length < 1 || productos.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
 
-        var producto = productos.find(function(p) { return p.codigoBarras === codigo; });
-        if (producto) {
-            agregarProductoAlCarrito(producto.idProducto);
-            mostrarToast('✅ ' + producto.nombreProducto + ' escaneado', 'success');
-        } else {
-            // ✅ CORREGIDO: /api/
+            clearTimeout(timeoutBusqueda);
+            timeoutBusqueda = setTimeout(function() {
+                var resultados = productos.filter(function(p) {
+                    return (p.nombreProducto && p.nombreProducto.toLowerCase().includes(termino)) || 
+                           (p.codigoBarras && p.codigoBarras.includes(termino)) ||
+                           (p.categoria && p.categoria.nombreCategoria && p.categoria.nombreCategoria.toLowerCase().includes(termino));
+                });
+
+                if (resultados.length === 0) {
+                    container.innerHTML = '<div style="padding:12px;text-align:center;color:var(--color-text-tertiary);"><i class="ti ti-search"></i> No se encontraron productos</div>';
+                    container.style.display = 'block';
+                    return;
+                }
+
+                container.innerHTML = resultados.map(function(p) {
+                    var precio = p.precioVenta || 0;
+                    var categoria = p.categoria?.nombreCategoria || 'Sin categoría';
+                    return '<div class="result-item" onclick="agregarProductoAlCarrito(' + p.idProducto + ')"><div class="ri-info"><div class="ri-name">' + p.nombreProducto + '</div><div><span class="ri-category">' + categoria + '</span> <span class="ri-stock">' + (p.codigoBarras || 'Sin código') + '</span></div></div><div class="ri-price">S/ ' + precio.toFixed(2) + '</div></div>';
+                }).join('');
+                container.style.display = 'block';
+            }, 300);
+        }
+
+        function mostrarResultados() {
+            var container = document.getElementById('resultsContainer');
+            if (container && document.getElementById('searchInp')?.value?.trim()) {
+                container.style.display = 'block';
+            }
+        }
+
+        function ocultarResultados() {
+            setTimeout(function() {
+                var container = document.getElementById('resultsContainer');
+                if (container) container.style.display = 'none';
+            }, 200);
+        }
+
+        // ================================================================
+        // 🔥 ESCANEAR PRODUCTO - CON MODAL MEJORADO
+        // ================================================================
+        function escanearProducto() {
+            document.getElementById('modalScan').classList.add('active');
+            var input = document.getElementById('scanCodigo');
+            input.value = '';
+            setTimeout(function() { input.focus(); }, 100);
+        }
+
+        function cerrarModalScan() {
+            document.getElementById('modalScan').classList.remove('active');
+        }
+
+        function procesarEscaneo() {
+            var codigo = document.getElementById('scanCodigo').value.trim();
+            if (!codigo) {
+                mostrarToast('⚠️ Ingresa o escanea un código de barras', 'warning');
+                return;
+            }
+
+            var btn = document.getElementById('btnBuscarScan');
+            var originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Buscando...';
+
+            var producto = productos.find(function(p) { return p.codigoBarras === codigo; });
+
+            if (producto) {
+                agregarProductoAlCarrito(producto.idProducto);
+                mostrarToast('✅ ' + producto.nombreProducto + ' agregado', 'success');
+                cerrarModalScan();
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                return;
+            }
+
             fetch('/api/scanner/producto?codigoBarras=' + encodeURIComponent(codigo))
                 .then(function(response) {
-                    if (!response.ok) throw new Error('Producto no encontrado');
+                    if (!response.ok) {
+                        throw new Error('Producto no encontrado');
+                    }
                     return response.json();
                 })
                 .then(function(producto) {
                     productos.push(producto);
                     agregarProductoAlCarrito(producto.idProducto);
-                    mostrarToast('✅ ' + producto.nombreProducto + ' escaneado', 'success');
+                    mostrarToast('✅ ' + producto.nombreProducto + ' agregado', 'success');
+                    cerrarModalScan();
+                })
+                .catch(function(error) {
+                    mostrarToast('❌ Producto no encontrado: ' + codigo, 'error');
+                    document.getElementById('scanCodigo').value = '';
+                    document.getElementById('scanCodigo').focus();
+                })
+                .finally(function() {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+        }
+
+        // Enter para buscar en el modal de escaneo
+        document.addEventListener('DOMContentLoaded', function() {
+            var scanInput = document.getElementById('scanCodigo');
+            if (scanInput) {
+                scanInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        procesarEscaneo();
+                    }
+                });
+            }
+        });
+
+        // Cerrar modal al hacer clic fuera
+        document.querySelector('.modal-scan-overlay')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+
+        // ================================================================
+        // FUNCIONES DEL CARRITO
+        // ================================================================
+        function agregarProductoAlCarrito(id) {
+            var producto = productos.find(function(p) { return p.idProducto === id; });
+            if (!producto) {
+                mostrarToast('❌ Producto no encontrado', 'error');
+                return;
+            }
+
+            var precio = producto.precioVenta || 0;
+            if (precio <= 0) {
+                mostrarToast('⚠️ Producto sin precio', 'warning');
+                return;
+            }
+
+            var existente = carrito.find(function(p) { return p.id === id; });
+            if (existente) {
+                existente.cantidad++;
+            } else {
+                carrito.push({
+                    id: producto.idProducto,
+                    nombre: producto.nombreProducto,
+                    precio: precio,
+                    codigoBarras: producto.codigoBarras,
+                    cantidad: 1
+                });
+            }
+
+            renderizarCarrito();
+            mostrarToast('✅ ' + producto.nombreProducto + ' agregado', 'success');
+            ocultarResultados();
+            var searchInp = document.getElementById('searchInp');
+            if (searchInp) searchInp.value = '';
+        }
+
+        function eliminarProducto(id) {
+            carrito = carrito.filter(function(p) { return p.id !== id; });
+            renderizarCarrito();
+        }
+
+        function cambiarCantidad(id, delta) {
+            var producto = carrito.find(function(p) { return p.id === id; });
+            if (producto) {
+                var nuevo = producto.cantidad + delta;
+                if (nuevo < 1) return;
+                producto.cantidad = nuevo;
+                renderizarCarrito();
+            }
+        }
+
+        // ================================================================
+        // RENDERIZAR CARRITO
+        // ================================================================
+        function renderizarCarrito() {
+            var cartArea = document.getElementById('cartArea');
+            var subtotalEl = document.getElementById('subtotal');
+            var descuentoEl = document.getElementById('descuento');
+            var igvEl = document.getElementById('igv');
+            var totalEl = document.getElementById('totalVenta');
+            var btnTotal = document.getElementById('btnTotal');
+
+            if (!cartArea) return;
+
+            if (carrito.length === 0) {
+                cartArea.innerHTML = '<div class="empty-cart"><i class="ti ti-shopping-cart"></i><p>Agrega productos para comenzar la venta</p></div>';
+                if (subtotalEl) subtotalEl.textContent = 'S/ 0.00';
+                if (descuentoEl) descuentoEl.textContent = '-S/ 0.00';
+                if (igvEl) igvEl.textContent = 'S/ 0.00';
+                if (totalEl) totalEl.textContent = 'S/ 0.00';
+                if (btnTotal) btnTotal.textContent = 'S/ 0.00';
+                return;
+            }
+
+            var html = '';
+            var subtotal = 0;
+
+            carrito.forEach(function(p) {
+                var total = p.precio * p.cantidad;
+                subtotal += total;
+                html += '<div class="cart-item"><span class="item-name">' + p.nombre + '</span><div class="item-cant"><button onclick="cambiarCantidad(' + p.id + ', -1)">−</button><span>' + p.cantidad + '</span><button onclick="cambiarCantidad(' + p.id + ', 1)">+</button></div><span class="item-precio">S/ ' + p.precio.toFixed(2) + '</span><span class="item-total">S/ ' + total.toFixed(2) + '</span><span class="item-del" onclick="eliminarProducto(' + p.id + ')">✕</span></div>';
+            });
+
+            cartArea.innerHTML = html;
+            if (subtotalEl) subtotalEl.textContent = 'S/ ' + subtotal.toFixed(2);
+
+            var resultado = calcularDescuentos(subtotal, carrito);
+            var descuento = resultado.descuento;
+            var igv = (subtotal - descuento) * 0.18;
+            var total = (subtotal - descuento) + igv;
+
+            if (descuentoEl) descuentoEl.textContent = '-S/ ' + descuento.toFixed(2);
+            if (igvEl) igvEl.textContent = 'S/ ' + igv.toFixed(2);
+            if (totalEl) totalEl.textContent = 'S/ ' + total.toFixed(2);
+            if (btnTotal) btnTotal.textContent = 'S/ ' + total.toFixed(2);
+        }
+
+        // ================================================================
+        // CALCULAR DESCUENTOS
+        // ================================================================
+        function calcularDescuentos(subtotal, items) {
+            var descuentoTotal = 0;
+            
+            if (!ofertasActivas || ofertasActivas.length === 0) {
+                return { descuento: 0 };
+            }
+
+            ofertasActivas.forEach(function(oferta) {
+                var tipo = oferta.tipoDescuento?.idTipoDescuento || 0;
+                var valor = oferta.valorDescuento || 0;
+                var montoMinimo = oferta.montoMinimo || 0;
+                var cantidadCompra = oferta.cantidadCompra || 2;
+
+                if (tipo === 3) {
+                    items.forEach(function(item) {
+                        var gratis = Math.floor(item.cantidad / cantidadCompra);
+                        if (gratis > 0) {
+                            descuentoTotal += gratis * item.precio;
+                        }
+                    });
+                } else if (tipo === 1) {
+                    if (subtotal >= montoMinimo && valor > 0) {
+                        descuentoTotal += subtotal * (valor / 100);
+                    }
+                } else if (tipo === 2) {
+                    if (subtotal >= montoMinimo && valor > 0) {
+                        descuentoTotal += Math.min(valor, subtotal);
+                    }
+                }
+            });
+
+            if (descuentoTotal > subtotal) {
+                descuentoTotal = subtotal;
+            }
+
+            if (descuentoTotal > 0) {
+                mostrarToast('🎯 Descuento aplicado: -S/ ' + descuentoTotal.toFixed(2), 'success');
+            }
+
+            return { descuento: descuentoTotal };
+        }
+
+        // ================================================================
+        // FUNCIONES DE CLIENTE
+        // ================================================================
+        function buscarCliente() {
+            var dni = document.getElementById('clienteDni')?.value?.trim() || '';
+            if (dni.length < 8) {
+                mostrarToast('⚠️ Ingresa un DNI/RUC válido', 'warning');
+                return;
+            }
+
+            fetch('/api/clientes/documento/' + encodeURIComponent(dni))
+                .then(function(response) {
+                    if (!response.ok) throw new Error('Cliente no encontrado');
+                    return response.json();
+                })
+                .then(function(cliente) {
+                    clienteData = cliente;
+                    var nombreEl = document.getElementById('clienteNombre');
+                    if (!nombreEl) return;
+                    if (cliente.tipoCliente === 'NATURAL') {
+                        nombreEl.value = cliente.nombres + ' ' + (cliente.apellidos || '');
+                    } else {
+                        nombreEl.value = cliente.razonSocial || cliente.nombres || '';
+                    }
+                    mostrarToast('✅ Cliente encontrado', 'success');
                 })
                 .catch(function() {
-                    mostrarToast('❌ Producto no encontrado: ' + codigo, 'error');
+                    fetch('/api/clientes/ruc/' + encodeURIComponent(dni))
+                        .then(function(response) {
+                            if (!response.ok) throw new Error('Cliente no encontrado');
+                            return response.json();
+                        })
+                        .then(function(cliente) {
+                            clienteData = cliente;
+                            var nombreEl = document.getElementById('clienteNombre');
+                            if (nombreEl) nombreEl.value = cliente.razonSocial || cliente.nombres || '';
+                            mostrarToast('✅ Cliente encontrado', 'success');
+                        })
+                        .catch(function() {
+                            mostrarToast('⚠️ Cliente no encontrado', 'warning');
+                        });
                 });
         }
-    }
 
-    // ================================================================
-    // FUNCIONES DEL CARRITO
-    // ================================================================
-    function agregarProductoAlCarrito(id) {
-        var producto = productos.find(function(p) { return p.idProducto === id; });
-        if (!producto) {
-            mostrarToast('❌ Producto no encontrado', 'error');
-            return;
-        }
-
-        var precio = producto.precioVenta || 0;
-        if (precio <= 0) {
-            mostrarToast('⚠️ Producto sin precio', 'warning');
-            return;
-        }
-
-        var existente = carrito.find(function(p) { return p.id === id; });
-        if (existente) {
-            existente.cantidad++;
-        } else {
-            carrito.push({
-                id: producto.idProducto,
-                nombre: producto.nombreProducto,
-                precio: precio,
-                codigoBarras: producto.codigoBarras,
-                cantidad: 1
-            });
-        }
-
-        renderizarCarrito();
-        mostrarToast('✅ ' + producto.nombreProducto + ' agregado', 'success');
-        ocultarResultados();
-        var searchInp = document.getElementById('searchInp');
-        if (searchInp) searchInp.value = '';
-    }
-
-    function eliminarProducto(id) {
-        carrito = carrito.filter(function(p) { return p.id !== id; });
-        renderizarCarrito();
-    }
-
-    function cambiarCantidad(id, delta) {
-        var producto = carrito.find(function(p) { return p.id === id; });
-        if (producto) {
-            var nuevo = producto.cantidad + delta;
-            if (nuevo < 1) return;
-            producto.cantidad = nuevo;
-            renderizarCarrito();
-        }
-    }
-
-    // ================================================================
-    // RENDERIZAR CARRITO
-    // ================================================================
-    function renderizarCarrito() {
-        var cartArea = document.getElementById('cartArea');
-        var subtotalEl = document.getElementById('subtotal');
-        var descuentoEl = document.getElementById('descuento');
-        var igvEl = document.getElementById('igv');
-        var totalEl = document.getElementById('totalVenta');
-        var btnTotal = document.getElementById('btnTotal');
-
-        if (!cartArea) return;
-
-        if (carrito.length === 0) {
-            cartArea.innerHTML = '<div class="empty-cart"><i class="ti ti-shopping-cart"></i><p>Agrega productos para comenzar la venta</p></div>';
-            if (subtotalEl) subtotalEl.textContent = 'S/ 0.00';
-            if (descuentoEl) descuentoEl.textContent = '-S/ 0.00';
-            if (igvEl) igvEl.textContent = 'S/ 0.00';
-            if (totalEl) totalEl.textContent = 'S/ 0.00';
-            if (btnTotal) btnTotal.textContent = 'S/ 0.00';
-            return;
-        }
-
-        var html = '';
-        var subtotal = 0;
-
-        carrito.forEach(function(p) {
-            var total = p.precio * p.cantidad;
-            subtotal += total;
-            html += '<div class="cart-item"><span class="item-name">' + p.nombre + '</span><div class="item-cant"><button onclick="cambiarCantidad(' + p.id + ', -1)">−</button><span>' + p.cantidad + '</span><button onclick="cambiarCantidad(' + p.id + ', 1)">+</button></div><span class="item-precio">S/ ' + p.precio.toFixed(2) + '</span><span class="item-total">S/ ' + total.toFixed(2) + '</span><span class="item-del" onclick="eliminarProducto(' + p.id + ')">✕</span></div>';
-        });
-
-        cartArea.innerHTML = html;
-        if (subtotalEl) subtotalEl.textContent = 'S/ ' + subtotal.toFixed(2);
-
-        var resultado = calcularDescuentos(subtotal, carrito);
-        var descuento = resultado.descuento;
-        var igv = (subtotal - descuento) * 0.18;
-        var total = (subtotal - descuento) + igv;
-
-        if (descuentoEl) descuentoEl.textContent = '-S/ ' + descuento.toFixed(2);
-        if (igvEl) igvEl.textContent = 'S/ ' + igv.toFixed(2);
-        if (totalEl) totalEl.textContent = 'S/ ' + total.toFixed(2);
-        if (btnTotal) btnTotal.textContent = 'S/ ' + total.toFixed(2);
-    }
-
-    // ================================================================
-    // CALCULAR DESCUENTOS
-    // ================================================================
-	// ================================================================
-	// CALCULAR DESCUENTOS
-	// ================================================================
-	function calcularDescuentos(subtotal, items) {
-	    var descuentoTotal = 0;
-	    
-	    if (!ofertasActivas || ofertasActivas.length === 0) {
-	        return { descuento: 0 };
-	    }
-
-	    ofertasActivas.forEach(function(oferta) {
-	        var tipo = oferta.tipoDescuento?.idTipoDescuento || 0;
-	        var valor = oferta.valorDescuento || 0;
-	        var montoMinimo = oferta.montoMinimo || 0;
-	        var cantidadCompra = oferta.cantidadCompra || 2;
-
-	        if (tipo === 3) {
-	            items.forEach(function(item) {
-	                var gratis = Math.floor(item.cantidad / cantidadCompra);
-	                if (gratis > 0) {
-	                    descuentoTotal += gratis * item.precio;
-	                }
-	            });
-	        } else if (tipo === 1) {
-	            if (subtotal >= montoMinimo && valor > 0) {
-	                descuentoTotal += subtotal * (valor / 100);
-	            }
-	        } else if (tipo === 2) {
-	            if (subtotal >= montoMinimo && valor > 0) {
-	                descuentoTotal += Math.min(valor, subtotal);
-	            }
-	        }
-	    });
-
-	    // 🔥 EVITAR DESCUENTO NEGATIVO 🔥
-	    // Si el descuento supera el subtotal, lo limitamos al subtotal
-	    if (descuentoTotal > subtotal) {
-	        descuentoTotal = subtotal;
-	    }
-
-	    if (descuentoTotal > 0) {
-	        mostrarToast('🎯 Descuento aplicado: -S/ ' + descuentoTotal.toFixed(2), 'success');
-	    }
-
-	    return { descuento: descuentoTotal };
-	}
-
-    // ================================================================
-    // FUNCIONES DE CLIENTE (CORREGIDAS)
-    // ================================================================
-    function buscarCliente() {
-        var dni = document.getElementById('clienteDni')?.value?.trim() || '';
-        if (dni.length < 8) {
-            mostrarToast('⚠️ Ingresa un DNI/RUC válido', 'warning');
-            return;
-        }
-
-        // ✅ CORREGIDO: /api/
-        fetch('/api/clientes/documento/' + encodeURIComponent(dni))
-            .then(function(response) {
-                if (!response.ok) throw new Error('Cliente no encontrado');
-                return response.json();
-            })
-            .then(function(cliente) {
-                clienteData = cliente;
-                var nombreEl = document.getElementById('clienteNombre');
-                if (!nombreEl) return;
-                if (cliente.tipoCliente === 'NATURAL') {
-                    nombreEl.value = cliente.nombres + ' ' + (cliente.apellidos || '');
-                } else {
-                    nombreEl.value = cliente.razonSocial || cliente.nombres || '';
-                }
-                mostrarToast('✅ Cliente encontrado', 'success');
-            })
-            .catch(function() {
-                // ✅ CORREGIDO: /api/
-                fetch('/api/clientes/ruc/' + encodeURIComponent(dni))
-                    .then(function(response) {
-                        if (!response.ok) throw new Error('Cliente no encontrado');
-                        return response.json();
-                    })
-                    .then(function(cliente) {
-                        clienteData = cliente;
-                        var nombreEl = document.getElementById('clienteNombre');
-                        if (nombreEl) nombreEl.value = cliente.razonSocial || cliente.nombres || '';
-                        mostrarToast('✅ Cliente encontrado', 'success');
-                    })
-                    .catch(function() {
-                        mostrarToast('⚠️ Cliente no encontrado', 'warning');
-                    });
-            });
-    }
-
-    function limpiarCliente() {
-        var dniEl = document.getElementById('clienteDni');
-        var nombreEl = document.getElementById('clienteNombre');
-        if (tipoComprobante === 'boleta') {
-            if (dniEl) dniEl.value = '99999999';
-            if (nombreEl) nombreEl.value = 'Cliente General';
-            if (dniEl) dniEl.placeholder = 'DNI del cliente (8 dígitos)';
-        } else {
-            if (dniEl) dniEl.value = '';
-            if (nombreEl) nombreEl.value = '';
-            if (dniEl) dniEl.placeholder = 'RUC (11 dígitos)';
-        }
-        clienteData = null;
-        mostrarToast('🧹 Cliente limpiado', 'info');
-    }
-
-    // ================================================================
-    // FUNCIONES DE COMPROBANTE
-    // ================================================================
-    function selComp(tipo) {
-        tipoComprobante = tipo;
-        var boletaEl = document.getElementById('cmpBoleta');
-        var facturaEl = document.getElementById('cmpFactura');
-        if (boletaEl) boletaEl.classList.toggle('sel', tipo === 'boleta');
-        if (facturaEl) facturaEl.classList.toggle('sel', tipo === 'factura');
-        
-        var note = document.getElementById('compNote');
-        var dniEl = document.getElementById('clienteDni');
-        var nombreEl = document.getElementById('clienteNombre');
-        var labels = document.querySelectorAll('.cf-label');
-        
-        if (tipo === 'boleta') {
-            if (labels.length >= 2) {
-                labels[0].textContent = 'DNI';
-                labels[1].textContent = 'Nombre';
-            }
-            if (note) note.textContent = 'Boleta — Datos del comprador';
-            if (dniEl) {
-                dniEl.placeholder = 'DNI del cliente (8 dígitos)';
-                if (!clienteData) dniEl.value = '99999999';
-            }
-            if (nombreEl && !clienteData) nombreEl.value = 'Cliente General';
-        } else {
-            if (labels.length >= 2) {
-                labels[0].textContent = 'RUC';
-                labels[1].textContent = 'Razón Social';
-            }
-            if (note) note.textContent = 'Factura — Datos del comprador';
-            if (dniEl) {
-                dniEl.placeholder = 'RUC (11 dígitos)';
-                if (!clienteData) dniEl.value = '';
-            }
-            if (nombreEl && !clienteData) nombreEl.value = '';
-        }
-        mostrarToast('📄 Comprobante: ' + tipo.toUpperCase(), 'info');
-    }
-
-    // ================================================================
-    // 🔥 SELECCIONAR MÉTODO DE PAGO
-    // ================================================================
-    function selPayCard(el, metodo) {
-        document.querySelectorAll('.pay-card').forEach(function(c) { c.classList.remove('sel'); });
-        if (el) el.classList.add('sel');
-        metodoPago = metodo;
-        mostrarToast('💳 Método: ' + metodo.toUpperCase(), 'info');
-    }
-
-    // ================================================================
-    // 🔥 SUSPENDER VENTA
-    // ================================================================
-    function toggleSuspender() {
-        var label = document.getElementById('suspLabel');
-        var btn = document.getElementById('suspBtn');
-        
-        if (carrito.length === 0 && suspensiones.length === 0) {
-            mostrarToast('⚠️ No hay productos para suspender', 'warning');
-            return;
-        }
-
-        if (label && label.textContent === 'Suspender') {
-            if (carrito.length === 0) {
-                mostrarToast('⚠️ No hay productos en el carrito', 'warning');
-                return;
-            }
-            
-            var id = 'SUS-' + String(suspensiones.length + 1).padStart(3, '0');
-            suspensiones.push({
-                id: id,
-                fecha: new Date().toLocaleString(),
-                items: JSON.parse(JSON.stringify(carrito)),
-                total: document.getElementById('totalVenta')?.textContent || 'S/ 0.00'
-            });
-            
-            carrito = [];
-            renderizarCarrito();
-            if (label) label.textContent = 'Recuperar';
-            if (btn) btn.style.background = '#3B82F6';
-            mostrarToast('⏸️ Venta suspendida (ID: ' + id + ')', 'warning');
-            mostrarToast('📋 Suspensiones: ' + suspensiones.map(function(s) { return s.id; }).join(', '), 'info');
-        } else {
-            if (suspensiones.length === 0) {
-                if (label) label.textContent = 'Suspender';
-                if (btn) btn.style.background = '#F59E0B';
-                mostrarToast('⚠️ No hay ventas suspendidas', 'warning');
-                return;
-            }
-            
-            var ultima = suspensiones[suspensiones.length - 1];
-            carrito = ultima.items;
-            renderizarCarrito();
-            suspensiones.pop();
-            
-            if (suspensiones.length === 0) {
-                if (label) label.textContent = 'Suspender';
-                if (btn) btn.style.background = '#F59E0B';
-            }
-            mostrarToast('▶️ Venta recuperada: ' + ultima.id, 'success');
-        }
-    }
-
-    // ================================================================
-    // 🔥 LIMPIAR TODO
-    // ================================================================
-    function limpiarTodo() {
-        if (!confirm('¿Limpiar todo el carrito?')) return;
-        carrito = [];
-        renderizarCarrito();
-        mostrarToast('🧹 Carrito limpiado', 'info');
-    }
-
-    // ================================================================
-    // 🔥 MODAL DE PAGO
-    // ================================================================
-    function abrirModalPago() {
-        if (carrito.length === 0) {
-            mostrarToast('⚠️ Agrega productos al carrito', 'warning');
-            return;
-        }
-
-        var turno = obtenerTurnoActivo();
-        if (!turno) {
-            mostrarToast('⚠️ No hay turno de caja activo. Abre un turno en "Apertura"', 'warning');
-            return;
-        }
-        turnoActivo = turno;
-
-        var total = document.getElementById('totalVenta')?.textContent || 'S/ 0.00';
-        var modalTotal = document.getElementById('modalTotal');
-        var btnTotal = document.getElementById('btnTotal');
-        if (modalTotal) modalTotal.textContent = total;
-        if (btnTotal) btnTotal.textContent = total;
-        
-        var title = document.getElementById('modalTitle');
-        var modal = document.getElementById('modalPago');
-        
-        document.getElementById('stepEfectivo1').style.display = 'none';
-        document.getElementById('stepEfectivo2').style.display = 'none';
-        document.getElementById('stepTarjeta').style.display = 'none';
-        document.getElementById('stepYape').style.display = 'none';
-        document.getElementById('stepSuccess').style.display = 'none';
-        
-        if (metodoPago === 'efectivo') {
-            if (title) title.textContent = 'Efectivo';
-            document.getElementById('stepEfectivo1').style.display = 'block';
-            var montoPago = document.getElementById('montoPago');
-            if (montoPago) {
-                montoPago.value = '';
-                var totalNum = parseFloat(total.replace('S/ ', ''));
-                if (totalNum > 0) montoPago.placeholder = totalNum.toFixed(2);
-            }
-        } else if (metodoPago === 'tarjeta') {
-            if (title) title.textContent = 'Tarjeta';
-            document.getElementById('stepTarjeta').style.display = 'block';
-        } else if (metodoPago === 'yapeplin') {
-            if (title) title.textContent = 'Yape / Plin';
-            document.getElementById('stepYape').style.display = 'block';
-            var numero = '9' + Math.floor(100000000 + Math.random() * 900000000);
-            var qrDisplay = document.getElementById('qrDisplaySimple');
-            if (qrDisplay) qrDisplay.textContent = numero;
-            iniciarYapeTimer();
-        }
-        
-        if (modal) modal.classList.add('active');
-    }
-
-    function cerrarModalPago() {
-        var modal = document.getElementById('modalPago');
-        if (modal) modal.classList.remove('active');
-        detenerYapeTimer();
-        document.getElementById('stepEfectivo1').style.display = 'block';
-        document.getElementById('stepEfectivo2').style.display = 'none';
-        document.getElementById('stepTarjeta').style.display = 'none';
-        document.getElementById('stepYape').style.display = 'none';
-        document.getElementById('stepSuccess').style.display = 'none';
-    }
-
-    // ================================================================
-    // 🔥 CALCULAR VUELTO
-    // ================================================================
-    function calcularVuelto() {
-        var totalText = document.getElementById('modalTotal')?.textContent?.replace('S/ ', '') || '0';
-        var total = parseFloat(totalText) || 0;
-        var pago = parseFloat(document.getElementById('montoPago')?.value) || 0;
-        vuelto = pago - total;
-        montoRecibido = pago;
-    }
-
-    // ================================================================
-    // 🔥 MOSTRAR VUELTO Y VISTA PREVIA
-    // ================================================================
-    function mostrarVueltoYBoleta() {
-        var totalText = document.getElementById('modalTotal')?.textContent?.replace('S/ ', '') || '0';
-        var total = parseFloat(totalText) || 0;
-        var pago = parseFloat(document.getElementById('montoPago')?.value) || 0;
-        if (pago < total) {
-            mostrarToast('⚠️ El monto pagado es menor al total', 'warning');
-            return;
-        }
-        var vueltoCalc = pago - total;
-        document.getElementById('vueltoVal').textContent = 'S/ ' + (vueltoCalc > 0 ? vueltoCalc.toFixed(2) : '0.00');
-        document.getElementById('bpEfectivo').textContent = 'S/ ' + pago.toFixed(2);
-        document.getElementById('bpVuelto').textContent = 'S/ ' + (vueltoCalc > 0 ? vueltoCalc.toFixed(2) : '0.00');
-
-        var fecha = new Date();
-        document.getElementById('bpFecha').textContent = fecha.toLocaleDateString('es-PE') + ' ' + fecha.toLocaleTimeString('es-PE', {hour:'2-digit',minute:'2-digit'});
-        var isBoleta = tipoComprobante === 'boleta';
-        var dni = document.getElementById('clienteDni')?.value || '99999999';
-        var nombre = document.getElementById('clienteNombre')?.value || 'Cliente';
-        document.getElementById('bpComp').textContent = isBoleta ? 'BOLETA — DNI: ' + dni + ' · Cliente: ' + nombre : 'FACTURA — RUC: ' + dni;
-
-        var itemsHtml = '';
-        carrito.forEach(function(item) {
-            var totalItem = item.precio * item.cantidad;
-            itemsHtml += '<div class="bp-row"><span>' + item.nombre + ' ×' + item.cantidad + '</span><span>S/ ' + totalItem.toFixed(2) + '</span></div>';
-        });
-        document.getElementById('bpItems').innerHTML = itemsHtml;
-
-        var descuento = parseFloat(document.getElementById('descuento')?.textContent?.replace('-S/ ', '')) || 0;
-        if (descuento > 0) {
-            var descRow = document.createElement('div');
-            descRow.className = 'bp-row';
-            descRow.style.color = 'var(--color-text-success)';
-            descRow.innerHTML = '<span>Descuento aplicado</span><span>-S/ ' + descuento.toFixed(2) + '</span>';
-            document.getElementById('bpItems').appendChild(descRow);
-        }
-
-        var igv = parseFloat(document.getElementById('igv')?.textContent?.replace('S/ ', '')) || 0;
-        var totalFinal = parseFloat(document.getElementById('totalVenta')?.textContent?.replace('S/ ', '')) || 0;
-        document.getElementById('bpIgv').textContent = 'S/ ' + igv.toFixed(2);
-        document.getElementById('bpTotal').textContent = 'S/ ' + totalFinal.toFixed(2);
-
-        document.getElementById('stepEfectivo1').style.display = 'none';
-        document.getElementById('stepEfectivo2').style.display = 'block';
-    }
-
-    // ================================================================
-    // 🔥 YAPE TIMER
-    // ================================================================
-    function iniciarYapeTimer() {
-        detenerYapeTimer();
-        yapeSegundos = 60;
-        actualizarYapeTimer();
-        yapeTimerInterval = setInterval(function() {
-            yapeSegundos--;
-            actualizarYapeTimer();
-            if (yapeSegundos <= 0) {
-                detenerYapeTimer();
-                var status = document.getElementById('yapeStatusSimple');
-                if (status) status.textContent = '⏰ QR expirado. Regenera para continuar.';
-            }
-        }, 1000);
-    }
-
-    function detenerYapeTimer() {
-        if (yapeTimerInterval) {
-            clearInterval(yapeTimerInterval);
-            yapeTimerInterval = null;
-        }
-    }
-
-    function actualizarYapeTimer() {
-        var timerEl = document.getElementById('yapeTimerSimple');
-        var barEl = document.getElementById('yapeBarSimple');
-        var statusEl = document.getElementById('yapeStatusSimple');
-        
-        if (timerEl) timerEl.textContent = yapeSegundos + 's';
-        if (barEl) {
-            var pct = (yapeSegundos / 60) * 100;
-            barEl.style.width = pct + '%';
-            if (yapeSegundos > 20) barEl.style.background = '#16A34A';
-            else if (yapeSegundos > 10) barEl.style.background = '#D97706';
-            else barEl.style.background = '#DC2626';
-        }
-        if (statusEl && yapeSegundos > 0) {
-            statusEl.textContent = '⏳ Esperando pago del cliente…';
-        }
-    }
-
-    function regenerarYape() {
-        var numero = '9' + Math.floor(100000000 + Math.random() * 900000000);
-        var qrDisplay = document.getElementById('qrDisplaySimple');
-        if (qrDisplay) qrDisplay.textContent = numero;
-        iniciarYapeTimer();
-        var status = document.getElementById('yapeStatusSimple');
-        if (status) status.textContent = '⏳ Esperando pago del cliente…';
-        mostrarToast('🔄 QR regenerado', 'info');
-    }
-
-    // ================================================================
-    // 🔥 CONFIRMAR PAGO (PROCESAR VENTA) - CORREGIDO
-    // ================================================================
-    function confirmarPago() {
-        var total = document.getElementById('totalVenta')?.textContent || 'S/ 0.00';
-        var totalNum = parseFloat(total.replace('S/ ', ''));
-
-        var subtotalVal = parseFloat(document.getElementById('subtotal')?.textContent?.replace('S/ ', '')) || 0;
-        var descuentoVal = parseFloat(document.getElementById('descuento')?.textContent?.replace('-S/ ', '')) || 0;
-        var igvVal = parseFloat(document.getElementById('igv')?.textContent?.replace('S/ ', '')) || 0;
-        var totalVal = parseFloat(document.getElementById('totalVenta')?.textContent?.replace('S/ ', '')) || 0;
-
-        var montoPagoVal = 0;
-        var vueltoCalc = 0;
-
-        if (metodoPago === 'efectivo') {
-            montoPagoVal = parseFloat(document.getElementById('montoPago')?.value) || 0;
-            if (montoPagoVal < totalNum) {
-                mostrarToast('⚠️ El monto pagado es menor al total', 'warning');
-                return;
-            }
-            vueltoCalc = montoPagoVal - totalNum;
-        }
-
-        var btn = document.querySelector('.btn-cobrar');
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Procesando...';
-        }
-
-        var idCajero = window.idUsuarioGlobal || 2;
-        var turno = obtenerTurnoActivo();
-        if (!turno) {
-            mostrarToast('⚠️ No hay turno activo', 'error');
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-cash-register"></i>Procesar Pago'; }
-            return;
-        }
-
-        var ventaData = {
-            venta: {
-                cajero: { idUsuario: idCajero },
-                cliente: clienteData ? { idCliente: clienteData.idCliente } : null,
-                tienda: { idTienda: turno.tienda.idTienda },
-                caja: { idCaja: turno.caja.idCaja },
-                turnoCaja: { idTurnoCaja: turno.idTurnoCaja },
-                tipoComprobante: { idTipoComprobante: tipoComprobante === 'boleta' ? 1 : 2 },
-                subtotal: subtotalVal,
-                descuentoAplicado: descuentoVal,
-                igv: igvVal,
-                total: totalVal,
-                fechaVenta: new Date().toISOString()
-            },
-            detalles: carrito.map(function(item) {
-                return {
-                    producto: { idProducto: item.id },
-                    cantidad: item.cantidad,
-                    precioUnitario: item.precio,
-                    descuentoLinea: 0,
-                    subtotalLinea: item.precio * item.cantidad
-                };
-            })
-        };
-
-        // ✅ CORREGIDO: /api/
-        fetch('/api/ventas', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(ventaData)
-        })
-        .then(function(response) {
-            if (!response.ok) {
-                return response.json().then(function(err) {
-                    throw new Error(err.error || 'Error al registrar venta');
-                });
-            }
-            return response.json();
-        })
-        .then(function(data) {
-            mostrarToast('✅ Venta registrada exitosamente', 'success');
-            
-            var numeroComprobante = data.codigoVenta || data.numeroComprobante || '4841';
-            
-            document.getElementById('stepEfectivo1').style.display = 'none';
-            document.getElementById('stepEfectivo2').style.display = 'none';
-            document.getElementById('stepTarjeta').style.display = 'none';
-            document.getElementById('stepYape').style.display = 'none';
-            document.getElementById('stepSuccess').style.display = 'block';
-            
-            document.getElementById('successNumero').textContent = numeroComprobante;
-            document.getElementById('successTotal').textContent = data.total || total.replace('S/ ', '');
-            document.getElementById('successMetodo').textContent = metodoPago.toUpperCase();
-
-            var ventaDataPDF = {
-                detalles: carrito.map(function(item) {
-                    return {
-                        producto: { nombreProducto: item.nombre },
-                        cantidad: item.cantidad,
-                        precioUnitario: item.precio,
-                        subtotalLinea: item.precio * item.cantidad
-                    };
-                }),
-                subtotal: subtotalVal,
-                descuento: descuentoVal,
-                igv: igvVal,
-                total: totalVal
-            };
-
-            // 🔥 GUARDAR DATOS PARA REIMPRIMIR
-            window.ultimaVentaData = {
-                ventaDataPDF: ventaDataPDF,
-                metodoPago: metodoPago,
-                montoRecibido: metodoPago === 'efectivo' ? montoPagoVal : 0,
-                vuelto: metodoPago === 'efectivo' ? vueltoCalc : 0,
-                numeroComprobante: numeroComprobante,
-                total: totalVal
-            };
-
-            setTimeout(function() {
-                generarPDF(
-                    ventaDataPDF,
-                    metodoPago,
-                    metodoPago === 'efectivo' ? montoPagoVal : 0,
-                    metodoPago === 'efectivo' ? vueltoCalc : 0,
-                    numeroComprobante
-                );
-                mostrarToast('📄 PDF generado correctamente', 'success');
-            }, 1000);
-
-            carrito = [];
-            clienteData = null;
+        function limpiarCliente() {
             var dniEl = document.getElementById('clienteDni');
             var nombreEl = document.getElementById('clienteNombre');
             if (tipoComprobante === 'boleta') {
                 if (dniEl) dniEl.value = '99999999';
                 if (nombreEl) nombreEl.value = 'Cliente General';
+                if (dniEl) dniEl.placeholder = 'DNI del cliente (8 dígitos)';
             } else {
                 if (dniEl) dniEl.value = '';
                 if (nombreEl) nombreEl.value = '';
+                if (dniEl) dniEl.placeholder = 'RUC (11 dígitos)';
             }
+            clienteData = null;
+            mostrarToast('🧹 Cliente limpiado', 'info');
+        }
+
+        // ================================================================
+        // FUNCIONES DE COMPROBANTE
+        // ================================================================
+        function selComp(tipo) {
+            tipoComprobante = tipo;
+            var boletaEl = document.getElementById('cmpBoleta');
+            var facturaEl = document.getElementById('cmpFactura');
+            if (boletaEl) boletaEl.classList.toggle('sel', tipo === 'boleta');
+            if (facturaEl) facturaEl.classList.toggle('sel', tipo === 'factura');
+            
+            var note = document.getElementById('compNote');
+            var dniEl = document.getElementById('clienteDni');
+            var nombreEl = document.getElementById('clienteNombre');
+            var labels = document.querySelectorAll('.cf-label');
+            
+            if (tipo === 'boleta') {
+                if (labels.length >= 2) {
+                    labels[0].textContent = 'DNI';
+                    labels[1].textContent = 'Nombre';
+                }
+                if (note) note.textContent = 'Boleta — Datos del comprador';
+                if (dniEl) {
+                    dniEl.placeholder = 'DNI del cliente (8 dígitos)';
+                    if (!clienteData) dniEl.value = '99999999';
+                }
+                if (nombreEl && !clienteData) nombreEl.value = 'Cliente General';
+            } else {
+                if (labels.length >= 2) {
+                    labels[0].textContent = 'RUC';
+                    labels[1].textContent = 'Razón Social';
+                }
+                if (note) note.textContent = 'Factura — Datos del comprador';
+                if (dniEl) {
+                    dniEl.placeholder = 'RUC (11 dígitos)';
+                    if (!clienteData) dniEl.value = '';
+                }
+                if (nombreEl && !clienteData) nombreEl.value = '';
+            }
+            mostrarToast('📄 Comprobante: ' + tipo.toUpperCase(), 'info');
+        }
+
+        // ================================================================
+        // SELECCIONAR MÉTODO DE PAGO
+        // ================================================================
+        function selPayCard(el, metodo) {
+            document.querySelectorAll('.pay-card').forEach(function(c) { c.classList.remove('sel'); });
+            if (el) el.classList.add('sel');
+            metodoPago = metodo;
+            mostrarToast('💳 Método: ' + metodo.toUpperCase(), 'info');
+        }
+
+        // ================================================================
+        // SUSPENDER VENTA
+        // ================================================================
+        function toggleSuspender() {
+            var label = document.getElementById('suspLabel');
+            var btn = document.getElementById('suspBtn');
+            
+            if (carrito.length === 0 && suspensiones.length === 0) {
+                mostrarToast('⚠️ No hay productos para suspender', 'warning');
+                return;
+            }
+
+            if (label && label.textContent === 'Suspender') {
+                if (carrito.length === 0) {
+                    mostrarToast('⚠️ No hay productos en el carrito', 'warning');
+                    return;
+                }
+                
+                var id = 'SUS-' + String(suspensiones.length + 1).padStart(3, '0');
+                suspensiones.push({
+                    id: id,
+                    fecha: new Date().toLocaleString(),
+                    items: JSON.parse(JSON.stringify(carrito)),
+                    total: document.getElementById('totalVenta')?.textContent || 'S/ 0.00'
+                });
+                
+                carrito = [];
+                renderizarCarrito();
+                if (label) label.textContent = 'Recuperar';
+                if (btn) btn.style.background = '#3B82F6';
+                mostrarToast('⏸️ Venta suspendida (ID: ' + id + ')', 'warning');
+                mostrarToast('📋 Suspensiones: ' + suspensiones.map(function(s) { return s.id; }).join(', '), 'info');
+            } else {
+                if (suspensiones.length === 0) {
+                    if (label) label.textContent = 'Suspender';
+                    if (btn) btn.style.background = '#F59E0B';
+                    mostrarToast('⚠️ No hay ventas suspendidas', 'warning');
+                    return;
+                }
+                
+                var ultima = suspensiones[suspensiones.length - 1];
+                carrito = ultima.items;
+                renderizarCarrito();
+                suspensiones.pop();
+                
+                if (suspensiones.length === 0) {
+                    if (label) label.textContent = 'Suspender';
+                    if (btn) btn.style.background = '#F59E0B';
+                }
+                mostrarToast('▶️ Venta recuperada: ' + ultima.id, 'success');
+            }
+        }
+
+        // ================================================================
+        // LIMPIAR TODO
+        // ================================================================
+        function limpiarTodo() {
+            if (!confirm('¿Limpiar todo el carrito?')) return;
+            carrito = [];
             renderizarCarrito();
-        })
-        .catch(function(error) {
-            mostrarToast('❌ Error: ' + error.message, 'error');
-            console.error('Error:', error);
-        })
-        .finally(function() {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="ti ti-cash-register"></i>Procesar Pago <span id="btnTotal">' + total + '</span>';
+            mostrarToast('🧹 Carrito limpiado', 'info');
+        }
+
+        // ================================================================
+        // MODAL DE PAGO
+        // ================================================================
+        function abrirModalPago() {
+            if (carrito.length === 0) {
+                mostrarToast('⚠️ Agrega productos al carrito', 'warning');
+                return;
             }
-        });
-    }
 
-    // ================================================================
-    // 🔥 FUNCIÓN PARA REIMPRIMIR COMPROBANTE
-    // ================================================================
-    window.imprimirComprobante = function() {
-        if (!window.ultimaVentaData) {
-            mostrarToast('⚠️ No hay comprobante para imprimir', 'warning');
-            return;
-        }
-        
-        if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
-            mostrarToast('❌ Error: librería PDF no cargada. Recargue la página.', 'error');
-            return;
-        }
-        
-        const data = window.ultimaVentaData;
-        generarPDF(
-            data.ventaDataPDF,
-            data.metodoPago,
-            data.montoRecibido,
-            data.vuelto,
-            data.numeroComprobante
-        );
-        mostrarToast('📄 Reimprimiendo comprobante...', 'info');
-    };
+            var turno = obtenerTurnoActivo();
+            if (!turno) {
+                mostrarToast('⚠️ No hay turno de caja activo. Abre un turno en "Apertura"', 'warning');
+                return;
+            }
+            turnoActivo = turno;
 
-    // ================================================================
-    // ACTUALIZAR ESTADO UI
-    // ================================================================
-    function actualizarEstadoUI(activo) {
-        var statusText = document.getElementById('statusText');
-        var statusIcon = document.getElementById('statusIcon');
-        
-        if (statusText) {
-            statusText.textContent = activo ? 'Caja abierta' : 'Caja cerrada';
-            statusText.style.color = activo ? '#4ADE80' : '#EF4444';
-        }
-        if (statusIcon) {
-            statusIcon.className = activo ? 'ti ti-circle-filled status-online' : 'ti ti-circle-filled status-offline';
-        }
-    }
-
-    // ================================================================
-    // TOAST NOTIFICATIONS (USANDO CONTENEDOR GLOBAL)
-    // ================================================================
-    function mostrarToast(mensaje, tipo) {
-        tipo = tipo || 'info';
-        // 🔥 USAR EL CONTENEDOR GLOBAL DEL LAYOUT
-        var container = document.getElementById('toastContainerGlobal');
-        if (!container) {
-            // Si no existe (fallback), crear uno temporal
-            container = document.createElement('div');
-            container.id = 'toastContainerGlobal';
-            container.className = 'toast-container';
-            document.body.appendChild(container);
+            var total = document.getElementById('totalVenta')?.textContent || 'S/ 0.00';
+            var modalTotal = document.getElementById('modalTotal');
+            var btnTotal = document.getElementById('btnTotal');
+            if (modalTotal) modalTotal.textContent = total;
+            if (btnTotal) btnTotal.textContent = total;
+            
+            var title = document.getElementById('modalTitle');
+            var modal = document.getElementById('modalPago');
+            
+            document.getElementById('stepEfectivo1').style.display = 'none';
+            document.getElementById('stepEfectivo2').style.display = 'none';
+            document.getElementById('stepTarjeta').style.display = 'none';
+            document.getElementById('stepYape').style.display = 'none';
+            document.getElementById('stepSuccess').style.display = 'none';
+            
+            if (metodoPago === 'efectivo') {
+                if (title) title.textContent = 'Efectivo';
+                document.getElementById('stepEfectivo1').style.display = 'block';
+                var montoPago = document.getElementById('montoPago');
+                if (montoPago) {
+                    montoPago.value = '';
+                    var totalNum = parseFloat(total.replace('S/ ', ''));
+                    if (totalNum > 0) montoPago.placeholder = totalNum.toFixed(2);
+                }
+            } else if (metodoPago === 'tarjeta') {
+                if (title) title.textContent = 'Tarjeta';
+                document.getElementById('stepTarjeta').style.display = 'block';
+            } else if (metodoPago === 'yapeplin') {
+                if (title) title.textContent = 'Yape / Plin';
+                document.getElementById('stepYape').style.display = 'block';
+                var numero = '9' + Math.floor(100000000 + Math.random() * 900000000);
+                var qrDisplay = document.getElementById('qrDisplaySimple');
+                if (qrDisplay) qrDisplay.textContent = numero;
+                iniciarYapeTimer();
+            }
+            
+            if (modal) modal.classList.add('active');
         }
 
-        var toast = document.createElement('div');
-        toast.className = 'toast toast-' + tipo;
-        toast.textContent = mensaje;
-        container.appendChild(toast);
-
-        setTimeout(function() {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(20px)';
-            setTimeout(function() { toast.remove(); }, 300);
-        }, 3000);
-    }
-    
-    // ================================================================
-    // GENERAR PDF DE BOLETA/FACTURA
-    // ================================================================
-    function generarPDF(ventaData, metodoPago, montoRecibido, vuelto, numeroComprobante) {
-        if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
-            mostrarToast('❌ Error: librería PDF no cargada. Recargue la página.', 'error');
-            return;
+        function cerrarModalPago() {
+            var modal = document.getElementById('modalPago');
+            if (modal) modal.classList.remove('active');
+            detenerYapeTimer();
+            document.getElementById('stepEfectivo1').style.display = 'block';
+            document.getElementById('stepEfectivo2').style.display = 'none';
+            document.getElementById('stepTarjeta').style.display = 'none';
+            document.getElementById('stepYape').style.display = 'none';
+            document.getElementById('stepSuccess').style.display = 'none';
         }
-        
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = 210;
-        const margin = 15;
-        let y = 20;
 
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('TECHVENTA PRO', pageWidth / 2, y, { align: 'center' });
-        y += 6;
-        
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text('TechVenta Pro SAC - RUC 20123456789', pageWidth / 2, y, { align: 'center' });
-        y += 5;
-        doc.text('Tienda Norte - Caja 1', pageWidth / 2, y, { align: 'center' });
-        y += 5;
-        
-        var fecha = new Date().toLocaleDateString('es-PE') + ' ' + new Date().toLocaleTimeString('es-PE', {hour:'2-digit',minute:'2-digit'});
-        doc.text('Fecha: ' + fecha, pageWidth / 2, y, { align: 'center' });
-        y += 6;
+        // ================================================================
+        // CALCULAR VUELTO
+        // ================================================================
+        function calcularVuelto() {
+            var totalText = document.getElementById('modalTotal')?.textContent?.replace('S/ ', '') || '0';
+            var total = parseFloat(totalText) || 0;
+            var pago = parseFloat(document.getElementById('montoPago')?.value) || 0;
+            vuelto = pago - total;
+            montoRecibido = pago;
+        }
 
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        var tipoComp = tipoComprobante === 'boleta' ? 'BOLETA' : 'FACTURA';
-        var numComprobante = numeroComprobante || 'N/A';
-        doc.text(tipoComp + ' N°: ' + numComprobante, pageWidth / 2, y, { align: 'center' });
-        y += 6;
+        // ================================================================
+        // MOSTRAR VUELTO Y VISTA PREVIA
+        // ================================================================
+        function mostrarVueltoYBoleta() {
+            var totalText = document.getElementById('modalTotal')?.textContent?.replace('S/ ', '') || '0';
+            var total = parseFloat(totalText) || 0;
+            var pago = parseFloat(document.getElementById('montoPago')?.value) || 0;
+            if (pago < total) {
+                mostrarToast('⚠️ El monto pagado es menor al total', 'warning');
+                return;
+            }
+            var vueltoCalc = pago - total;
+            document.getElementById('vueltoVal').textContent = 'S/ ' + (vueltoCalc > 0 ? vueltoCalc.toFixed(2) : '0.00');
+            document.getElementById('bpEfectivo').textContent = 'S/ ' + pago.toFixed(2);
+            document.getElementById('bpVuelto').textContent = 'S/ ' + (vueltoCalc > 0 ? vueltoCalc.toFixed(2) : '0.00');
 
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        var dni = document.getElementById('clienteDni')?.value || '99999999';
-        var nombre = document.getElementById('clienteNombre')?.value || 'Cliente';
-        doc.text('DNI/RUC: ' + dni, margin, y);
-        y += 5;
-        doc.text('Cliente: ' + nombre, margin, y);
-        y += 7;
+            var fecha = new Date();
+            document.getElementById('bpFecha').textContent = fecha.toLocaleDateString('es-PE') + ' ' + fecha.toLocaleTimeString('es-PE', {hour:'2-digit',minute:'2-digit'});
+            var isBoleta = tipoComprobante === 'boleta';
+            var dni = document.getElementById('clienteDni')?.value || '99999999';
+            var nombre = document.getElementById('clienteNombre')?.value || 'Cliente';
+            document.getElementById('bpComp').textContent = isBoleta ? 'BOLETA — DNI: ' + dni + ' · Cliente: ' + nombre : 'FACTURA — RUC: ' + dni;
 
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Descripción', margin, y);
-        doc.text('Cant.', 120, y);
-        doc.text('P/U', 150, y);
-        doc.text('Total', 175, y);
-        y += 4;
-        
-        doc.setDrawColor(200, 200, 200);
-        doc.line(margin, y, pageWidth - margin, y);
-        y += 4;
+            var itemsHtml = '';
+            carrito.forEach(function(item) {
+                var totalItem = item.precio * item.cantidad;
+                itemsHtml += '<div class="bp-row"><span>' + item.nombre + ' ×' + item.cantidad + '</span><span>S/ ' + totalItem.toFixed(2) + '</span></div>';
+            });
+            document.getElementById('bpItems').innerHTML = itemsHtml;
 
-        doc.setFont('helvetica', 'normal');
-        ventaData.detalles.forEach(function(item, index) {
-            var totalItem = item.cantidad * item.precioUnitario;
-            doc.text(item.producto.nombreProducto || 'Producto', margin, y);
-            doc.text(String(item.cantidad), 120, y);
-            doc.text('S/ ' + item.precioUnitario.toFixed(2), 150, y);
-            doc.text('S/ ' + totalItem.toFixed(2), 175, y);
+            var descuento = parseFloat(document.getElementById('descuento')?.textContent?.replace('-S/ ', '')) || 0;
+            if (descuento > 0) {
+                var descRow = document.createElement('div');
+                descRow.className = 'bp-row';
+                descRow.style.color = 'var(--color-text-success)';
+                descRow.innerHTML = '<span>Descuento aplicado</span><span>-S/ ' + descuento.toFixed(2) + '</span>';
+                document.getElementById('bpItems').appendChild(descRow);
+            }
+
+            var igv = parseFloat(document.getElementById('igv')?.textContent?.replace('S/ ', '')) || 0;
+            var totalFinal = parseFloat(document.getElementById('totalVenta')?.textContent?.replace('S/ ', '')) || 0;
+            document.getElementById('bpIgv').textContent = 'S/ ' + igv.toFixed(2);
+            document.getElementById('bpTotal').textContent = 'S/ ' + totalFinal.toFixed(2);
+
+            document.getElementById('stepEfectivo1').style.display = 'none';
+            document.getElementById('stepEfectivo2').style.display = 'block';
+        }
+
+        // ================================================================
+        // YAPE TIMER
+        // ================================================================
+        function iniciarYapeTimer() {
+            detenerYapeTimer();
+            yapeSegundos = 60;
+            actualizarYapeTimer();
+            yapeTimerInterval = setInterval(function() {
+                yapeSegundos--;
+                actualizarYapeTimer();
+                if (yapeSegundos <= 0) {
+                    detenerYapeTimer();
+                    var status = document.getElementById('yapeStatusSimple');
+                    if (status) status.textContent = '⏰ QR expirado. Regenera para continuar.';
+                }
+            }, 1000);
+        }
+
+        function detenerYapeTimer() {
+            if (yapeTimerInterval) {
+                clearInterval(yapeTimerInterval);
+                yapeTimerInterval = null;
+            }
+        }
+
+        function actualizarYapeTimer() {
+            var timerEl = document.getElementById('yapeTimerSimple');
+            var barEl = document.getElementById('yapeBarSimple');
+            var statusEl = document.getElementById('yapeStatusSimple');
+            
+            if (timerEl) timerEl.textContent = yapeSegundos + 's';
+            if (barEl) {
+                var pct = (yapeSegundos / 60) * 100;
+                barEl.style.width = pct + '%';
+                if (yapeSegundos > 20) barEl.style.background = '#16A34A';
+                else if (yapeSegundos > 10) barEl.style.background = '#D97706';
+                else barEl.style.background = '#DC2626';
+            }
+            if (statusEl && yapeSegundos > 0) {
+                statusEl.textContent = '⏳ Esperando pago del cliente…';
+            }
+        }
+
+        function regenerarYape() {
+            var numero = '9' + Math.floor(100000000 + Math.random() * 900000000);
+            var qrDisplay = document.getElementById('qrDisplaySimple');
+            if (qrDisplay) qrDisplay.textContent = numero;
+            iniciarYapeTimer();
+            var status = document.getElementById('yapeStatusSimple');
+            if (status) status.textContent = '⏳ Esperando pago del cliente…';
+            mostrarToast('🔄 QR regenerado', 'info');
+        }
+
+        // ================================================================
+        // CONFIRMAR PAGO
+        // ================================================================
+        function confirmarPago() {
+            var total = document.getElementById('totalVenta')?.textContent || 'S/ 0.00';
+            var totalNum = parseFloat(total.replace('S/ ', ''));
+
+            var subtotalVal = parseFloat(document.getElementById('subtotal')?.textContent?.replace('S/ ', '')) || 0;
+            var descuentoVal = parseFloat(document.getElementById('descuento')?.textContent?.replace('-S/ ', '')) || 0;
+            var igvVal = parseFloat(document.getElementById('igv')?.textContent?.replace('S/ ', '')) || 0;
+            var totalVal = parseFloat(document.getElementById('totalVenta')?.textContent?.replace('S/ ', '')) || 0;
+
+            var montoPagoVal = 0;
+            var vueltoCalc = 0;
+
+            if (metodoPago === 'efectivo') {
+                montoPagoVal = parseFloat(document.getElementById('montoPago')?.value) || 0;
+                if (montoPagoVal < totalNum) {
+                    mostrarToast('⚠️ El monto pagado es menor al total', 'warning');
+                    return;
+                }
+                vueltoCalc = montoPagoVal - totalNum;
+            }
+
+            var btn = document.querySelector('.btn-cobrar');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Procesando...';
+            }
+
+            var idCajero = window.idUsuarioGlobal || 2;
+            var turno = obtenerTurnoActivo();
+            if (!turno) {
+                mostrarToast('⚠️ No hay turno activo', 'error');
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-cash-register"></i>Procesar Pago'; }
+                return;
+            }
+
+            var ventaData = {
+                venta: {
+                    cajero: { idUsuario: idCajero },
+                    cliente: clienteData ? { idCliente: clienteData.idCliente } : null,
+                    tienda: { idTienda: turno.tienda.idTienda },
+                    caja: { idCaja: turno.caja.idCaja },
+                    turnoCaja: { idTurnoCaja: turno.idTurnoCaja },
+                    tipoComprobante: { idTipoComprobante: tipoComprobante === 'boleta' ? 1 : 2 },
+                    subtotal: subtotalVal,
+                    descuentoAplicado: descuentoVal,
+                    igv: igvVal,
+                    total: totalVal,
+                    metodoPago: metodoPago,
+                    fechaVenta: new Date().toISOString()
+                },
+                detalles: carrito.map(function(item) {
+                    return {
+                        producto: { idProducto: item.id },
+                        cantidad: item.cantidad,
+                        precioUnitario: item.precio,
+                        descuentoLinea: 0,
+                        subtotalLinea: item.precio * item.cantidad
+                    };
+                })
+            };
+
+            fetch('/api/ventas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ventaData)
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    return response.json().then(function(err) {
+                        throw new Error(err.error || 'Error al registrar venta');
+                    });
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                mostrarToast('✅ Venta registrada exitosamente', 'success');
+                
+                var numeroComprobante = data.codigoVenta || data.numeroComprobante || '4841';
+                
+                document.getElementById('stepEfectivo1').style.display = 'none';
+                document.getElementById('stepEfectivo2').style.display = 'none';
+                document.getElementById('stepTarjeta').style.display = 'none';
+                document.getElementById('stepYape').style.display = 'none';
+                document.getElementById('stepSuccess').style.display = 'block';
+                
+                document.getElementById('successNumero').textContent = numeroComprobante;
+                document.getElementById('successTotal').textContent = data.total || total.replace('S/ ', '');
+                document.getElementById('successMetodo').textContent = metodoPago.toUpperCase();
+
+                var ventaDataPDF = {
+                    detalles: carrito.map(function(item) {
+                        return {
+                            producto: { nombreProducto: item.nombre },
+                            cantidad: item.cantidad,
+                            precioUnitario: item.precio,
+                            subtotalLinea: item.precio * item.cantidad
+                        };
+                    }),
+                    subtotal: subtotalVal,
+                    descuento: descuentoVal,
+                    igv: igvVal,
+                    total: totalVal
+                };
+
+                window.ultimaVentaData = {
+                    ventaDataPDF: ventaDataPDF,
+                    metodoPago: metodoPago,
+                    montoRecibido: metodoPago === 'efectivo' ? montoPagoVal : 0,
+                    vuelto: metodoPago === 'efectivo' ? vueltoCalc : 0,
+                    numeroComprobante: numeroComprobante,
+                    total: totalVal
+                };
+
+                setTimeout(function() {
+                    generarPDF(
+                        ventaDataPDF,
+                        metodoPago,
+                        metodoPago === 'efectivo' ? montoPagoVal : 0,
+                        metodoPago === 'efectivo' ? vueltoCalc : 0,
+                        numeroComprobante
+                    );
+                    mostrarToast('📄 PDF generado correctamente', 'success');
+                }, 1000);
+
+                carrito = [];
+                clienteData = null;
+                var dniEl = document.getElementById('clienteDni');
+                var nombreEl = document.getElementById('clienteNombre');
+                if (tipoComprobante === 'boleta') {
+                    if (dniEl) dniEl.value = '99999999';
+                    if (nombreEl) nombreEl.value = 'Cliente General';
+                } else {
+                    if (dniEl) dniEl.value = '';
+                    if (nombreEl) nombreEl.value = '';
+                }
+                renderizarCarrito();
+            })
+            .catch(function(error) {
+                mostrarToast('❌ Error: ' + error.message, 'error');
+                console.error('Error:', error);
+            })
+            .finally(function() {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="ti ti-cash-register"></i>Procesar Pago <span id="btnTotal">' + total + '</span>';
+                }
+            });
+        }
+
+        // ================================================================
+        // REIMPRIMIR COMPROBANTE
+        // ================================================================
+        window.imprimirComprobante = function() {
+            if (!window.ultimaVentaData) {
+                mostrarToast('⚠️ No hay comprobante para imprimir', 'warning');
+                return;
+            }
+            
+            if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+                mostrarToast('❌ Error: librería PDF no cargada. Recargue la página.', 'error');
+                return;
+            }
+            
+            const data = window.ultimaVentaData;
+            generarPDF(
+                data.ventaDataPDF,
+                data.metodoPago,
+                data.montoRecibido,
+                data.vuelto,
+                data.numeroComprobante
+            );
+            mostrarToast('📄 Reimprimiendo comprobante...', 'info');
+        };
+
+        // ================================================================
+        // ACTUALIZAR ESTADO UI
+        // ================================================================
+        function actualizarEstadoUI(activo) {
+            var statusText = document.getElementById('statusText');
+            var statusIcon = document.getElementById('statusIcon');
+            
+            if (statusText) {
+                statusText.textContent = activo ? 'Caja abierta' : 'Caja cerrada';
+                statusText.style.color = activo ? '#4ADE80' : '#EF4444';
+            }
+            if (statusIcon) {
+                statusIcon.className = activo ? 'ti ti-circle-filled status-online' : 'ti ti-circle-filled status-offline';
+            }
+        }
+
+        // ================================================================
+        // TOAST
+        // ================================================================
+        function mostrarToast(mensaje, tipo) {
+            tipo = tipo || 'info';
+            var container = document.getElementById('toastContainerGlobal');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainerGlobal';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + tipo;
+            toast.textContent = mensaje;
+            container.appendChild(toast);
+
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3000);
+        }
+
+        // ================================================================
+        // GENERAR PDF
+        // ================================================================
+        function generarPDF(ventaData, metodoPago, montoRecibido, vuelto, numeroComprobante) {
+            if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+                mostrarToast('❌ Error: librería PDF no cargada. Recargue la página.', 'error');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = 210;
+            const margin = 15;
+            let y = 20;
+
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('TECHVENTA PRO', pageWidth / 2, y, { align: 'center' });
             y += 6;
-            if (y > 260) { doc.addPage(); y = 20; }
-        });
-
-        var descuento = ventaData.descuento || 0;
-        if (descuento > 0) {
-            doc.text('Descuento aplicado', margin, y);
-            doc.text('-S/ ' + descuento.toFixed(2), 175, y, { align: 'right' });
+            
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('TechVenta Pro SAC - RUC 20123456789', pageWidth / 2, y, { align: 'center' });
+            y += 5;
+            doc.text('Tienda Norte - Caja 1', pageWidth / 2, y, { align: 'center' });
+            y += 5;
+            
+            var fecha = new Date().toLocaleDateString('es-PE') + ' ' + new Date().toLocaleTimeString('es-PE', {hour:'2-digit',minute:'2-digit'});
+            doc.text('Fecha: ' + fecha, pageWidth / 2, y, { align: 'center' });
             y += 6;
+
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            var tipoComp = tipoComprobante === 'boleta' ? 'BOLETA' : 'FACTURA';
+            var numComprobante = numeroComprobante || 'N/A';
+            doc.text(tipoComp + ' N°: ' + numComprobante, pageWidth / 2, y, { align: 'center' });
+            y += 6;
+
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            var dni = document.getElementById('clienteDni')?.value || '99999999';
+            var nombre = document.getElementById('clienteNombre')?.value || 'Cliente';
+            doc.text('DNI/RUC: ' + dni, margin, y);
+            y += 5;
+            doc.text('Cliente: ' + nombre, margin, y);
+            y += 7;
+
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Descripción', margin, y);
+            doc.text('Cant.', 120, y);
+            doc.text('P/U', 150, y);
+            doc.text('Total', 175, y);
+            y += 4;
+            
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, y, pageWidth - margin, y);
+            y += 4;
+
+            doc.setFont('helvetica', 'normal');
+            ventaData.detalles.forEach(function(item, index) {
+                var totalItem = item.cantidad * item.precioUnitario;
+                doc.text(item.producto.nombreProducto || 'Producto', margin, y);
+                doc.text(String(item.cantidad), 120, y);
+                doc.text('S/ ' + item.precioUnitario.toFixed(2), 150, y);
+                doc.text('S/ ' + totalItem.toFixed(2), 175, y);
+                y += 6;
+                if (y > 260) { doc.addPage(); y = 20; }
+            });
+
+            var descuento = ventaData.descuento || 0;
+            if (descuento > 0) {
+                doc.text('Descuento aplicado', margin, y);
+                doc.text('-S/ ' + descuento.toFixed(2), 175, y, { align: 'right' });
+                y += 6;
+            }
+
+            var igv = ventaData.igv || 0;
+            var total = ventaData.total || 0;
+            
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, y, pageWidth - margin, y);
+            y += 4;
+            
+            doc.text('IGV (18%)', margin, y);
+            doc.text('S/ ' + igv.toFixed(2), 175, y, { align: 'right' });
+            y += 6;
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.text('TOTAL', margin, y);
+            doc.text('S/ ' + total.toFixed(2), 175, y, { align: 'right' });
+            y += 8;
+
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Método de pago: ' + metodoPago.toUpperCase(), margin, y);
+            y += 5;
+            
+            if (metodoPago === 'efectivo') {
+                doc.text('Efectivo recibido: S/ ' + montoRecibido.toFixed(2), margin, y);
+                y += 5;
+                doc.text('Vuelto: S/ ' + vuelto.toFixed(2), margin, y);
+                y += 5;
+            }
+
+            y += 5;
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, y, pageWidth - margin, y);
+            y += 5;
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('¡Gracias por su compra!', pageWidth / 2, y, { align: 'center' });
+            
+            doc.save('comprobante_' + new Date().getTime() + '.pdf');
         }
 
-        var igv = ventaData.igv || 0;
-        var total = ventaData.total || 0;
-        
-        doc.setDrawColor(200, 200, 200);
-        doc.line(margin, y, pageWidth - margin, y);
-        y += 4;
-        
-        doc.text('IGV (18%)', margin, y);
-        doc.text('S/ ' + igv.toFixed(2), 175, y, { align: 'right' });
-        y += 6;
-        
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(11);
-        doc.text('TOTAL', margin, y);
-        doc.text('S/ ' + total.toFixed(2), 175, y, { align: 'right' });
-        y += 8;
-
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Método de pago: ' + metodoPago.toUpperCase(), margin, y);
-        y += 5;
-        
-        if (metodoPago === 'efectivo') {
-            doc.text('Efectivo recibido: S/ ' + montoRecibido.toFixed(2), margin, y);
-            y += 5;
-            doc.text('Vuelto: S/ ' + vuelto.toFixed(2), margin, y);
-            y += 5;
+        // ================================================================
+        // INICIALIZACIÓN
+        // ================================================================
+        function inicializarVenta() {
+            selComp('boleta');
+            cargarDatosIniciales();
+            renderizarCarrito();
+            console.log('✅ Módulo de ventas inicializado');
         }
 
-        y += 5;
-        doc.setDrawColor(200, 200, 200);
-        doc.line(margin, y, pageWidth - margin, y);
-        y += 5;
-        
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text('¡Gracias por su compra!', pageWidth / 2, y, { align: 'center' });
-        
-        doc.save('comprobante_' + new Date().getTime() + '.pdf');
-    }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', inicializarVenta);
+        } else {
+            inicializarVenta();
+        }
 
-    // ================================================================
-    // 🔥 FUNCIÓN DE INICIALIZACIÓN DEL MÓDULO DE VENTAS (GLOBAL)
-    // ================================================================
-    function inicializarVenta() {
-        selComp('boleta');
-        cargarDatosIniciales();
-        renderizarCarrito();
-        console.log('✅ Módulo de ventas inicializado');
-    }
-
-    // ================================================================
-    // INICIALIZACIÓN
-    // ================================================================
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', inicializarVenta);
-    } else {
-        inicializarVenta();
-    }
-
-    // ================================================================
-    // EXPONER FUNCIONES GLOBALMENTE
-    // ================================================================
-    window.inicializarVenta = inicializarVenta;
-    window.buscarProductos = buscarProductos;
-    window.mostrarResultados = mostrarResultados;
-    window.ocultarResultados = ocultarResultados;
-    window.limpiarBusqueda = limpiarBusqueda;
-    window.escanearProducto = escanearProducto;
-    window.agregarProductoAlCarrito = agregarProductoAlCarrito;
-    window.eliminarProducto = eliminarProducto;
-    window.cambiarCantidad = cambiarCantidad;
-    window.selComp = selComp;
-    window.selPayCard = selPayCard;
-    window.buscarCliente = buscarCliente;
-    window.limpiarCliente = limpiarCliente;
-    window.abrirModalPago = abrirModalPago;
-    window.cerrarModalPago = cerrarModalPago;
-    window.confirmarPago = confirmarPago;
-    window.calcularVuelto = calcularVuelto;
-    window.mostrarVueltoYBoleta = mostrarVueltoYBoleta;
-    window.toggleSuspender = toggleSuspender;
-    window.limpiarTodo = limpiarTodo;
-    window.mostrarToast = mostrarToast;
-    window.obtenerTurnoActivo = obtenerTurnoActivo;
-    window.regenerarYape = regenerarYape;
-    window.imprimirComprobante = imprimirComprobante;
-</script>
-	</div>
-	</html>
+        // ================================================================
+        // EXPONER FUNCIONES GLOBALMENTE
+        // ================================================================
+        window.inicializarVenta = inicializarVenta;
+        window.buscarProductos = buscarProductos;
+        window.mostrarResultados = mostrarResultados;
+        window.ocultarResultados = ocultarResultados;
+        window.limpiarBusqueda = limpiarBusqueda;
+        window.escanearProducto = escanearProducto;
+        window.cerrarModalScan = cerrarModalScan;
+        window.procesarEscaneo = procesarEscaneo;
+        window.agregarProductoAlCarrito = agregarProductoAlCarrito;
+        window.eliminarProducto = eliminarProducto;
+        window.cambiarCantidad = cambiarCantidad;
+        window.selComp = selComp;
+        window.selPayCard = selPayCard;
+        window.buscarCliente = buscarCliente;
+        window.limpiarCliente = limpiarCliente;
+        window.abrirModalPago = abrirModalPago;
+        window.cerrarModalPago = cerrarModalPago;
+        window.confirmarPago = confirmarPago;
+        window.calcularVuelto = calcularVuelto;
+        window.mostrarVueltoYBoleta = mostrarVueltoYBoleta;
+        window.toggleSuspender = toggleSuspender;
+        window.limpiarTodo = limpiarTodo;
+        window.mostrarToast = mostrarToast;
+        window.obtenerTurnoActivo = obtenerTurnoActivo;
+        window.regenerarYape = regenerarYape;
+        window.imprimirComprobante = imprimirComprobante;
+    </script>
 </div>
 </html>

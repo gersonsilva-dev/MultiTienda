@@ -1,0 +1,68 @@
+package com.techventa.multitienda.admin.repository;
+
+import com.techventa.multitienda.admin.model.Incidencia;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface IncidenciaRepository extends JpaRepository<Incidencia, Integer> {
+
+    // ========================================================
+    // MÉTODOS EXISTENTES (mantener)
+    // ========================================================
+    List<Incidencia> findByActivoTrue();
+    
+    List<Incidencia> findBySupervisor_IdUsuario(Integer idSupervisor);
+    
+    List<Incidencia> findByTienda_IdTienda(Integer idTienda);
+    
+    List<Incidencia> findByEstadoIncidencia_IdEstadoIncidencia(Integer idEstado);
+    
+    List<Incidencia> findByPrioridad_Nivel(Integer nivel);
+    
+    Optional<Incidencia> findByCodigoIncidencia(String codigo);
+    
+    List<Incidencia> findByTituloContainingIgnoreCase(String titulo);
+    
+    boolean existsByCodigoIncidencia(String codigo);
+
+    // ========================================================
+    // NUEVOS MÉTODOS CON JOIN FETCH PARA TRAER USUARIO
+    // ========================================================
+
+    // LISTAR TODAS CON USUARIO, ESTADO, TIPO Y PRIORIDAD
+    @Query("SELECT i FROM Incidencia i " +
+           "LEFT JOIN FETCH i.supervisor u " +
+           "LEFT JOIN FETCH i.estadoIncidencia e " +
+           "LEFT JOIN FETCH i.tipoIncidencia t " +
+           "LEFT JOIN FETCH i.prioridad p " +
+           "LEFT JOIN FETCH i.adminResuelve a " +
+           "ORDER BY i.fechaCreacion DESC")
+    List<Incidencia> findAllWithUser();
+
+    // BUSCAR POR ID CON USUARIO
+    @Query("SELECT i FROM Incidencia i " +
+           "LEFT JOIN FETCH i.supervisor u " +
+           "LEFT JOIN FETCH i.estadoIncidencia e " +
+           "LEFT JOIN FETCH i.tipoIncidencia t " +
+           "LEFT JOIN FETCH i.prioridad p " +
+           "LEFT JOIN FETCH i.adminResuelve a " +
+           "WHERE i.idIncidencia = :id")
+    Optional<Incidencia> findByIdWithUser(@Param("id") Integer id);
+
+    // LISTAR POR ESTADO CON USUARIO
+    @Query("SELECT i FROM Incidencia i " +
+           "LEFT JOIN FETCH i.supervisor u " +
+           "LEFT JOIN FETCH i.estadoIncidencia e " +
+           "LEFT JOIN FETCH i.tipoIncidencia t " +
+           "LEFT JOIN FETCH i.prioridad p " +
+           "LEFT JOIN FETCH i.adminResuelve a " +
+           "WHERE i.estadoIncidencia.idEstadoIncidencia = :idEstado " +
+           "ORDER BY i.fechaCreacion DESC")
+    List<Incidencia> findByEstadoWithUser(@Param("idEstado") Integer idEstado);
+}

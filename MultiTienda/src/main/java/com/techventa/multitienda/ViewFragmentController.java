@@ -78,10 +78,10 @@ public class ViewFragmentController {
         // RETORNAR EL LAYOUT SEGÚN EL ROL
         // ============================================================
         // Si es cajero → usa layout-pos.html (sin sidebar)
-       /* if ("cajero".equals(rol)) {
+        if ("cajero".equals(rol)) {
             model.addAttribute("content", path);
             return "layout-pos";
-        }*/
+        }
 
         // Para otros roles → usa el fragmento solo
         return path;

@@ -269,38 +269,13 @@
             gap: 6px;
         }
 
-        .mv-caja-actions .btn-cerrar {
-            padding: 10px;
-            border-radius: 99px;
-            border: none;
-            background: #0F172A;
-            color: #fff;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: background 0.2s;
-        }
-
-        .mv-caja-actions .btn-cerrar:hover {
-            background: #1E293B;
-        }
-
-        .mv-caja-actions .btn-cerrar:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         .mv-caja-actions .btn-retiro {
-            padding: 8px;
+            padding: 10px;
             border-radius: 99px;
             border: 1px solid var(--color-border-tertiary);
             background: transparent;
             color: var(--color-text-secondary);
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             display: flex;
@@ -312,6 +287,8 @@
 
         .mv-caja-actions .btn-retiro:hover {
             background: var(--color-background-secondary);
+            border-color: #F59E0B;
+            color: #B45309;
         }
 
         /* ===== PAGOS RECIBIDOS ===== */
@@ -384,6 +361,138 @@
 
         .mv-empty p { font-size: 13px; }
 
+        /* ============================================================ */
+        /* 🔥 MODAL DE RETIRO (ESTILO SIMILAR AL DE VENTAS)            */
+        /* ============================================================ */
+        .retiro-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .retiro-modal-overlay.active {
+            display: flex;
+        }
+
+        .retiro-modal-box {
+            background: #fff;
+            border-radius: 16px;
+            max-width: 420px;
+            width: 100%;
+            padding: 28px 32px;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+            animation: modalIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .retiro-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .retiro-modal-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .retiro-modal-header h3 i {
+            font-size: 22px;
+            color: #F59E0B;
+        }
+
+        .retiro-modal-close {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--color-text-tertiary);
+            transition: color 0.2s;
+        }
+        .retiro-modal-close:hover { color: var(--color-text-primary); }
+
+        .retiro-modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .retiro-campo {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .retiro-campo label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .retiro-campo input,
+        .retiro-campo textarea {
+            padding: 10px 14px;
+            border: 1px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            font-size: 14px;
+            color: var(--color-text-primary);
+            background: var(--color-background-secondary);
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        .retiro-campo input:focus,
+        .retiro-campo textarea:focus {
+            border-color: #F59E0B;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+        }
+
+        .retiro-campo textarea {
+            resize: vertical;
+            min-height: 56px;
+        }
+
+        .btn-retiro-confirmar {
+            padding: 12px;
+            border-radius: 99px;
+            border: none;
+            background: #F59E0B;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-retiro-confirmar:hover {
+            background: #D97706;
+        }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 1024px) {
             .mv-grid { grid-template-columns: repeat(2, 1fr); }
@@ -395,6 +504,7 @@
             .mv-caja-body { grid-template-columns: 1fr; }
             .mv-table th, .mv-table td { font-size: 10px; padding: 6px 8px; }
             .mv-header { flex-direction: column; }
+            .retiro-modal-box { margin: 16px; padding: 20px; }
         }
     </style>
 
@@ -499,10 +609,7 @@
                         </div>
                     </div>
                     <div class="mv-caja-actions">
-                        <button class="btn-cerrar" id="btnCerrarCaja" onclick="cerrarCaja()">
-                            <i class="ti ti-lock"></i> Cerrar caja del día
-                        </button>
-                        <button class="btn-retiro" onclick="solicitarRetiro()">
+                        <button class="btn-retiro" onclick="abrirModalRetiro()">
                             <i class="ti ti-arrow-up-circle"></i> Solicitar retiro de caja
                         </button>
                     </div>
@@ -536,383 +643,407 @@
     </div>
 
     <!-- ============================================================ -->
+    <!-- 🔥 MODAL DE RETIRO DE CAJA                                   -->
+    <!-- ============================================================ -->
+    <div class="retiro-modal-overlay" id="modalRetiro">
+        <div class="retiro-modal-box">
+            <div class="retiro-modal-header">
+                <h3><i class="ti ti-arrow-up-circle"></i> Solicitar retiro de caja</h3>
+                <button class="retiro-modal-close" onclick="cerrarModalRetiro()">✕</button>
+            </div>
+            <div class="retiro-modal-body">
+                <div class="retiro-campo">
+                    <label>Monto a retirar (S/)</label>
+                    <input type="number" id="retiroMonto" step="0.50" min="0" placeholder="0.00">
+                </div>
+                <div class="retiro-campo">
+                    <label>Motivo</label>
+                    <input type="text" id="retiroMotivo" placeholder="Ej. Compra de insumos, cambio, etc.">
+                </div>
+                <div class="retiro-campo">
+                    <label>Observaciones (opcional)</label>
+                    <textarea id="retiroObservaciones" rows="2" placeholder="Detalles adicionales..."></textarea>
+                </div>
+                <button class="btn-retiro-confirmar" onclick="confirmarRetiro()">
+                    <i class="ti ti-check"></i> Confirmar retiro
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
     <!-- JAVASCRIPT DE MIS VENTAS – VERSIÓN CORREGIDA                -->
     <!-- ============================================================ -->
-	<script>
-	    // ================================================================
-	    // VARIABLES GLOBALES
-	    // ================================================================
-	    var ventasDelDia = [];
-	    var turnoActual = null;
-	    
-	    // 🔥 FUNCIÓN PARA OBTENER EL ID DEL USUARIO DE FORMA SEGURA
-	    function obtenerUserId() {
-	        var id = window.idUsuarioGlobal || 2;
-	        console.log('🆔 Usuario ID para Mis Ventas:', id);
-	        return id;
-	    }
+    <script>
+        // ================================================================
+        // VARIABLES GLOBALES
+        // ================================================================
+        var ventasDelDia = [];
+        var turnoActual = null;
 
-	    // ================================================================
-	    // CARGAR DATOS PRINCIPALES
-	    // ================================================================
-	    function cargarMisVentas() {
-	        var fecha = new Date();
-	        var fechaEl = document.getElementById('mvFecha');
-	        if (fechaEl) {
-	            fechaEl.textContent = fecha.toLocaleDateString('es-PE', {
-	                weekday: 'long',
-	                day: 'numeric',
-	                month: 'long',
-	                year: 'numeric'
-	            });
-	        }
-	        cargarVentasDelDia();
-	        cargarEstadoCaja();
-	    }
+        // 🔥 OBTENER EL ID DEL USUARIO DE FORMA SEGURA Y ACTUALIZADA
+        function obtenerUserId() {
+            var id = window.idUsuarioGlobal;
+            if (!id && window.usuarioGlobal) {
+                id = window.usuarioGlobal.idUsuario;
+            }
+            if (!id) {
+                console.warn('⚠️ No se pudo obtener idUsuario, usando fallback 2');
+                id = 2;
+            }
+            console.log('🆔 Usuario ID para Mis Ventas:', id);
+            return id;
+        }
 
-	    // ================================================================
-	    // CARGAR VENTAS DEL DÍA (CORREGIDO: usa obtenerUserId)
-	    // ================================================================
-	    function cargarVentasDelDia() {
-	        var userId = obtenerUserId();
-	        if (!userId) {
-	            console.warn('⚠️ No hay userId para cargar ventas');
-	            return;
-	        }
+        // ================================================================
+        // CARGAR DATOS PRINCIPALES
+        // ================================================================
+        function cargarMisVentas() {
+            var fecha = new Date();
+            var fechaEl = document.getElementById('mvFecha');
+            if (fechaEl) {
+                fechaEl.textContent = fecha.toLocaleDateString('es-PE', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+            }
+            cargarVentasDelDia();
+            cargarEstadoCaja();
+        }
 
-	        console.log('🔍 Buscando ventas para userId:', userId);
+		// ================================================================
+		// CARGAR VENTAS DEL DÍA (CON FILTRO DE FECHA CORREGIDO)
+		// ================================================================
+		function cargarVentasDelDia() {
+		    var userId = obtenerUserId();
+		    if (!userId) {
+		        console.warn('⚠️ No hay userId para cargar ventas');
+		        return;
+		    }
 
-	        var hoy = new Date().toISOString().split('T')[0];
-	        console.log('📅 Fecha de hoy (para filtro):', hoy);
+		    console.log('🔍 Buscando ventas para userId:', userId);
 
-	        // ✅ CORREGIDO: /api/ventas
-	        fetch('/api/ventas/cajero/' + userId)
-	            .then(function(response) {
-	                console.log('📡 Respuesta del servidor:', response.status);
-	                if (!response.ok) throw new Error('Error al cargar ventas: ' + response.status);
-	                return response.json();
-	            })
-	            .then(function(data) {
-	                console.log('📦 Total de ventas recibidas:', data.length);
-	                console.log('📋 Primera venta (ejemplo):', data[0]);
+		    // 🔥 Obtener fecha actual LOCAL (sin zona horaria)
+		    var hoy = new Date();
+		    var hoyStr = hoy.getFullYear() + '-' + 
+		                 String(hoy.getMonth() + 1).padStart(2, '0') + '-' + 
+		                 String(hoy.getDate()).padStart(2, '0');
+		    console.log('📅 Fecha de hoy (local):', hoyStr);
 
-	                ventasDelDia = data;
-	                console.log('✅ Ventas a mostrar:', ventasDelDia.length);
-	                renderizarTabla(ventasDelDia);
-	                actualizarResumen(ventasDelDia);
-	            })
-	            .catch(function(error) {
-	                console.error('❌ Error al cargar ventas:', error);
-	                var tbody = document.getElementById('mvTableBody');
-	                if (tbody) {
-	                    tbody.innerHTML = '<tr><td colspan="5"><div class="mv-empty"><i class="ti ti-alert-circle"></i><p>Error al cargar ventas: ' + error.message + '</p></div></td></tr>';
-	                }
-	            });
-	    }
+		    fetch('/api/ventas/cajero/' + userId)
+		        .then(function(response) {
+		            console.log('📡 Respuesta del servidor:', response.status);
+		            if (!response.ok) throw new Error('Error al cargar ventas: ' + response.status);
+		            return response.json();
+		        })
+		        .then(function(data) {
+		            console.log('📦 Total de ventas recibidas:', data.length);
 
-	    // ================================================================
-	    // RENDERIZAR TABLA
-	    // ================================================================
-	    function renderizarTabla(ventas) {
-	        var tbody = document.getElementById('mvTableBody');
-	        var contador = document.getElementById('mvCantidadVentas');
+		            // 🔥 FILTRAR comparando fecha LOCAL
+		            var ventasFiltradas = data.filter(function(v) {
+		                if (!v.fechaVenta) return false;
+		                // Convertir fecha de la venta a local y extraer YYYY-MM-DD
+		                var fechaVenta = new Date(v.fechaVenta);
+		                var fechaVentaStr = fechaVenta.getFullYear() + '-' + 
+		                                    String(fechaVenta.getMonth() + 1).padStart(2, '0') + '-' + 
+		                                    String(fechaVenta.getDate()).padStart(2, '0');
+		                return fechaVentaStr === hoyStr;
+		            });
 
-	        if (!ventas || ventas.length === 0) {
-	            if (tbody) {
-	                tbody.innerHTML = '<tr><td colspan="5"><div class="mv-empty"><i class="ti ti-shopping-cart"></i><p>No hay ventas registradas hoy</p></div></td></tr>';
-	            }
-	            if (contador) contador.textContent = '0 ventas hoy';
-	            return;
-	        }
+		            console.log('✅ Ventas de hoy:', ventasFiltradas.length);
+		            ventasDelDia = ventasFiltradas;
+		            renderizarTabla(ventasDelDia);
+		            actualizarResumen(ventasDelDia);
+		        })
+		        .catch(function(error) {
+		            console.error('❌ Error al cargar ventas:', error);
+		            var tbody = document.getElementById('mvTableBody');
+		            if (tbody) {
+		                tbody.innerHTML = '<tr><td colspan="5"><div class="mv-empty"><i class="ti ti-alert-circle"></i><p>Error al cargar ventas: ' + error.message + '</p></div></td></tr>';
+		            }
+		        });
+		}
 
-	        if (contador) contador.textContent = ventas.length + ' ventas hoy';
+        // ================================================================
+        // RENDERIZAR TABLA
+        // ================================================================
+        function renderizarTabla(ventas) {
+            var tbody = document.getElementById('mvTableBody');
+            var contador = document.getElementById('mvCantidadVentas');
 
-	        var estadoClaseMap = {
-	            'COMPLETADO': 'ok',
-	            'SUSPENDIDO': 'pending',
-	            'CANCELADO': 'cancel',
-	            'REEMBOLSADO': 'cancel',
-	            'PENDIENTE_PAGO': 'pending'
-	        };
+            if (!ventas || ventas.length === 0) {
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="5"><div class="mv-empty"><i class="ti ti-shopping-cart"></i><p>No hay ventas registradas hoy</p></div></td></tr>';
+                }
+                if (contador) contador.textContent = '0 ventas hoy';
+                return;
+            }
 
-	        tbody.innerHTML = ventas.map(function(v, index) {
-	            var estadoNombre = v.estadoVenta?.nombreEstado || 'Desconocido';
-	            var estadoClase = estadoClaseMap[estadoNombre] || 'pending';
-	            var comprobante = v.tipoComprobante?.nombreComprobante || 'Boleta';
-	            var metodo = v.metodoPago || '—';
+            if (contador) contador.textContent = ventas.length + ' ventas hoy';
 
-	            var cliente = '';
-	            if (v.cliente) {
-	                if (typeof v.cliente === 'object') {
-	                    cliente = v.cliente.nombres ? v.cliente.nombres + ' ' + (v.cliente.apellidos || '') : v.cliente.razonSocial || '';
-	                } else {
-	                    cliente = v.cliente;
-	                }
-	            }
+            var estadoClaseMap = {
+                'COMPLETADO': 'ok',
+                'SUSPENDIDO': 'pending',
+                'CANCELADO': 'cancel',
+                'REEMBOLSADO': 'cancel',
+                'PENDIENTE_PAGO': 'pending'
+            };
 
-	            var numero = v.codigoVenta || '#' + String(index + 1).padStart(4, '0');
+            tbody.innerHTML = ventas.map(function(v, index) {
+                var estadoNombre = v.estadoVenta?.nombreEstado || 'Desconocido';
+                var estadoClase = estadoClaseMap[estadoNombre] || 'pending';
+                var comprobante = v.tipoComprobante?.nombreComprobante || 'Boleta';
+                var metodo = v.metodoPago || '—';
 
-	            return '<tr>' +
-	                '<td style="color:var(--color-text-tertiary);font-size:11px;">' + numero + '</td>' +
-	                '<td>' + comprobante + (cliente ? ' — ' + cliente : '') + '</td>' +
-	                '<td><span class="mv-pill">' + metodo + '</span></td>' +
-	                '<td style="font-weight:500;">S/ ' + (v.total || 0).toFixed(2) + '</td>' +
-	                '<td><span class="mv-status ' + estadoClase + '"><span class="dot"></span>' + estadoNombre + '</span></td>' +
-	                '</tr>';
-	        }).join('');
-	    }
+                var cliente = '';
+                if (v.cliente) {
+                    if (typeof v.cliente === 'object') {
+                        cliente = v.cliente.nombres ? v.cliente.nombres + ' ' + (v.cliente.apellidos || '') : v.cliente.razonSocial || '';
+                    } else {
+                        cliente = v.cliente;
+                    }
+                }
 
-	    // ================================================================
-	    // ACTUALIZAR TARJETAS DE RESUMEN
-	    // ================================================================
-	    function actualizarResumen(ventas) {
-	        var total = 0;
-	        var totalDevuelto = 0;
-	        var devoluciones = 0;
+                var numero = v.codigoVenta || '#' + String(index + 1).padStart(4, '0');
 
-	        ventas.forEach(function(v) {
-	            var monto = v.total || 0;
-	            var estadoNombre = v.estadoVenta?.nombreEstado || 'COMPLETADO';
+                return '<tr>' +
+                    '<td style="color:var(--color-text-tertiary);font-size:11px;">' + numero + '</td>' +
+                    '<td>' + comprobante + (cliente ? ' — ' + cliente : '') + '</td>' +
+                    '<td><span class="mv-pill">' + metodo + '</span></td>' +
+                    '<td style="font-weight:500;">S/ ' + (v.total || 0).toFixed(2) + '</td>' +
+                    '<td><span class="mv-status ' + estadoClase + '"><span class="dot"></span>' + estadoNombre + '</span></td>' +
+                    '</tr>';
+            }).join('');
+        }
 
-	            if (estadoNombre === 'COMPLETADO' || estadoNombre === 'SUSPENDIDO' || estadoNombre === 'PENDIENTE_PAGO') {
-	                total += monto;
-	            }
-	            if (estadoNombre === 'REEMBOLSADO') {
-	                devoluciones++;
-	                totalDevuelto += monto;
-	            }
-	        });
+        // ================================================================
+        // ACTUALIZAR TARJETAS DE RESUMEN
+        // ================================================================
+        function actualizarResumen(ventas) {
+            var total = 0;
+            var totalDevuelto = 0;
+            var devoluciones = 0;
 
-	        var promedio = ventas.length > 0 ? total / ventas.length : 0;
+            ventas.forEach(function(v) {
+                var monto = v.total || 0;
+                var estadoNombre = v.estadoVenta?.nombreEstado || 'COMPLETADO';
 
-	        document.getElementById('mvTotalVendido').textContent = 'S/ ' + total.toFixed(2);
-	        document.getElementById('mvTransacciones').textContent = ventas.length;
-	        document.getElementById('mvTicketPromedio').textContent = 'S/ ' + promedio.toFixed(2);
-	        document.getElementById('mvDevoluciones').textContent = devoluciones;
-	        document.getElementById('mvMontoDevuelto').textContent = 'S/ ' + totalDevuelto.toFixed(2);
-	    }
+                if (estadoNombre === 'COMPLETADO' || estadoNombre === 'SUSPENDIDO' || estadoNombre === 'PENDIENTE_PAGO') {
+                    total += monto;
+                }
+                if (estadoNombre === 'REEMBOLSADO') {
+                    devoluciones++;
+                    totalDevuelto += monto;
+                }
+            });
 
-	    // ================================================================
-	    // CARGAR ESTADO DE CAJA (TURNO) - CORREGIDO
-	    // ================================================================
-	    function cargarEstadoCaja() {
-	        var userId = obtenerUserId();
-	        if (!userId) {
-	            console.warn('⚠️ No hay userId para cargar estado de caja');
-	            return;
-	        }
+            var promedio = ventas.length > 0 ? total / ventas.length : 0;
 
-	        // ✅ CORREGIDO: /api/turnos-caja
-	        fetch('/api/turnos-caja/usuario/' + userId + '/activo')
-	            .then(function(response) {
-	                if (response.status === 404) {
-	                    mostrarCajaCerrada();
-	                    return null;
-	                }
-	                if (!response.ok) throw new Error('Error al obtener turno');
-	                return response.json();
-	            })
-	            .then(function(data) {
-	                if (data && data.activo && data.turno) {
-	                    turnoActual = data.turno;
-	                    mostrarCajaAbierta(turnoActual);
-	                } else {
-	                    mostrarCajaCerrada();
-	                }
-	            })
-	            .catch(function(error) {
-	                console.error('❌ Error al cargar turno:', error);
-	                mostrarCajaCerrada();
-	            });
-	    }
+            document.getElementById('mvTotalVendido').textContent = 'S/ ' + total.toFixed(2);
+            document.getElementById('mvTransacciones').textContent = ventas.length;
+            document.getElementById('mvTicketPromedio').textContent = 'S/ ' + promedio.toFixed(2);
+            document.getElementById('mvDevoluciones').textContent = devoluciones;
+            document.getElementById('mvMontoDevuelto').textContent = 'S/ ' + totalDevuelto.toFixed(2);
+        }
 
-	    function mostrarCajaAbierta(turno) {
-	        var badge = document.getElementById('mvEstadoCaja');
-	        if (badge) {
-	            badge.textContent = 'Abierta ' + (turno.horaApertura || '08:00');
-	            badge.style.background = '#DCFCE7';
-	            badge.style.color = '#15803D';
-	        }
+        // ================================================================
+        // CARGAR ESTADO DE CAJA (TURNO)
+        // ================================================================
+        function cargarEstadoCaja() {
+            var userId = obtenerUserId();
+            if (!userId) {
+                console.warn('⚠️ No hay userId para cargar estado de caja');
+                return;
+            }
 
-	        document.getElementById('mvFondoInicial').textContent = 'S/ ' + (turno.fondoInicial || 0).toFixed(2);
+            fetch('/api/turnos-caja/usuario/' + userId + '/activo')
+                .then(function(response) {
+                    if (response.status === 404) {
+                        mostrarCajaCerrada();
+                        return null;
+                    }
+                    if (!response.ok) throw new Error('Error al obtener turno');
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data && data.activo && data.turno) {
+                        turnoActual = data.turno;
+                        mostrarCajaAbierta(turnoActual);
+                    } else {
+                        mostrarCajaCerrada();
+                    }
+                })
+                .catch(function(error) {
+                    console.error('❌ Error al cargar turno:', error);
+                    mostrarCajaCerrada();
+                });
+        }
 
-	        var efectivoActual = (turno.fondoInicial || 0) + (turno.totalVentasEfectivo || 0);
-	        document.getElementById('mvEfectivoActual').textContent = 'S/ ' + efectivoActual.toFixed(2);
+        function mostrarCajaAbierta(turno) {
+            var badge = document.getElementById('mvEstadoCaja');
+            if (badge) {
+                badge.textContent = 'Abierta ' + (turno.horaApertura || '08:00');
+                badge.style.background = '#DCFCE7';
+                badge.style.color = '#15803D';
+            }
 
-	        document.getElementById('mvRetiros').textContent = 'S/ 0.00';
-	        document.getElementById('mvDiferencia').textContent = 'S/ 0.00';
+            document.getElementById('mvFondoInicial').textContent = 'S/ ' + (turno.fondoInicial || 0).toFixed(2);
 
-	        var btnCerrar = document.getElementById('btnCerrarCaja');
-	        if (btnCerrar) btnCerrar.disabled = false;
+            var efectivoActual = (turno.fondoInicial || 0) + (turno.totalVentasEfectivo || 0);
+            document.getElementById('mvEfectivoActual').textContent = 'S/ ' + efectivoActual.toFixed(2);
 
-	        cargarPagos(turno);
-	    }
+            document.getElementById('mvRetiros').textContent = 'S/ 0.00';
+            document.getElementById('mvDiferencia').textContent = 'S/ 0.00';
 
-	    function mostrarCajaCerrada() {
-	        var badge = document.getElementById('mvEstadoCaja');
-	        if (badge) {
-	            badge.textContent = 'Cerrada';
-	            badge.style.background = '#FEE2E2';
-	            badge.style.color = '#DC2626';
-	        }
+            cargarPagos(turno);
+        }
 
-	        var campos = ['mvFondoInicial', 'mvEfectivoActual', 'mvRetiros', 'mvDiferencia'];
-	        campos.forEach(function(id) {
-	            var el = document.getElementById(id);
-	            if (el) el.textContent = 'S/ 0.00';
-	        });
+        function mostrarCajaCerrada() {
+            var badge = document.getElementById('mvEstadoCaja');
+            if (badge) {
+                badge.textContent = 'Cerrada';
+                badge.style.background = '#FEE2E2';
+                badge.style.color = '#DC2626';
+            }
 
-	        var btnCerrar = document.getElementById('btnCerrarCaja');
-	        if (btnCerrar) {
-	            btnCerrar.disabled = true;
-	            btnCerrar.innerHTML = '<i class="ti ti-lock"></i> Caja cerrada';
-	        }
+            var campos = ['mvFondoInicial', 'mvEfectivoActual', 'mvRetiros', 'mvDiferencia'];
+            campos.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.textContent = 'S/ 0.00';
+            });
 
-	        ['mvPagoEfectivo', 'mvPagoTarjeta', 'mvPagoDigital'].forEach(function(id) {
-	            var el = document.getElementById(id);
-	            if (el) el.textContent = 'S/ 0.00';
-	        });
-	        ['mvBarEfectivo', 'mvBarTarjeta', 'mvBarDigital'].forEach(function(id) {
-	            var el = document.getElementById(id);
-	            if (el) el.style.width = '0%';
-	        });
-	    }
+            ['mvPagoEfectivo', 'mvPagoTarjeta', 'mvPagoDigital'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.textContent = 'S/ 0.00';
+            });
+            ['mvBarEfectivo', 'mvBarTarjeta', 'mvBarDigital'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.style.width = '0%';
+            });
+        }
 
-	    // ================================================================
-	    // CARGAR PAGOS RECIBIDOS
-	    // ================================================================
-	    function cargarPagos(turno) {
-	        var efectivo = turno.totalVentasEfectivo || 0;
-	        var tarjeta = turno.totalVentasTarjeta || 0;
-	        var yape = turno.totalVentasYape || 0;
-	        var plin = turno.totalVentasPlin || 0;
-	        var digital = yape + plin;
-	        var total = efectivo + tarjeta + digital;
+        // ================================================================
+        // CARGAR PAGOS RECIBIDOS
+        // ================================================================
+        function cargarPagos(turno) {
+            var efectivo = turno.totalVentasEfectivo || 0;
+            var tarjeta = turno.totalVentasTarjeta || 0;
+            var yape = turno.totalVentasYape || 0;
+            var plin = turno.totalVentasPlin || 0;
+            var digital = yape + plin;
+            var total = efectivo + tarjeta + digital;
 
-	        document.getElementById('mvPagoEfectivo').textContent = 'S/ ' + efectivo.toFixed(2);
-	        document.getElementById('mvPagoTarjeta').textContent = 'S/ ' + tarjeta.toFixed(2);
-	        document.getElementById('mvPagoDigital').textContent = 'S/ ' + digital.toFixed(2);
+            document.getElementById('mvPagoEfectivo').textContent = 'S/ ' + efectivo.toFixed(2);
+            document.getElementById('mvPagoTarjeta').textContent = 'S/ ' + tarjeta.toFixed(2);
+            document.getElementById('mvPagoDigital').textContent = 'S/ ' + digital.toFixed(2);
 
-	        if (total > 0) {
-	            document.getElementById('mvBarEfectivo').style.width = (efectivo / total * 100) + '%';
-	            document.getElementById('mvBarTarjeta').style.width = (tarjeta / total * 100) + '%';
-	            document.getElementById('mvBarDigital').style.width = (digital / total * 100) + '%';
-	        } else {
-	            document.getElementById('mvBarEfectivo').style.width = '0%';
-	            document.getElementById('mvBarTarjeta').style.width = '0%';
-	            document.getElementById('mvBarDigital').style.width = '0%';
-	        }
-	    }
+            if (total > 0) {
+                document.getElementById('mvBarEfectivo').style.width = (efectivo / total * 100) + '%';
+                document.getElementById('mvBarTarjeta').style.width = (tarjeta / total * 100) + '%';
+                document.getElementById('mvBarDigital').style.width = (digital / total * 100) + '%';
+            } else {
+                document.getElementById('mvBarEfectivo').style.width = '0%';
+                document.getElementById('mvBarTarjeta').style.width = '0%';
+                document.getElementById('mvBarDigital').style.width = '0%';
+            }
+        }
 
-	    // ================================================================
-	    // CERRAR CAJA (TURNO) - CORREGIDO
-	    // ================================================================
-	    window.cerrarCaja = function() {
-	        if (!turnoActual || !turnoActual.idTurnoCaja) {
-	            mostrarToast('⚠️ No hay turno activo para cerrar', 'warning');
-	            return;
-	        }
+        // ================================================================
+        // 🔥 MODAL DE RETIRO
+        // ================================================================
+        function abrirModalRetiro() {
+            document.getElementById('modalRetiro').classList.add('active');
+            // Limpiar campos por si quedaron datos anteriores
+            document.getElementById('retiroMonto').value = '';
+            document.getElementById('retiroMotivo').value = '';
+            document.getElementById('retiroObservaciones').value = '';
+        }
 
-	        if (!confirm('¿Estás seguro de que deseas cerrar la caja?\nEsta acción no se puede deshacer.')) {
-	            return;
-	        }
+        function cerrarModalRetiro() {
+            document.getElementById('modalRetiro').classList.remove('active');
+        }
 
-	        var fondoFinal = parseFloat(document.getElementById('mvEfectivoActual').textContent.replace('S/ ', '')) || 0;
+        function confirmarRetiro() {
+            var monto = parseFloat(document.getElementById('retiroMonto').value);
+            var motivo = document.getElementById('retiroMotivo').value.trim();
+            var observaciones = document.getElementById('retiroObservaciones').value.trim();
 
-	        var btn = document.getElementById('btnCerrarCaja');
-	        var originalText = btn.innerHTML;
-	        btn.disabled = true;
-	        btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Cerrando...';
+            if (!monto || monto <= 0) {
+                mostrarToast('⚠️ Ingresa un monto válido', 'warning');
+                return;
+            }
+            if (!motivo) {
+                mostrarToast('⚠️ Ingresa un motivo para el retiro', 'warning');
+                return;
+            }
 
-	        // ✅ CORREGIDO: /api/turnos-caja
-	        fetch('/api/turnos-caja/' + turnoActual.idTurnoCaja + '/cerrar?fondoFinal=' + fondoFinal, {
-	            method: 'PUT',
-	            headers: { 'Content-Type': 'application/json' }
-	        })
-	        .then(function(response) {
-	            if (!response.ok) {
-	                return response.json().then(function(err) {
-	                    throw new Error(err.error || 'Error al cerrar turno');
-	                });
-	            }
-	            return response.json();
-	        })
-	        .then(function(data) {
-	            mostrarToast('✅ Caja cerrada correctamente', 'success');
-	            turnoActual = null;
-	            cargarEstadoCaja();
-	            if (window.actualizarEstadoCaja) {
-	                window.actualizarEstadoCaja(false);
-	            }
-	            cargarVentasDelDia();
-	        })
-	        .catch(function(error) {
-	            mostrarToast('❌ Error: ' + error.message, 'error');
-	            console.error('Error:', error);
-	        })
-	        .finally(function() {
-	            btn.disabled = false;
-	            btn.innerHTML = originalText;
-	        });
-	    };
+            // Simular envío al backend (aquí puedes conectar con tu API)
+            // fetch('/api/retiros', { method: 'POST', ... })
+            
+            // Actualizar UI local
+            var efectivoActual = parseFloat(document.getElementById('mvEfectivoActual').textContent.replace('S/ ', '')) || 0;
+            var retirosActual = parseFloat(document.getElementById('mvRetiros').textContent.replace('S/ ', '')) || 0;
 
-	    // ================================================================
-	    // SOLICITAR RETIRO DE CAJA
-	    // ================================================================
-	    window.solicitarRetiro = function() {
-	        var monto = prompt('💰 Ingresa el monto a retirar:', '100.00');
-	        if (!monto) return;
-	        if (isNaN(parseFloat(monto)) || parseFloat(monto) <= 0) {
-	            mostrarToast('⚠️ Ingresa un monto válido', 'warning');
-	            return;
-	        }
-	        var motivo = prompt('📝 Motivo del retiro:', 'Compra de insumos');
-	        if (!motivo) return;
-	        mostrarToast('📨 Solicitud enviada al supervisor', 'info');
-	    };
+            if (monto > efectivoActual) {
+                mostrarToast('⚠️ No hay suficiente efectivo en caja para retirar S/ ' + monto.toFixed(2), 'warning');
+                return;
+            }
 
-	    // ================================================================
-	    // TOAST NOTIFICATIONS (USANDO CONTENEDOR GLOBAL)
-	    // ================================================================
-	    function mostrarToast(mensaje, tipo) {
-	        tipo = tipo || 'info';
-	        var container = document.getElementById('toastContainerGlobal');
-	        if (!container) {
-	            container = document.createElement('div');
-	            container.id = 'toastContainerGlobal';
-	            container.className = 'toast-container';
-	            document.body.appendChild(container);
-	        }
+            var nuevoEfectivo = efectivoActual - monto;
+            var nuevoRetiro = retirosActual + monto;
 
-	        var toast = document.createElement('div');
-	        toast.className = 'toast toast-' + tipo;
-	        toast.textContent = mensaje;
-	        container.appendChild(toast);
+            document.getElementById('mvEfectivoActual').textContent = 'S/ ' + nuevoEfectivo.toFixed(2);
+            document.getElementById('mvRetiros').textContent = 'S/ ' + nuevoRetiro.toFixed(2);
 
-	        setTimeout(function() {
-	            toast.style.opacity = '0';
-	            toast.style.transform = 'translateX(20px)';
-	            setTimeout(function() { toast.remove(); }, 300);
-	        }, 3000);
-	    }
+            mostrarToast('✅ Retiro de S/ ' + monto.toFixed(2) + ' registrado correctamente', 'success');
 
-	    // ================================================================
-	    // INICIALIZACIÓN
-	    // ================================================================
-	    function inicializarMisVentas() {
-	        console.log('🔄 Inicializando Mis Ventas...');
-	        setTimeout(function() {
-	            cargarMisVentas();
-	        }, 100);
-	    }
+            cerrarModalRetiro();
+        }
 
-	    window.inicializarMisVentas = inicializarMisVentas;
+        // ================================================================
+        // TOAST NOTIFICATIONS (USANDO CONTENEDOR GLOBAL)
+        // ================================================================
+        function mostrarToast(mensaje, tipo) {
+            tipo = tipo || 'info';
+            var container = document.getElementById('toastContainerGlobal');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainerGlobal';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
 
-	    if (document.readyState === 'loading') {
-	        document.addEventListener('DOMContentLoaded', inicializarMisVentas);
-	    } else {
-	        inicializarMisVentas();
-	    }
-	</script>
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + tipo;
+            toast.textContent = mensaje;
+            container.appendChild(toast);
+
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3000);
+        }
+
+        // ================================================================
+        // INICIALIZACIÓN
+        // ================================================================
+        function inicializarMisVentas() {
+            console.log('🔄 Inicializando Mis Ventas...');
+            setTimeout(function() {
+                cargarMisVentas();
+            }, 100);
+        }
+
+        window.inicializarMisVentas = inicializarMisVentas;
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', inicializarMisVentas);
+        } else {
+            inicializarMisVentas();
+        }
+    </script>
 </div>
 </html>

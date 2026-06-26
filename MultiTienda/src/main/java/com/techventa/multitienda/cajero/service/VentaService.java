@@ -33,6 +33,18 @@ public class VentaService {
     
     @Autowired
     private EstadoVentaRepository estadoVentaRepository;
+    
+    @Autowired
+    private PagoRepository pagoRepository;
+    
+    @Autowired
+    private MetodoPagoRepository metodoPagoRepository;
+    
+    @Autowired
+    private EstadoPagoRepository estadoPagoRepository;
+    
+    @Autowired
+    private TurnoCajaRepository turnoCajaRepository;
 
     private String generarCodigoVenta() {
         return "VEN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
@@ -54,7 +66,9 @@ public class VentaService {
 
     @Transactional
     public Venta registrarVenta(Venta venta, List<DetalleVenta> detalles) {
-        // Generar código
+        // ================================================================
+        // 1. GUARDAR LA VENTA
+        // ================================================================
         venta.setCodigoVenta(generarCodigoVenta());
         venta.setFechaVenta(LocalDateTime.now());
         
@@ -77,15 +91,23 @@ public class VentaService {
         Optional<EstadoVenta> estadoOpt = estadoVentaRepository.findByNombreEstado("COMPLETADO");
         estadoOpt.ifPresent(venta::setEstadoVenta);
         
+        // 🔥 Guardar el método de pago (viene del frontend)
+        if (venta.getMetodoPago() == null || venta.getMetodoPago().isEmpty()) {
+            venta.setMetodoPago("EFECTIVO");
+        }
+        venta.setMetodoPago(venta.getMetodoPago().toUpperCase());
+        
         venta.setActivo(true);
         Venta saved = ventaRepository.save(venta);
         
-        // Guardar detalles y actualizar stock
+        // ================================================================
+        // 2. GUARDAR DETALLES Y ACTUALIZAR STOCK
+        // ================================================================
         for (DetalleVenta detalle : detalles) {
             detalle.setVenta(saved);
             detalleVentaRepository.save(detalle);
             
-            // Actualizar stock
+            // Actualizar stock en inventario
             Optional<InventarioTienda> invOpt = inventarioRepository
                     .findByProducto_IdProductoAndTienda_IdTienda(
                             detalle.getProducto().getIdProducto(),
@@ -97,7 +119,7 @@ public class VentaService {
                 inventarioRepository.save(inventario);
             }
             
-            // Actualizar stock de lote
+            // Actualizar stock de lote (si existe)
             if (detalle.getLote() != null) {
                 Optional<Lote> loteOpt = loteRepository.findById(detalle.getLote().getIdLote());
                 if (loteOpt.isPresent()) {
@@ -108,7 +130,79 @@ public class VentaService {
             }
         }
         
+        // ================================================================
+        // 3. CREAR EL REGISTRO DE PAGO
+        // ================================================================
+        String metodoNombre = venta.getMetodoPago();
+        
+        // Buscar o crear el método de pago
+        MetodoPago metodoPago = metodoPagoRepository
+                .findByNombreMetodoIgnoreCase(metodoNombre)
+                .orElseGet(() -> {
+                    MetodoPago nuevo = new MetodoPago(metodoNombre);
+                    return metodoPagoRepository.save(nuevo);
+                });
+        
+        // Buscar estado de pago "COMPLETADO" (suponiendo que existe)
+        EstadoPago estadoPago = estadoPagoRepository
+                .findByNombreEstado("COMPLETADO")
+                .orElseThrow(() -> new RuntimeException("Estado de pago 'COMPLETADO' no encontrado"));
+        
+        Pago pago = new Pago();
+        pago.setVenta(saved);
+        pago.setMetodoPago(metodoPago);
+        pago.setMonto(saved.getTotal());
+        pago.setEstadoPago(estadoPago);
+        pago.setFechaPago(LocalDateTime.now());
+        pagoRepository.save(pago);
+        
+        // ================================================================
+        // 4. ACTUALIZAR TOTALES DEL TURNO
+        // ================================================================
+        actualizarTotalesTurno(saved, metodoNombre);
+        
         return saved;
+    }
+
+    private void actualizarTotalesTurno(Venta venta, String metodo) {
+        // Obtener el turno completo desde la base de datos
+        TurnoCaja turno = venta.getTurnoCaja();
+        if (turno == null || turno.getIdTurnoCaja() == null) {
+            throw new RuntimeException("La venta no tiene turno de caja asociado o ID nulo");
+        }
+        
+        TurnoCaja turnoPersistido = turnoCajaRepository.findById(turno.getIdTurnoCaja())
+                .orElseThrow(() -> new RuntimeException("Turno no encontrado con ID: " + turno.getIdTurnoCaja()));
+
+        BigDecimal monto = venta.getTotal();
+        String metodoUpper = metodo.toUpperCase();
+
+        // Inicializar si es null
+        if (turnoPersistido.getTotalVentasEfectivo() == null) turnoPersistido.setTotalVentasEfectivo(BigDecimal.ZERO);
+        if (turnoPersistido.getTotalVentasTarjeta() == null) turnoPersistido.setTotalVentasTarjeta(BigDecimal.ZERO);
+        if (turnoPersistido.getTotalVentasYape() == null) turnoPersistido.setTotalVentasYape(BigDecimal.ZERO);
+        if (turnoPersistido.getTotalVentasPlin() == null) turnoPersistido.setTotalVentasPlin(BigDecimal.ZERO);
+
+        switch (metodoUpper) {
+            case "EFECTIVO":
+                turnoPersistido.setTotalVentasEfectivo(turnoPersistido.getTotalVentasEfectivo().add(monto));
+                break;
+            case "TARJETA":
+                turnoPersistido.setTotalVentasTarjeta(turnoPersistido.getTotalVentasTarjeta().add(monto));
+                break;
+            case "YAPE":
+            case "YAPEPLIN":
+                turnoPersistido.setTotalVentasYape(turnoPersistido.getTotalVentasYape().add(monto));
+                break;
+            case "PLIN":
+                turnoPersistido.setTotalVentasPlin(turnoPersistido.getTotalVentasPlin().add(monto));
+                break;
+            default:
+                // Si no se reconoce, sumar a efectivo por defecto
+                turnoPersistido.setTotalVentasEfectivo(turnoPersistido.getTotalVentasEfectivo().add(monto));
+        }
+        
+        turnoCajaRepository.save(turnoPersistido);
     }
 
     @Transactional

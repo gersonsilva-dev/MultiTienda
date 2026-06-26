@@ -1,0 +1,55 @@
+// controller/SupervisorCajaController.java
+package com.techventa.multitienda.supervisor.controller;
+
+import com.techventa.multitienda.supervisor.entity.Caja;
+import com.techventa.multitienda.supervisor.service.SupervisorCajaService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController  // ← IMPORTANTE: @RestController en lugar de @Controller
+@RequestMapping("/api/supervisor/cajas")
+@CrossOrigin(origins = "*") // Para permitir peticiones desde tu HTML
+public class SupervisorCajaController {
+    
+    @Autowired
+    private SupervisorCajaService cajaService;
+    
+    // Obtener todas las cajas (GET)
+    @GetMapping
+    public ResponseEntity<List<Caja>> obtenerTodasLasCajas() {
+        List<Caja> cajas = cajaService.obtenerTodasLasCajas();
+        return ResponseEntity.ok(cajas);
+    }
+    
+    // Obtener caja por ID (GET)
+    @GetMapping("/{id}")
+    public ResponseEntity<Caja> obtenerCajaPorId(@PathVariable Long id) {
+        return cajaService.obtenerCajaPorId(id)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
+    
+    // Crear nueva caja (POST)
+    @PostMapping
+    public ResponseEntity<Caja> crearCaja(@RequestBody Caja caja) {
+        Caja nuevaCaja = cajaService.guardarCaja(caja);
+        return ResponseEntity.status(HttpStatus.CREATED).body(nuevaCaja);
+    }
+    
+    // Actualizar caja (PUT)
+    @PutMapping("/{id}")
+    public ResponseEntity<Caja> actualizarCaja(@PathVariable Long id, @RequestBody Caja caja) {
+        Caja cajaActualizada = cajaService.actualizarCaja(id, caja);
+        return ResponseEntity.ok(cajaActualizada);
+    }
+    
+    // Eliminar caja (DELETE)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarCaja(@PathVariable Long id) {
+        cajaService.eliminarCaja(id);
+        return ResponseEntity.noContent().build();
+    }
+}

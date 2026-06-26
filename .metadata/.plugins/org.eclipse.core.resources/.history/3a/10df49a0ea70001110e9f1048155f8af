@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Cajas</title>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-cash-register text-warning"></i> Gestión de Cajas</h2>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="tablaCajas">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Número</th>
+                                <th>Tienda</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaCajas">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-spinner fa-spin"></i> Cargando cajas...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Caja -->
+    <div class="modal fade" id="modalCaja" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title"><i class="fas fa-edit"></i> Editar Caja</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCaja">
+                        <input type="hidden" id="cajaId">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="nombreCaja" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Número de Caja</label>
+                            <input type="number" class="form-control" id="numeroCaja" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Estado</label>
+                            <select class="form-control" id="estadoCaja">
+                                <option value="1">Abierta</option>
+                                <option value="2">Cerrada</option>
+                                <option value="3">Mantenimiento</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" onclick="guardarCaja()">
+                        <i class="fas fa-save"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const API_CAJAS = '/supervisor/cajas';
+
+            function cargarCajas() {
+                console.log('🔍 Cargando cajas...');
+                
+                fetch(API_CAJAS)
+                    .then(res => {
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        return res.json();
+                    })
+                    .then(cajas => {
+                        console.log('📦 Datos recibidos:', cajas);
+                        
+                        const tbody = document.getElementById('cuerpoTablaCajas');
+                        if (!cajas || cajas.length === 0) {
+                            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No hay cajas registradas</td></tr>`;
+                            return;
+                        }
+                        
+                        let html = '';
+                        cajas.forEach(c => {
+                            // Obtener el estado correctamente
+                            const estadoNombre = c.estadoCaja?.nombreEstado || 'DESCONOCIDO';
+                            const badge = estadoNombre === 'ABIERTA' ? 'success' : 
+                                         estadoNombre === 'CERRADA' ? 'danger' : 'warning';
+                            
+                            html += `
+                                <tr>
+                                    <td>${c.idCaja}</td>
+                                    <td><strong>${c.nombreCaja || 'Sin nombre'}</strong></td>
+                                    <td>${c.numeroCaja || '-'}</td>
+                                    <td>${c.tienda?.nombreTienda || 'N/A'}</td>
+                                    <td><span class="badge bg-${badge}">${estadoNombre}</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-warning" onclick="editarCaja(${c.idCaja})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        tbody.innerHTML = html;
+                        console.log('✅ Tabla renderizada correctamente');
+                    })
+                    .catch(err => {
+                        console.error('❌ ERROR:', err);
+                        document.getElementById('cuerpoTablaCajas').innerHTML = 
+                            `<tr><td colspan="6" class="text-center text-danger">Error al cargar las cajas: ${err.message}</td></tr>`;
+                    });
+            }
+
+            function editarCaja(id) {
+                fetch(`${API_CAJAS}/${id}`)
+                    .then(res => res.json())
+                    .then(c => {
+                        document.getElementById('cajaId').value = c.idCaja;
+                        document.getElementById('nombreCaja').value = c.nombreCaja || '';
+                        document.getElementById('numeroCaja').value = c.numeroCaja || 0;
+                        document.getElementById('estadoCaja').value = c.estadoCaja?.idEstadoCaja || 1;
+                        
+                        const modal = new bootstrap.Modal(document.getElementById('modalCaja'));
+                        modal.show();
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        alert('Error al cargar la caja');
+                    });
+            }
+
+            function guardarCaja() {
+                const id = document.getElementById('cajaId').value;
+                const caja = {
+                    nombreCaja: document.getElementById('nombreCaja').value.trim(),
+                    numeroCaja: parseInt(document.getElementById('numeroCaja').value) || 0,
+                    estadoCaja: {
+                        idEstadoCaja: parseInt(document.getElementById('estadoCaja').value)
+                    }
+                };
+
+                if (!caja.nombreCaja) {
+                    alert('El nombre es obligatorio');
+                    return;
+                }
+
+                fetch(`${API_CAJAS}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(caja)
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Error al actualizar');
+                    return res.json();
+                })
+                .then(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalCaja'));
+                    if (modal) modal.hide();
+                    cargarCajas();
+                    alert('Caja actualizada exitosamente');
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert('Error al actualizar la caja');
+                });
+            }
+
+            window.cargarCajas = cargarCajas;
+            window.editarCaja = editarCaja;
+            window.guardarCaja = guardarCaja;
+
+            document.addEventListener('DOMContentLoaded', cargarCajas);
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                cargarCajas();
+            }
+        })();
+    </script>
+</body>
+</html>

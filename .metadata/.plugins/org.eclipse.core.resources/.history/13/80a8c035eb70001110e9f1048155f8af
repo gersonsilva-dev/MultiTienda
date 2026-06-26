@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Incidencias</title>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-exclamation-triangle text-danger"></i> Gestión de Incidencias</h2>
+            <div>
+                <select class="form-select" id="filtroEstado" onchange="cargarIncidencias()">
+                    <option value="0">Todas</option>
+                    <option value="1">Pendientes</option>
+                    <option value="2">Resueltas</option>
+                    <option value="3">Cerradas</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="tablaIncidencias">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Usuario</th>
+                                <th>Tipo</th>
+                                <th>Asunto</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaIncidencias">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-spinner fa-spin"></i> Cargando incidencias...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalle Incidencia -->
+    <div class="modal fade" id="modalIncidencia" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-info-circle text-danger"></i> Detalle de Incidencia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="incidenciaDetalle">
+                    <!-- Se llena con JS -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-success" id="btnResolverIncidencia" onclick="resolverIncidencia()">
+                        <i class="fas fa-check"></i> Resolver
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btnCerrarIncidencia" onclick="cerrarIncidencia()">
+                        <i class="fas fa-door-closed"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function() {
+            // ========================================================
+            // VARIABLES LOCALES
+            // ========================================================
+            const API_INCIDENCIAS = '/supervisor/incidencias';
+            let modalIncidencia = null;
+            let incidenciaActual = null;
+
+            // ========================================================
+            // CARGAR INCIDENCIAS
+            // ========================================================
+            function cargarIncidencias() {
+                const estado = document.getElementById('filtroEstado').value;
+                const url = estado === '0' ? API_INCIDENCIAS : `${API_INCIDENCIAS}/estado/${estado}`;
+
+                fetch(url)
+                    .then(res => res.json())
+                    .then(incidencias => {
+                        const tbody = document.getElementById('cuerpoTablaIncidencias');
+                        if (!incidencias || incidencias.length === 0) {
+                            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No hay incidencias registradas</td></tr>`;
+                            return;
+                        }
+                        let html = '';
+                        incidencias.forEach(i => {
+                            const badge = i.estado?.idEstado === 1 ? 'warning' : i.estado?.idEstado === 2 ? 'success' : 'secondary';
+                            const estadoNombre = i.estado?.nombre || 'DESCONOCIDO';
+                            html += `
+                                <tr>
+                                    <td>${i.idIncidencia}</td>
+                                    <td>${i.usuario?.nombre || 'N/A'}</td>
+                                    <td>${i.tipoIncidencia?.nombre || 'N/A'}</td>
+                                    <td>${i.asunto || '-'}</td>
+                                    <td>${i.fechaCreacion ? new Date(i.fechaCreacion).toLocaleDateString() : '-'}</td>
+                                    <td><span class="badge bg-${badge}">${estadoNombre}</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="verIncidencia(${i.idIncidencia})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        tbody.innerHTML = html;
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        document.getElementById('cuerpoTablaIncidencias').innerHTML = 
+                            `<tr><td colspan="7" class="text-center text-danger">Error al cargar las incidencias</td></tr>`;
+                    });
+            }
+
+            // ========================================================
+            // VER INCIDENCIA
+            // ========================================================
+            function verIncidencia(id) {
+                fetch(`${API_INCIDENCIAS}/${id}`)
+                    .then(res => res.json())
+                    .then(i => {
+                        incidenciaActual = i;
+                        const estadoNombre = i.estado?.nombre || 'DESCONOCIDO';
+                        const badgeColor = i.estado?.idEstado === 1 ? 'warning' : i.estado?.idEstado === 2 ? 'success' : 'secondary';
+
+                        document.getElementById('incidenciaDetalle').innerHTML = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>ID:</strong> ${i.idIncidencia}</p>
+                                    <p><strong>Usuario:</strong> ${i.usuario?.nombre || 'N/A'}</p>
+                                    <p><strong>Tipo:</strong> ${i.tipoIncidencia?.nombre || 'N/A'}</p>
+                                    <p><strong>Asunto:</strong> ${i.asunto || '-'}</p>
+                                    <p><strong>Fecha:</strong> ${i.fechaCreacion ? new Date(i.fechaCreacion).toLocaleString() : '-'}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Estado:</strong> <span class="badge bg-${badgeColor}">${estadoNombre}</span></p>
+                                    <p><strong>Descripción:</strong></p>
+                                    <div class="border p-2 bg-light rounded">${i.descripcion || 'Sin descripción'}</div>
+                                    ${i.respuesta ? `
+                                        <p class="mt-2"><strong>Respuesta:</strong></p>
+                                        <div class="border p-2 bg-success text-white rounded">${i.respuesta}</div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+
+                        const estadoId = i.estado?.idEstado;
+                        document.getElementById('btnResolverIncidencia').style.display = estadoId === 1 ? 'inline-block' : 'none';
+                        document.getElementById('btnCerrarIncidencia').style.display = estadoId === 2 ? 'inline-block' : 'none';
+
+                        modalIncidencia.show();
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        alert('Error al cargar la incidencia');
+                    });
+            }
+
+            // ========================================================
+            // RESOLVER INCIDENCIA
+            // ========================================================
+            function resolverIncidencia() {
+                if (!incidenciaActual) return;
+                const respuesta = prompt('Ingrese la respuesta para la incidencia:');
+                if (!respuesta) return;
+
+                const idAdmin = prompt('Ingrese su ID de administrador:');
+                if (!idAdmin) return;
+
+                fetch(`${API_INCIDENCIAS}/${incidenciaActual.idIncidencia}/resolver?idAdmin=${idAdmin}&respuesta=${respuesta}`, {
+                    method: 'PUT'
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Error al resolver');
+                    return res.json();
+                })
+                .then(() => {
+                    modalIncidencia.hide();
+                    cargarIncidencias();
+                    alert('Incidencia resuelta exitosamente');
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert('Error al resolver la incidencia');
+                });
+            }
+
+            // ========================================================
+            // CERRAR INCIDENCIA
+            // ========================================================
+            function cerrarIncidencia() {
+                if (!incidenciaActual) return;
+                
+                if (!confirm('¿Estás seguro de cerrar esta incidencia?')) return;
+
+                fetch(`${API_INCIDENCIAS}/${incidenciaActual.idIncidencia}/cerrar`, {
+                    method: 'PUT'
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Error al cerrar');
+                    return res.json();
+                })
+                .then(() => {
+                    modalIncidencia.hide();
+                    cargarIncidencias();
+                    alert('Incidencia cerrada exitosamente');
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert('Error al cerrar la incidencia');
+                });
+            }
+
+            // ========================================================
+            // INICIALIZAR MODAL
+            // ========================================================
+            function initModal() {
+                const modalElement = document.getElementById('modalIncidencia');
+                if (modalElement) {
+                    modalIncidencia = new bootstrap.Modal(modalElement);
+                }
+            }
+
+            // ========================================================
+            // EXPONER FUNCIONES
+            // ========================================================
+            window.cargarIncidencias = cargarIncidencias;
+            window.verIncidencia = verIncidencia;
+            window.resolverIncidencia = resolverIncidencia;
+            window.cerrarIncidencia = cerrarIncidencia;
+
+            // ========================================================
+            // AUTO-EJECUTAR
+            // ========================================================
+            document.addEventListener('DOMContentLoaded', function() {
+                initModal();
+                cargarIncidencias();
+            });
+            
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                initModal();
+                cargarIncidencias();
+            }
+        })();
+    </script>
+</body>
+</html>

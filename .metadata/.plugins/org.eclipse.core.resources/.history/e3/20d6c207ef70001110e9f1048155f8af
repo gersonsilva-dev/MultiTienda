@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Incidencias</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">⚠️ Incidencias</div>
+        <div class="page-subtitle">Reportes y seguimiento de problemas</div>
+    </div>
+    <div class="page-header-right">
+        <select id="filtroEstado" onchange="cargarIncidencias()" style="padding:8px 12px; border:1px solid #ddd; border-radius:6px; margin-right:10px;">
+            <option value="0">Todas</option>
+            <option value="1">Abiertas</option>
+            <option value="2">En Proceso</option>
+            <option value="3">Resueltas</option>
+            <option value="4">Cerradas</option>
+            <option value="5">Rechazadas</option>
+        </select>
+        <button class="btn btn-primary" onclick="abrirModalIncidencia()"><i class="fas fa-plus"></i> Nueva incidencia</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Código</th>
+                    <th>Título</th>
+                    <th>Tipo</th>
+                    <th>Prioridad</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaIncidencias">
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>
+                        Cargando incidencias...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalIncidencia">
+    <div class="modal">
+        <div class="modal-body" id="modalIncidenciaBody">
+            <!-- Se llena con JS al ver detalle -->
+        </div>
+        <div class="modal-footer" id="modalIncidenciaFooter">
+            <button class="btn btn-ghost" onclick="cerrarModalIncidencia()">Cerrar</button>
+            <button class="btn btn-success" id="btnResolver" onclick="resolverIncidencia()" style="display:none;">
+                <i class="fas fa-check"></i> Resolver
+            </button>
+            <button class="btn btn-secondary" id="btnCerrar" onclick="cerrarIncidencia()" style="display:none;">
+                <i class="fas fa-door-closed"></i> Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let incidenciasData = [];
+    let incidenciaActual = null;
+
+    // ============================================================
+    // COLORES PARA PRIORIDADES (fondo suave, texto intenso)
+    // ============================================================
+    function getColorPrioridad(prioridad) {
+        const colores = {
+            'CRÍTICA': { bg: '#FFCDD2', text: '#B71C1C' },
+            'URGENTE': { bg: '#FFE0B2', text: '#E65100' },
+            'ALTA': { bg: '#FFE0B2', text: '#F57C00' },
+            'MEDIA': { bg: '#BBDEFB', text: '#1976D2' },
+            'BAJA': { bg: '#C8E6C9', text: '#388E3C' }
+        };
+        return colores[prioridad] || { bg: '#E0E0E0', text: '#616161' };
+    }
+
+    // ============================================================
+    // COLORES PARA ESTADOS (fondo suave, texto intenso)
+    // ============================================================
+    function getColorEstado(estado) {
+        const colores = {
+            'ABIERTO': { bg: '#FFF8E1', text: '#F57F17' },
+            'EN_PROCESO': { bg: '#E3F2FD', text: '#1565C0' },
+            'RESUELTO': { bg: '#E8F5E9', text: '#2E7D32' },
+            'CERRADO': { bg: '#F5F5F5', text: '#616161' },
+            'RECHAZADO': { bg: '#FFEBEE', text: '#C62828' }
+        };
+        return colores[estado] || { bg: '#FFF8E1', text: '#F57F17' };
+    }
+
+    // ============================================================
+    // CARGAR INCIDENCIAS
+    // ============================================================
+    function cargarIncidencias() {
+        const estado = document.getElementById('filtroEstado').value;
+        const url = estado === '0' ? '/supervisor/incidencias' : `/supervisor/incidencias/estado/${estado}`;
+
+        fetch(url)
+            .then(r => {
+                if (!r.ok) throw new Error('Error al cargar');
+                return r.json();
+            })
+            .then(d => {
+                incidenciasData = d;
+                const tbody = document.getElementById('tablaIncidencias');
+                if (!d || d.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No hay incidencias registradas</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = d.map(i => {
+                    const estado = i.estadoIncidencia?.nombreEstado || 'ABIERTO';
+                    const prioridad = i.prioridad?.nombrePrioridad || 'MEDIA';
+                    const tipo = i.tipoIncidencia?.nombreTipo || 'N/A';
+                    const colorPrio = getColorPrioridad(prioridad);
+                    const colorEst = getColorEstado(estado);
+                    
+                    return `
+                    <tr>
+                        <td>${i.idIncidencia}</td>
+                        <td><span class="badge badge-info">${i.codigoIncidencia || '-'}</span></td>
+                        <td><strong>${i.titulo || '-'}</strong></td>
+                        <td>${tipo}</td>
+                        <td>
+                            <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${colorPrio.bg};color:${colorPrio.text};font-size:0.75rem;font-weight:600;">
+                                ${prioridad}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${colorEst.bg};color:${colorEst.text};font-size:0.75rem;font-weight:600;">
+                                ${estado}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="verIncidencia(${i.idIncidencia})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `}).join('');
+            })
+            .catch(() => {
+                document.getElementById('tablaIncidencias').innerHTML = 
+                    '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error al cargar incidencias</td></tr>';
+            });
+    }
+
+    // ============================================================
+    // VER INCIDENCIA (MODAL)
+    // ============================================================
+    function verIncidencia(id) {
+        const i = incidenciasData.find(x => x.idIncidencia === id);
+        if (!i) {
+            alert('Incidencia no encontrada');
+            return;
+        }
+
+        incidenciaActual = i;
+
+        const estado = i.estadoIncidencia?.nombreEstado || 'ABIERTO';
+        const prioridad = i.prioridad?.nombrePrioridad || 'MEDIA';
+        const tipo = i.tipoIncidencia?.nombreTipo || 'N/A';
+        const colorPrio = getColorPrioridad(prioridad);
+        const colorEst = getColorEstado(estado);
+        const fecha = i.fechaCreacion ? new Date(i.fechaCreacion).toLocaleString() : '-';
+
+        document.getElementById('modalIncidenciaTitle').textContent = 'Detalle de Incidencia';
+        document.getElementById('modalIncidenciaBody').innerHTML = `
+            <div style="display:grid;gap:12px;">
+                <div><strong>ID:</strong> ${i.idIncidencia}</div>
+                <div><strong>Código:</strong> ${i.codigoIncidencia || '-'}</div>
+                <div><strong>Título:</strong> ${i.titulo || '-'}</div>
+                <div><strong>Tipo:</strong> ${tipo}</div>
+                <div>
+                    <strong>Prioridad:</strong> 
+                    <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${colorPrio.bg};color:${colorPrio.text};font-size:0.75rem;font-weight:600;">
+                        ${prioridad}
+                    </span>
+                </div>
+                <div>
+                    <strong>Estado:</strong> 
+                    <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${colorEst.bg};color:${colorEst.text};font-size:0.75rem;font-weight:600;">
+                        ${estado}
+                    </span>
+                </div>
+                <div><strong>Descripción:</strong> ${i.descripcionProblema || 'Sin descripción'}</div>
+                <div><strong>Fecha:</strong> ${fecha}</div>
+                ${i.respuestaAdmin ? `<div><strong>Respuesta Admin:</strong> ${i.respuestaAdmin}</div>` : ''}
+                ${i.fechaResolucion ? `<div><strong>Fecha Resolución:</strong> ${new Date(i.fechaResolucion).toLocaleString()}</div>` : ''}
+                ${i.fechaCierre ? `<div><strong>Fecha Cierre:</strong> ${new Date(i.fechaCierre).toLocaleString()}</div>` : ''}
+            </div>
+        `;
+
+        // Mostrar/ocultar botones según estado
+        const esAbierto = estado === 'ABIERTO' || estado === 'EN_PROCESO';
+        const esResuelto = estado === 'RESUELTO';
+        
+        document.getElementById('btnResolver').style.display = esAbierto ? 'inline-block' : 'none';
+        document.getElementById('btnCerrar').style.display = esResuelto ? 'inline-block' : 'none';
+
+        document.getElementById('modalIncidencia').classList.add('open');
+    }
+
+    // ============================================================
+    // RESOLVER INCIDENCIA
+    // ============================================================
+    function resolverIncidencia() {
+        if (!incidenciaActual) return;
+        
+        const respuesta = prompt('Ingrese la respuesta para la incidencia:');
+        if (respuesta === null) return;
+        if (!respuesta.trim()) {
+            alert('La respuesta es obligatoria');
+            return;
+        }
+
+        const idAdmin = prompt('Ingrese su ID de administrador:');
+        if (idAdmin === null) return;
+        if (!idAdmin.trim() || isNaN(idAdmin)) {
+            alert('El ID de administrador es obligatorio y debe ser numérico');
+            return;
+        }
+
+        const id = incidenciaActual.idIncidencia;
+
+        fetch(`/supervisor/incidencias/${id}/resolver?idAdmin=${idAdmin}&respuesta=${encodeURIComponent(respuesta)}`, {
+            method: 'PUT'
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Error al resolver');
+            return res.json();
+        })
+        .then(() => {
+            cerrarModalIncidencia();
+            cargarIncidencias();
+            alert('✅ Incidencia resuelta exitosamente');
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Error al resolver la incidencia: ' + err.message);
+        });
+    }
+
+    // ============================================================
+    // CERRAR INCIDENCIA
+    // ============================================================
+    function cerrarIncidencia() {
+        if (!incidenciaActual) return;
+        
+        if (!confirm('¿Estás seguro de cerrar esta incidencia?')) return;
+
+        const id = incidenciaActual.idIncidencia;
+
+        fetch(`/supervisor/incidencias/${id}/cerrar`, {
+            method: 'PUT'
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Error al cerrar');
+            return res.json();
+        })
+        .then(() => {
+            cerrarModalIncidencia();
+            cargarIncidencias();
+            alert('✅ Incidencia cerrada exitosamente');
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Error al cerrar la incidencia: ' + err.message);
+        });
+    }
+
+    // ============================================================
+    // ABRIR MODAL NUEVA INCIDENCIA (OPCIONAL)
+    // ============================================================
+    function abrirModalIncidencia() {
+        alert('Funcionalidad en desarrollo. Las incidencias solo pueden ser creadas por supervisores.');
+    }
+
+    // ============================================================
+    // CERRAR MODAL
+    // ============================================================
+    function cerrarModalIncidencia() {
+        document.getElementById('modalIncidencia').classList.remove('open');
+        incidenciaActual = null;
+    }
+
+    // ============================================================
+    // EXPONER FUNCIONES
+    // ============================================================
+    window.cargarIncidencias = cargarIncidencias;
+    window.verIncidencia = verIncidencia;
+    window.resolverIncidencia = resolverIncidencia;
+    window.cerrarIncidencia = cerrarIncidencia;
+    window.abrirModalIncidencia = abrirModalIncidencia;
+    window.cerrarModalIncidencia = cerrarModalIncidencia;
+
+    // ============================================================
+    // INICIALIZAR
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', cargarIncidencias);
+</script>
+</body>
+</html>

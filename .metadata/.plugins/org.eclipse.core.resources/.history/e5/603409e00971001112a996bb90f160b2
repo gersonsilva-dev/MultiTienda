@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ofertas</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">🏷️ Ofertas</div>
+        <div class="page-subtitle">Gestión de ofertas y promociones</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-outline btn-sm" onclick="cargarOfertas()">
+            <i class="fas fa-sync"></i> Actualizar
+        </button>
+        <button class="btn btn-info btn-sm" onclick="cargarOfertasVigentes()">
+            <i class="fas fa-clock"></i> Vigentes
+        </button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descuento</th>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Fin</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaOfertas">
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>
+                        Cargando ofertas...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Aprobar Oferta -->
+<div class="modal-overlay" id="modalOferta">
+    <div class="modal">
+        <div class="modal-header" style="background:#10B981; color:white;">
+            <div class="modal-title"><i class="fas fa-check-circle"></i> Aprobar Oferta</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalOferta()" style="color:white;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="modalOfertaBody">
+            <!-- Se llena con JS -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalOferta()">Cancelar</button>
+            <button class="btn btn-success" onclick="aprobarOferta()">
+                <i class="fas fa-check"></i> Aprobar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ============================================================
+        // VARIABLES LOCALES
+        // ============================================================
+        const API_OFERTAS = '/supervisor/ofertas';
+        let ofertasData = [];
+        let ofertaActual = null;
+
+        // ============================================================
+        // COLORES PARA ESTADOS
+        // ============================================================
+        function getColorEstado(estado) {
+            const colores = {
+                'BORRADOR': { bg: '#F5F5F5', text: '#616161' },
+                'PENDIENTE': { bg: '#FFF8E1', text: '#F57F17' },
+                'ACTIVA': { bg: '#E8F5E9', text: '#2E7D32' },
+                'APROBADA': { bg: '#E8F5E9', text: '#2E7D32' },
+                'FINALIZADA': { bg: '#E3F2FD', text: '#1565C0' },
+                'SUSPENDIDA': { bg: '#FFEBEE', text: '#C62828' }
+            };
+            return colores[estado] || { bg: '#F5F5F5', text: '#616161' };
+        }
+
+        // ============================================================
+        // CARGAR OFERTAS
+        // ============================================================
+        function cargarOfertas() {
+            console.log('🔍 Cargando ofertas...');
+            
+            fetch(API_OFERTAS)
+                .then(r => {
+                    if (!r.ok) throw new Error('Error al cargar');
+                    return r.json();
+                })
+                .then(data => {
+                    console.log('📦 Datos recibidos:', data);
+                    ofertasData = data;
+                    renderizarOfertas(data);
+                })
+                .catch(err => {
+                    console.error('❌ Error:', err);
+                    document.getElementById('tablaOfertas').innerHTML = 
+                        '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error al cargar ofertas</td></tr>';
+                });
+        }
+
+        // ============================================================
+        // CARGAR OFERTAS VIGENTES
+        // ============================================================
+        function cargarOfertasVigentes() {
+            console.log('🔍 Cargando ofertas vigentes...');
+            
+            fetch(`${API_OFERTAS}/vigentes`)
+                .then(r => {
+                    if (!r.ok) throw new Error('Error al cargar');
+                    return r.json();
+                })
+                .then(data => {
+                    console.log('📦 Vigentes:', data);
+                    renderizarOfertas(data);
+                })
+                .catch(err => {
+                    console.error('❌ Error:', err);
+                    alert('Error al cargar ofertas vigentes');
+                });
+        }
+
+        // ============================================================
+        // RENDERIZAR OFERTAS (SIN DESCRIPCIÓN)
+        // ============================================================
+        function renderizarOfertas(ofertas) {
+            const tbody = document.getElementById('tablaOfertas');
+            
+            if (!ofertas || ofertas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No hay ofertas registradas</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = ofertas.map(item => {
+                const estado = item.estadoOferta?.nombreEstado || item.estado || 'PENDIENTE';
+                const colorEst = getColorEstado(estado);
+                const fechaInicio = item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : '-';
+                const fechaFin = item.fechaFin ? new Date(item.fechaFin).toLocaleDateString() : '-';
+                
+                let botones = '';
+                if (estado === 'BORRADOR' || estado === 'PENDIENTE') {
+                    botones = `<button class="btn btn-success btn-sm" onclick="abrirModalAprobar(${item.idOferta})">
+                                <i class="fas fa-check"></i> Aprobar
+                              </button>`;
+                } else if (estado === 'ACTIVA') {
+                    botones = `
+                        <button class="btn btn-warning btn-sm" onclick="suspenderOferta(${item.idOferta})">
+                            <i class="fas fa-pause"></i> Suspender
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="finalizarOferta(${item.idOferta})">
+                            <i class="fas fa-stop"></i> Finalizar
+                        </button>
+                    `;
+                } else if (estado === 'SUSPENDIDA') {
+                    botones = `
+                        <button class="btn btn-success btn-sm" onclick="reactivarOferta(${item.idOferta})">
+                            <i class="fas fa-play"></i> Reactivar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="finalizarOferta(${item.idOferta})">
+                            <i class="fas fa-stop"></i> Finalizar
+                        </button>
+                    `;
+                } else if (estado === 'FINALIZADA') {
+                    botones = `
+                        <button class="btn btn-success btn-sm" onclick="reactivarOferta(${item.idOferta})">
+                            <i class="fas fa-play"></i> Reactivar
+                        </button>
+                        <span class="text-muted">(Finalizada)</span>
+                    `;
+                } else {
+                    botones = `<span class="text-muted">${estado}</span>`;
+                }
+                
+                return `
+                <tr>
+                    <td>${item.idOferta}</td>
+                    <td><strong>${item.nombreOferta || '-'}</strong></td>
+                    <td><span class="badge badge-primary">${item.valorDescuento || 0}%</span></td>
+                    <td>${fechaInicio}</td>
+                    <td>${fechaFin}</td>
+                    <td>
+                        <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${colorEst.bg};color:${colorEst.text};font-size:0.75rem;font-weight:600;">
+                            ${estado}
+                        </span>
+                    </td>
+                    <td>${botones}</td>
+                </tr>
+            `}).join('');
+        }
+
+        function suspenderOferta(id) {
+            if (!confirm('¿Estás seguro de suspender esta oferta?')) return;
+            
+            const idUsuario = prompt('Ingrese su ID de usuario:');
+            if (!idUsuario) return;
+            
+            fetch(`${API_OFERTAS}/${id}/suspender?idUsuario=${idUsuario}`, { method: 'PUT' })
+                .then(res => res.json())
+                .then(() => {
+                    cargarOfertas();
+                    alert('✅ Oferta suspendida');
+                })
+                .catch(err => alert('Error: ' + err.message));
+        }
+
+        function reactivarOferta(id) {
+            if (!confirm('¿Estás seguro de reactivar esta oferta?')) return;
+            
+            const idUsuario = prompt('Ingrese su ID de usuario:');
+            if (!idUsuario) return;
+            
+            fetch(`${API_OFERTAS}/${id}/reactivar?idUsuario=${idUsuario}`, { method: 'PUT' })
+                .then(res => res.json())
+                .then(() => {
+                    cargarOfertas();
+                    alert('✅ Oferta reactivada');
+                })
+                .catch(err => alert('Error: ' + err.message));
+        }
+
+        function finalizarOferta(id) {
+            if (!confirm('¿Estás seguro de finalizar esta oferta?')) return;
+            
+            fetch(`${API_OFERTAS}/${id}/finalizar`, { method: 'PUT' })
+                .then(res => res.json())
+                .then(() => {
+                    cargarOfertas();
+                    alert('✅ Oferta finalizada');
+                })
+                .catch(err => alert('Error: ' + err.message));
+        }
+        
+        // ============================================================
+        // ABRIR MODAL APROBAR
+        // ============================================================
+        function abrirModalAprobar(id) {
+            console.log('📋 Abrir modal aprobar:', id);
+            const item = ofertasData.find(x => x.idOferta === id);
+            if (!item) {
+                alert('Oferta no encontrada');
+                return;
+            }
+
+            ofertaActual = item;
+
+            const fechaInicio = item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : '-';
+            const fechaFin = item.fechaFin ? new Date(item.fechaFin).toLocaleDateString() : '-';
+
+            document.getElementById('modalOfertaBody').innerHTML = `
+                <div style="display:grid;gap:12px;">
+                    <div><strong>ID:</strong> ${item.idOferta}</div>
+                    <div><strong>Nombre:</strong> ${item.nombreOferta || '-'}</div>
+                    <div><strong>Descuento:</strong> ${item.valorDescuento || 0}%</div>
+                    <div><strong>Fecha Inicio:</strong> ${fechaInicio}</div>
+                    <div><strong>Fecha Fin:</strong> ${fechaFin}</div>
+                    <div><strong>Estado:</strong> ${item.estado || 'PENDIENTE'}</div>
+                    <hr>
+                    <div style="padding:12px;border-radius:8px;background:#E8F5E9;color:#2E7D32;text-align:center;font-weight:600;">
+                        ¿Estás seguro de aprobar esta oferta?
+                    </div>
+                    <div>
+                        <label style="display:block;font-weight:600;margin-bottom:5px;">ID Usuario (Aprobador)</label>
+                        <input type="number" id="idUsuarioAprobador" value="1" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:4px;font-family:inherit;">
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalOferta').classList.add('open');
+        }
+
+        // ============================================================
+        // APROBAR OFERTA
+        // ============================================================
+        function aprobarOferta() {
+            if (!ofertaActual) {
+                alert('No hay oferta seleccionada');
+                return;
+            }
+
+            const id = ofertaActual.idOferta;
+            const idUsuario = document.getElementById('idUsuarioAprobador')?.value || 1;
+
+            if (!idUsuario) {
+                alert('El ID de usuario es obligatorio');
+                return;
+            }
+
+            console.log('📡 Aprobando oferta:', id, 'usuario:', idUsuario);
+
+            fetch(`${API_OFERTAS}/${id}/aprobar?idUsuario=${idUsuario}`, {
+                method: 'PUT'
+            })
+            .then(res => {
+                console.log('📡 Respuesta status:', res.status);
+                if (!res.ok) throw new Error('Error al aprobar: ' + res.status);
+                return res.json();
+            })
+            .then(data => {
+                console.log('✅ Respuesta:', data);
+                cerrarModalOferta();
+                cargarOfertas();
+                alert('✅ Oferta aprobada exitosamente');
+            })
+            .catch(err => {
+                console.error('❌ Error:', err);
+                alert('Error al aprobar la oferta: ' + err.message);
+            });
+        }
+
+        // ============================================================
+        // CERRAR MODAL
+        // ============================================================
+        function cerrarModalOferta() {
+            document.getElementById('modalOferta').classList.remove('open');
+            ofertaActual = null;
+        }
+
+        // ============================================================
+        // EXPONER FUNCIONES GLOBALMENTE
+        // ============================================================
+        window.cargarOfertas = cargarOfertas;
+        window.cargarOfertasVigentes = cargarOfertasVigentes;
+        window.abrirModalAprobar = abrirModalAprobar;
+        window.aprobarOferta = aprobarOferta;
+        window.cerrarModalOferta = cerrarModalOferta;
+        window.suspenderOferta = suspenderOferta;
+        window.reactivarOferta = reactivarOferta;
+        window.finalizarOferta = finalizarOferta;
+
+        // ============================================================
+        // INICIALIZAR
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', cargarOfertas);
+        
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            cargarOfertas();
+        }
+    })();
+</script>
+</body>
+</html>
