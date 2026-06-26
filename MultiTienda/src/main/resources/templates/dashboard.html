@@ -114,8 +114,6 @@
                     <i class="fas fa-chevron-down tp-chevron"></i>
 
                     <div class="profile-dropdown" id="profileDd">
-                        <div class="dd-item"><i class="fas fa-user"></i> Mi perfil</div>
-                        <div class="dd-item"><i class="fas fa-cog"></i> Configuración</div>
                         <div class="dd-divider"></div>
                         <div class="dd-item danger" onclick="cerrarSesion()">
                             <i class="fas fa-sign-out-alt"></i> Cerrar sesión
@@ -183,6 +181,23 @@
     window.USER_APELLIDOS = /*[[${usuario?.apellidos}]]*/ '';
     window.USER_ROL = /*[[${usuario?.rol?.nombreRol}]]*/ 'CAJERO';
     /*]]>*/
+	
+	
+	function cerrarSesion() {
+	    // Cerrar el dropdown de perfil
+	    const profileDd = document.getElementById('profileDd');
+	    const topbarProfile = document.getElementById('topbarProfile');
+	    if (profileDd) profileDd.classList.remove('open');
+	    if (topbarProfile) topbarProfile.classList.remove('open');
+	    
+	    // Mostrar confirmación (opcional)
+	    if (!confirm('¿Estás seguro de cerrar sesión?')) return;
+	    
+	    // Redirigir al login
+	    window.location.href = '/login';
+	}
+	
+	
 </script>
 <script th:src="@{/js/principal.js}"></script>
 
