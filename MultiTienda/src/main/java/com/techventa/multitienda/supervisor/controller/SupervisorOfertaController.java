@@ -45,9 +45,36 @@ public class SupervisorOfertaController {
             return ResponseEntity.notFound().build();
         }
 
-        Map<String, String> response = new HashMap<>();
-        response.put("mensaje", "Oferta aprobada correctamente");
+        // 🔥 DEVOLVER LA OFERTA ACTUALIZADA
+        return ResponseEntity.ok(oferta);
+    }
+    
+    
+    @PutMapping("/{id}/suspender")
+    public ResponseEntity<?> suspender(
+            @PathVariable Integer id,
+            @RequestParam Integer idUsuario) {
+        
+        Oferta oferta = ofertaService.suspender(id, idUsuario);
+        if (oferta == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(oferta);
+    }
 
-        return ResponseEntity.ok(response);
+    @PutMapping("/{id}/reactivar")
+    public ResponseEntity<?> reactivar(
+            @PathVariable Integer id,
+            @RequestParam Integer idUsuario) {
+        
+        Oferta oferta = ofertaService.reactivar(id, idUsuario);
+        if (oferta == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(oferta);
+    }
+
+    @PutMapping("/{id}/finalizar")
+    public ResponseEntity<?> finalizar(@PathVariable Integer id) {
+        
+        Oferta oferta = ofertaService.finalizar(id);
+        if (oferta == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(oferta);
     }
 }

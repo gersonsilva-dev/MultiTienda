@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tickets</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">🎫 Tickets</div>
+        <div class="page-subtitle">Incidencias de tu tienda</div>
+    </div>
+    <div class="page-header-right">
+        <span class="badge badge-warning" id="totalTickets">0 abiertos</span>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-toolbar">
+        <div class="toolbar-left">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar ticket..." id="buscarTicket" oninput="filtrarTickets()">
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <button class="btn btn-outline btn-sm" onclick="cargarTickets()">
+                <i class="fas fa-sync"></i> Actualizar
+            </button>
+        </div>
+    </div>
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Título</th>
+                    <th>Tipo</th>
+                    <th>Prioridad</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaTickets">
+                <tr><td colspan="7" style="text-align:center;padding:40px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>
+                    Cargando tickets...
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Ver Ticket -->
+<div class="modal-overlay" id="modalTicket">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTicketTitle">Detalle del Ticket</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalTicket()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="modalTicketBody">
+            <p>Cargando...</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalTicket()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ========================================================
+        // VARIABLES LOCALES (NO GLOBALES) - EVITA DUPLICADOS
+        // ========================================================
+        let ticketsData = [];
+        let ticketSeleccionado = null;
+
+        // ========================================================
+        // FUNCIÓN PRINCIPAL: CARGAR TICKETS
+        // ========================================================
+        function cargarTickets() {
+            const tbody = document.getElementById('tablaTickets');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>Cargando...</td></tr>';
+
+            fetch('/api/incidencias')
+                .then(r => {
+                    if (!r.ok) throw new Error('Error al cargar');
+                    return r.json();
+                })
+                .then(d => {
+                    ticketsData = d;
+                    renderizarTabla(d);
+                    const abiertos = d.filter(i => i.estadoIncidencia?.nombreEstado === 'ABIERTO' || i.estadoIncidencia?.nombreEstado === 'EN_PROCESO');
+                    const totalEl = document.getElementById('totalTickets');
+                    if (totalEl) totalEl.textContent = abiertos.length + ' abiertos';
+                })
+                .catch(() => {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+                                <i class="fas fa-check-circle" style="font-size:2.5rem;display:block;margin-bottom:10px;color:#10B981;"></i>
+                                <h3 style="font-weight:500;">No hay tickets registrados</h3>
+                                <p style="font-size:0.8rem;">Tu tienda no tiene incidencias</p>
+                            </td>
+                        </tr>
+                    `;
+                    const totalEl = document.getElementById('totalTickets');
+                    if (totalEl) totalEl.textContent = '0 abiertos';
+                });
+        }
+
+        // ========================================================
+        // RENDERIZAR TABLA
+        // ========================================================
+        function renderizarTabla(data) {
+            const tbody = document.getElementById('tablaTickets');
+            if (!tbody) return;
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+                            <i class="fas fa-check-circle" style="font-size:2.5rem;display:block;margin-bottom:10px;color:#10B981;"></i>
+                            <h3 style="font-weight:500;">No hay tickets registrados</h3>
+                            <p style="font-size:0.8rem;">Tu tienda no tiene incidencias</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = data.map(t => {
+                const fecha = t.fechaCreacion ? t.fechaCreacion.substring(0,16).replace('T', ' ') : '-';
+                const prioridad = t.prioridad?.nombrePrioridad || 'MEDIA';
+                const colorPrio = t.prioridad?.colorHex || '#F59E0B';
+                const colorEstado = t.estadoIncidencia?.nombreEstado === 'ABIERTO' ? '#F59E0B' : 
+                                   t.estadoIncidencia?.nombreEstado === 'EN_PROCESO' ? '#3B82F6' :
+                                   t.estadoIncidencia?.nombreEstado === 'RESUELTO' ? '#10B981' :
+                                   t.estadoIncidencia?.nombreEstado === 'CERRADO' ? '#6B7280' : '#EF4444';
+                
+                return `
+                    <tr>
+                        <td><span class="badge badge-info">${t.codigoIncidencia || '-'}</span></td>
+                        <td><strong>${t.titulo}</strong></td>
+                        <td>${t.tipoIncidencia?.nombreTipo || '-'}</td>
+                        <td>
+                            <span style="display:inline-block;padding:2px 10px;border-radius:12px;background:${colorPrio}22;color:${colorPrio};font-size:0.7rem;font-weight:600;">
+                                ${prioridad}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="display:inline-block;padding:2px 10px;border-radius:12px;background:${colorEstado}22;color:${colorEstado};font-size:0.7rem;font-weight:600;">
+                                ${t.estadoIncidencia?.nombreEstado || 'ABIERTO'}
+                            </span>
+                        </td>
+                        <td style="font-size:0.7rem;color:var(--text-muted);">${fecha}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="verTicket(${t.idIncidencia})" style="padding:4px 10px;">
+                                <i class="fas fa-eye"></i> Ver
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ========================================================
+        // FILTRAR TICKETS
+        // ========================================================
+        function filtrarTickets() {
+            const term = document.getElementById('buscarTicket')?.value?.toLowerCase() || '';
+            const filtrados = ticketsData.filter(t => 
+                (t.titulo?.toLowerCase() || '').includes(term) ||
+                (t.codigoIncidencia?.toLowerCase() || '').includes(term) ||
+                (t.tipoIncidencia?.nombreTipo?.toLowerCase() || '').includes(term)
+            );
+            renderizarTabla(filtrados);
+            const abiertos = filtrados.filter(i => i.estadoIncidencia?.nombreEstado === 'ABIERTO' || i.estadoIncidencia?.nombreEstado === 'EN_PROCESO');
+            const totalEl = document.getElementById('totalTickets');
+            if (totalEl) totalEl.textContent = abiertos.length + ' abiertos';
+        }
+
+        // ========================================================
+        // VER TICKET (MODAL)
+        // ========================================================
+        function verTicket(id) {
+            const t = ticketsData.find(x => x.idIncidencia === id);
+            if (!t) {
+                alert('Ticket no encontrado');
+                return;
+            }
+            ticketSeleccionado = t;
+            
+            const titleEl = document.getElementById('modalTicketTitle');
+            if (titleEl) titleEl.textContent = 'Ticket ' + (t.codigoIncidencia || '#' + t.idIncidencia);
+            
+            const bodyEl = document.getElementById('modalTicketBody');
+            if (bodyEl) {
+                bodyEl.innerHTML = `
+                    <div style="display:grid;gap:10px;">
+                        <div><strong>Título:</strong> ${t.titulo}</div>
+                        <div><strong>Descripción:</strong> ${t.descripcionProblema || 'Sin descripción'}</div>
+                        <div><strong>Tipo:</strong> ${t.tipoIncidencia?.nombreTipo || '-'}</div>
+                        <div><strong>Prioridad:</strong> ${t.prioridad?.nombrePrioridad || 'MEDIA'}</div>
+                        <div><strong>Estado:</strong> ${t.estadoIncidencia?.nombreEstado || 'ABIERTO'}</div>
+                        <div><strong>Fecha:</strong> ${t.fechaCreacion ? t.fechaCreacion.substring(0,16).replace('T', ' ') : '-'}</div>
+                    </div>
+                `;
+            }
+
+            const modalEl = document.getElementById('modalTicket');
+            if (modalEl) modalEl.classList.add('open');
+        }
+
+        // ========================================================
+        // CERRAR MODAL
+        // ========================================================
+        function cerrarModalTicket() {
+            const modalEl = document.getElementById('modalTicket');
+            if (modalEl) modalEl.classList.remove('open');
+            ticketSeleccionado = null;
+        }
+
+        // ========================================================
+        // EXPONER FUNCIONES AL ÁMBITO GLOBAL (SOLO LAS NECESARIAS)
+        // ========================================================
+        window.cargarTickets = cargarTickets;
+        window.verTicket = verTicket;
+        window.cerrarModalTicket = cerrarModalTicket;
+        window.filtrarTickets = filtrarTickets;
+
+        // ========================================================
+        // AUTO-EJECUTAR AL CARGAR LA VISTA
+        // ========================================================
+        document.addEventListener('DOMContentLoaded', cargarTickets);
+        
+        // También ejecutar inmediatamente si el DOM ya está listo
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            cargarTickets();
+        }
+    })();
+</script>
+</body>
+</html>

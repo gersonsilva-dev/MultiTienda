@@ -1,6 +1,7 @@
 package com.techventa.multitienda.admin.service;
 
 import com.techventa.multitienda.admin.model.Oferta;
+import com.techventa.multitienda.admin.model.EstadoOferta; 
 import com.techventa.multitienda.admin.repository.OfertaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -56,17 +57,65 @@ public class OfertaService {
         return ofertaRepository.save(oferta);
     }
 
+    // ============================================================
+    // APROBAR OFERTA - CORREGIDO ✅
+    // ============================================================
     public Oferta aprobar(Integer id, Integer idUsuarioAprobador) {
         Optional<Oferta> ofertaOpt = ofertaRepository.findById(id);
         if (ofertaOpt.isPresent()) {
             Oferta oferta = ofertaOpt.get();
+            
+            // 🔥 CORRECCIÓN: Asignar el objeto EstadoOferta con ID 2 (ACTIVA)
+            EstadoOferta estadoActiva = new EstadoOferta();
+            estadoActiva.setIdEstadoOferta(2); // ACTIVA
+            oferta.setEstadoOferta(estadoActiva);
+            
             oferta.setUsuarioAprueba(idUsuarioAprobador);
             oferta.setFechaAprobacion(LocalDateTime.now());
+            
             return ofertaRepository.save(oferta);
         }
         return null;
     }
 
+    public Oferta suspender(Integer id, Integer idUsuario) {
+        Optional<Oferta> opt = ofertaRepository.findById(id);
+        if (opt.isEmpty()) return null;
+        
+        Oferta oferta = opt.get();
+        EstadoOferta estadoSuspender = new EstadoOferta();
+        estadoSuspender.setIdEstadoOferta(4); // SUSPENDIDA
+        oferta.setEstadoOferta(estadoSuspender);
+        
+        return ofertaRepository.save(oferta);
+    }
+
+    public Oferta reactivar(Integer id, Integer idUsuario) {
+        Optional<Oferta> opt = ofertaRepository.findById(id);
+        if (opt.isEmpty()) return null;
+        
+        Oferta oferta = opt.get();
+        EstadoOferta estadoActiva = new EstadoOferta();
+        estadoActiva.setIdEstadoOferta(2); // ACTIVA
+        oferta.setEstadoOferta(estadoActiva);
+        
+        return ofertaRepository.save(oferta);
+    }
+
+    public Oferta finalizar(Integer id) {
+        Optional<Oferta> opt = ofertaRepository.findById(id);
+        if (opt.isEmpty()) return null;
+        
+        Oferta oferta = opt.get();
+        EstadoOferta estadoFinalizada = new EstadoOferta();
+        estadoFinalizada.setIdEstadoOferta(3); // FINALIZADA
+        oferta.setEstadoOferta(estadoFinalizada);
+        oferta.setFechaFin(LocalDateTime.now()); // Opcional: marcar fecha de fin
+        
+        return ofertaRepository.save(oferta);
+    }
+    
+    
     // ============================================================
     // ELIMINAR FÍSICAMENTE
     // ============================================================

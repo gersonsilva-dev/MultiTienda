@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportes</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">📊 Reportes</div>
+        <div class="page-subtitle">Estadísticas de tu tienda</div>
+    </div>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-shopping-cart"></i> Ventas hoy</div>
+        <div class="kpi-value" id="ventasHoy">0</div>
+        <div class="kpi-delta up">Registradas</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-box"></i> Productos vendidos</div>
+        <div class="kpi-value" id="productosVendidos">0</div>
+        <div class="kpi-delta up">Unidades</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-users"></i> Clientes atendidos</div>
+        <div class="kpi-value" id="clientesAtendidos">0</div>
+        <div class="kpi-delta up">Hoy</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-ticket-alt"></i> Tickets abiertos</div>
+        <div class="kpi-value" id="ticketsAbiertos">0</div>
+        <div class="kpi-delta danger">Pendientes</div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header"><div class="card-title">📈 Ventas por día (última semana)</div></div>
+        <div class="card-body"><canvas id="chartVentas" height="180"></canvas></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><div class="card-title">🏷️ Ventas por método de pago</div></div>
+        <div class="card-body"><canvas id="chartPagos" height="180"></canvas></div>
+    </div>
+</div>
+
+<script>
+    let chartVentas = null;
+    let chartPagos = null;
+
+    function cargarReportesSupervisor() {
+        // ============================================================
+        // KPIs (datos desde BD)
+        // ============================================================
+        fetch('/api/ventas/hoy')
+            .then(r => r.json())
+            .then(d => document.getElementById('ventasHoy').textContent = d.totalVentas || '0')
+            .catch(() => document.getElementById('ventasHoy').textContent = '0');
+
+        fetch('/api/ventas/productos')
+            .then(r => r.json())
+            .then(d => document.getElementById('productosVendidos').textContent = d.totalProductos || '0')
+            .catch(() => document.getElementById('productosVendidos').textContent = '0');
+
+        fetch('/api/clientes/hoy')
+            .then(r => r.json())
+            .then(d => document.getElementById('clientesAtendidos').textContent = d.length || '0')
+            .catch(() => document.getElementById('clientesAtendidos').textContent = '0');
+
+        fetch('/api/incidencias')
+            .then(r => r.json())
+            .then(d => {
+                const abiertos = d.filter(i => i.estadoIncidencia?.nombreEstado === 'ABIERTO' || i.estadoIncidencia?.nombreEstado === 'EN_PROCESO');
+                document.getElementById('ticketsAbiertos').textContent = abiertos.length || '0';
+            })
+            .catch(() => document.getElementById('ticketsAbiertos').textContent = '0');
+
+        // ============================================================
+        // GRÁFICO DE VENTAS POR SEMANA
+        // ============================================================
+        fetch('/api/ventas/semana')
+            .then(r => r.json())
+            .then(d => {
+                if (chartVentas) chartVentas.destroy();
+                const labels = d.map(item => item.dia || '');
+                const data = d.map(item => item.total || 0);
+                chartVentas = new Chart(document.getElementById('chartVentas'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels.length > 0 ? labels : ['Sin datos'],
+                        datasets: [{
+                            label: 'Ventas (S/)',
+                            data: data.length > 0 ? data : [0],
+                            backgroundColor: 'rgba(217,119,6,0.6)',
+                            borderColor: '#D97706',
+                            borderWidth: 2,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            })
+            .catch(() => {
+                if (chartVentas) chartVentas.destroy();
+                chartVentas = new Chart(document.getElementById('chartVentas'), {
+                    type: 'bar',
+                    data: { labels: ['Sin datos'], datasets: [{ label: 'Ventas', data: [0], backgroundColor: '#94A3B8' }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            });
+
+        // ============================================================
+        // GRÁFICO DE PAGOS
+        // ============================================================
+        fetch('/api/ventas/pagos')
+            .then(r => r.json())
+            .then(d => {
+                if (chartPagos) chartPagos.destroy();
+                const labels = d.map(item => item.metodo || '');
+                const data = d.map(item => item.total || 0);
+                const colors = ['#10B981', '#3B82F6', '#F59E0B', '#8B5CF6', '#EF4444'];
+                chartPagos = new Chart(document.getElementById('chartPagos'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels.length > 0 ? labels : ['Sin datos'],
+                        datasets: [{
+                            data: data.length > 0 ? data : [1],
+                            backgroundColor: colors.slice(0, labels.length || 1),
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { boxWidth: 12, padding: 10, font: { size: 10 } }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(() => {
+                if (chartPagos) chartPagos.destroy();
+                chartPagos = new Chart(document.getElementById('chartPagos'), {
+                    type: 'doughnut',
+                    data: { labels: ['Sin datos'], datasets: [{ data: [1], backgroundColor: ['#94A3B8'] }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarReportesSupervisor);
+</script>
+</body>
+</html>

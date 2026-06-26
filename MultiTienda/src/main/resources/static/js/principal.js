@@ -23,7 +23,6 @@ const ROLES = {
       { type:'item', view:'ofertas', icon:'fas fa-tag', label:'Ofertas' },
       { type:'item', view:'incidencias', icon:'fas fa-exclamation-triangle', label:'Incidencias' },
       { type:'item', view:'mermas', icon:'fas fa-trash', label:'Mermas' },
-      { type:'item', view:'transferencias', icon:'fas fa-exchange-alt', label:'Transferencias' },
       { type:'item', view:'lotes', icon:'fas fa-cubes', label:'Lotes' },
       { type:'section', label:'SISTEMA' },
       { type:'item', view:'reportes', icon:'fas fa-chart-bar', label:'Reportes' },
@@ -35,10 +34,12 @@ const ROLES = {
     nav:[
       { type:'section', label:'MONITOREO' },
       { type:'item', view:'dashboard', icon:'fas fa-eye', label:'Dashboard en vivo' },
-      { type:'item', view:'autorizar', icon:'fas fa-check-circle', label:'Autorizar', badge:'3' },
       { type:'item', view:'tickets', icon:'fas fa-ticket-alt', label:'Tickets', badge:'2' },
       { type:'section', label:'OPERACIONES' },
-      { type:'item', view:'stock', icon:'fas fa-boxes', label:'Stock crítico', badge:'8' },
+      { type:'item', view:'cajas', icon:'fas fa-cash-register', label:'Cajas' },
+      { type:'item', view:'devoluciones', icon:'fas fa-undo', label:'Devoluciones' },
+      { type:'item', view:'ofertas', icon:'fas fa-tags', label:'Ofertas' },
+      { type:'section', label:'REPORTES' },
       { type:'item', view:'reportes', icon:'fas fa-chart-line', label:'Reportes' },
     ]
   },
@@ -456,5 +457,3 @@ function setText(id, txt) { const el=document.getElementById(id); if(el) el.text
 function cargarPagina(viewName) {
     loadView(viewName);
 }
-
-setTimeout(() => showToast('success','Layout Master v2.0 listo','Sidebar, accordion, dark mode y toasts funcionando.'), 500);

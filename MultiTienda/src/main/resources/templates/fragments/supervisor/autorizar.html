@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Autorizar</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">✅ Autorizar Solicitudes</div>
+        <div class="page-subtitle">Aprueba o rechaza solicitudes pendientes de tu tienda</div>
+    </div>
+    <div class="page-header-right">
+        <span class="badge badge-warning" id="totalPendientes">0 pendientes</span>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-toolbar">
+        <div class="toolbar-left">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar solicitud..." id="buscarSolicitud" oninput="filtrarSolicitudes()">
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <button class="btn btn-outline btn-sm" onclick="cargarAutorizaciones()">
+                <i class="fas fa-sync"></i> Actualizar
+            </button>
+        </div>
+    </div>
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tipo</th>
+                    <th>Cajero</th>
+                    <th>Monto</th>
+                    <th>Detalle</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaAutorizaciones">
+                <tr><td colspan="7" style="text-align:center;padding:40px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>
+                    Cargando solicitudes...
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let solicitudes = [];
+
+    function cargarAutorizaciones() {
+        const tbody = document.getElementById('tablaAutorizaciones');
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>Cargando...</td></tr>';
+
+        fetch('/api/supervisor/autorizaciones/pendientes')
+            .then(r => {
+                if (!r.ok) throw new Error('Error al cargar');
+                return r.json();
+            })
+            .then(d => {
+                solicitudes = d;
+                renderizarTabla(d);
+                document.getElementById('totalPendientes').textContent = d.length + ' pendientes';
+            })
+            .catch(() => {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+                            <i class="fas fa-check-circle" style="font-size:2.5rem;display:block;margin-bottom:10px;color:#10B981;"></i>
+                            <h3 style="font-weight:500;">No hay solicitudes pendientes</h3>
+                            <p style="font-size:0.8rem;">Todas las solicitudes han sido atendidas</p>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('totalPendientes').textContent = '0 pendientes';
+            });
+    }
+
+    function renderizarTabla(data) {
+        const tbody = document.getElementById('tablaAutorizaciones');
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+                        <i class="fas fa-check-circle" style="font-size:2.5rem;display:block;margin-bottom:10px;color:#10B981;"></i>
+                        <h3 style="font-weight:500;">No hay solicitudes pendientes</h3>
+                        <p style="font-size:0.8rem;">Todas las solicitudes han sido atendidas</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = data.map(s => {
+            const fecha = s.fechaSolicitud ? s.fechaSolicitud.substring(0,16).replace('T', ' ') : '-';
+            return `
+                <tr>
+                    <td><strong>#${s.idSolicitud}</strong></td>
+                    <td><span class="badge badge-info">${s.tipoSolicitud || '-'}</span></td>
+                    <td>${s.cajero?.nombres || '-'} ${s.cajero?.apellidos || ''}</td>
+                    <td><strong>S/ ${s.montoAfectado || '0.00'}</strong></td>
+                    <td style="font-size:0.8rem;">${s.detalle || '-'}</td>
+                    <td style="font-size:0.7rem;color:var(--text-muted);">${fecha}</td>
+                    <td>
+                        <button class="btn btn-success btn-sm" onclick="aprobar(${s.idSolicitud})" style="padding:4px 10px;">
+                            <i class="fas fa-check"></i> Aprobar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="rechazar(${s.idSolicitud})" style="padding:4px 10px;">
+                            <i class="fas fa-times"></i> Rechazar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function filtrarSolicitudes() {
+        const term = document.getElementById('buscarSolicitud').value.toLowerCase();
+        const filtrados = solicitudes.filter(s => 
+            (s.tipoSolicitud?.toLowerCase() || '').includes(term) ||
+            (s.cajero?.nombres?.toLowerCase() || '').includes(term) ||
+            (s.detalle?.toLowerCase() || '').includes(term)
+        );
+        renderizarTabla(filtrados);
+        document.getElementById('totalPendientes').textContent = filtrados.length + ' pendientes';
+    }
+
+    function aprobar(id) {
+        if (!confirm('¿Aprobar esta solicitud?')) return;
+        fetch(`/api/supervisor/autorizaciones/${id}/aprobar`, { 
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(r => {
+            if (!r.ok) throw new Error('Error al aprobar');
+            return r.json();
+        })
+        .then(() => {
+            alert('✅ Solicitud aprobada');
+            cargarAutorizaciones();
+        })
+        .catch(() => {
+            alert('❌ Error al aprobar');
+        });
+    }
+
+    function rechazar(id) {
+        if (!confirm('¿Rechazar esta solicitud?')) return;
+        fetch(`/api/supervisor/autorizaciones/${id}/rechazar`, { 
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(r => {
+            if (!r.ok) throw new Error('Error al rechazar');
+            return r.json();
+        })
+        .then(() => {
+            alert('⛔ Solicitud rechazada');
+            cargarAutorizaciones();
+        })
+        .catch(() => {
+            alert('❌ Error al rechazar');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarAutorizaciones);
+</script>
+</body>
+</html>
