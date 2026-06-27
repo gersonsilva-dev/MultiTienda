@@ -1,5 +1,6 @@
 package com.techventa.multitienda.admin.controller;
 
+import com.techventa.multitienda.admin.dto.UsuarioRequest;
 import com.techventa.multitienda.admin.model.Usuario;
 import com.techventa.multitienda.admin.service.UsuarioService;
 
@@ -7,13 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/usuarios")  // ← CAMBIADO
+@RequestMapping("/api/usuarios")
 public class UsuarioController {
 
     @Autowired
@@ -21,14 +23,12 @@ public class UsuarioController {
 
     @GetMapping
     public ResponseEntity<List<Usuario>> listarTodos() {
-        List<Usuario> usuarios = usuarioService.listarTodos();
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(usuarioService.listarTodos());
     }
 
     @GetMapping("/activos")
     public ResponseEntity<List<Usuario>> listarActivos() {
-        List<Usuario> usuarios = usuarioService.listarActivos();
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(usuarioService.listarActivos());
     }
 
     @GetMapping("/{id}")
@@ -51,31 +51,49 @@ public class UsuarioController {
 
     @GetMapping("/rol/{idRol}")
     public ResponseEntity<List<Usuario>> buscarPorRol(@PathVariable Integer idRol) {
-        List<Usuario> usuarios = usuarioService.buscarPorRol(idRol);
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(usuarioService.buscarPorRol(idRol));
     }
 
     @GetMapping("/tienda/{idTienda}")
     public ResponseEntity<List<Usuario>> buscarPorTienda(@PathVariable Integer idTienda) {
-        List<Usuario> usuarios = usuarioService.buscarPorTienda(idTienda);
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(usuarioService.buscarPorTienda(idTienda));
     }
 
+    // ============================================================
+    // CREAR USUARIO (CON CONTRASEÑA ENCRIPTADA Y CAJA)
+    // ============================================================
     @PostMapping
-    public ResponseEntity<Object> crear(@RequestBody Usuario usuario) {
+    public ResponseEntity<Object> crear(@RequestBody UsuarioRequest request) {
         try {
-            if (usuarioService.existeCorreo(usuario.getCorreoElectronico())) {
+            if (usuarioService.existeCorreo(request.getCorreoElectronico())) {
                 Map<String, String> error = new HashMap<>();
-                error.put("error", "Ya existe un usuario con el correo: " + usuario.getCorreoElectronico());
+                error.put("error", "Ya existe un usuario con el correo: " + request.getCorreoElectronico());
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
             }
-            if (usuario.getNumeroDocumento() != null && usuarioService.existeDocumento(usuario.getNumeroDocumento())) {
+            if (request.getNumeroDocumento() != null && usuarioService.existeDocumento(request.getNumeroDocumento())) {
                 Map<String, String> error = new HashMap<>();
-                error.put("error", "Ya existe un usuario con el documento: " + usuario.getNumeroDocumento());
+                error.put("error", "Ya existe un usuario con el documento: " + request.getNumeroDocumento());
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
             }
-            Usuario nuevoUsuario = usuarioService.crear(usuario);
+
+            Usuario usuario = new Usuario();
+            usuario.setNombres(request.getNombres());
+            usuario.setApellidos(request.getApellidos());
+            usuario.setCorreoElectronico(request.getCorreoElectronico());
+            usuario.setNumeroDocumento(request.getNumeroDocumento());
+            usuario.setTelefono(request.getTelefono());
+            usuario.setDireccion(request.getDireccion());
+            usuario.setRol(request.getRol());
+            usuario.setTienda(request.getTienda());
+            
+            // 🔥 ASIGNAR CAJA (si viene)
+            if (request.getCaja() != null) {
+                usuario.setCaja(request.getCaja());
+            }
+
+            Usuario nuevoUsuario = usuarioService.crear(usuario, request.getContrasena());
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario);
+
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al crear el usuario: " + e.getMessage());
@@ -83,16 +101,37 @@ public class UsuarioController {
         }
     }
 
+    // ============================================================
+    // ACTUALIZAR USUARIO (CON CONTRASEÑA ENCRIPTADA Y CAJA)
+    // ============================================================
     @PutMapping("/{id}")
-    public ResponseEntity<Object> actualizar(@PathVariable Integer id, @RequestBody Usuario usuario) {
+    public ResponseEntity<Object> actualizar(@PathVariable Integer id, @RequestBody UsuarioRequest request) {
         try {
             Optional<Usuario> existente = usuarioService.buscarPorId(id);
             if (existente.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            usuario.setIdUsuario(id);
-            Usuario actualizado = usuarioService.actualizar(usuario);
+
+            Usuario usuario = existente.get();
+            usuario.setNombres(request.getNombres());
+            usuario.setApellidos(request.getApellidos());
+            usuario.setCorreoElectronico(request.getCorreoElectronico());
+            usuario.setNumeroDocumento(request.getNumeroDocumento());
+            usuario.setTelefono(request.getTelefono());
+            usuario.setDireccion(request.getDireccion());
+            usuario.setRol(request.getRol());
+            usuario.setTienda(request.getTienda());
+            
+            // 🔥 ACTUALIZAR CAJA
+            if (request.getCaja() != null) {
+                usuario.setCaja(request.getCaja());
+            } else {
+                usuario.setCaja(null);
+            }
+
+            Usuario actualizado = usuarioService.actualizar(usuario, request.getContrasena());
             return ResponseEntity.ok(actualizado);
+
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al actualizar el usuario: " + e.getMessage());
@@ -100,6 +139,9 @@ public class UsuarioController {
         }
     }
 
+    // ============================================================
+    // CAMBIAR ESTADO DEL USUARIO
+    // ============================================================
     @PutMapping("/{id}/estado")
     public ResponseEntity<Object> cambiarEstado(@PathVariable Integer id, @RequestParam Boolean activo) {
         try {
@@ -119,8 +161,10 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    
+
+    // ============================================================
+    // ELIMINAR USUARIO
+    // ============================================================
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> eliminar(@PathVariable Integer id) {
         try {
@@ -128,7 +172,7 @@ public class UsuarioController {
             if (existente.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            usuarioService.eliminarFisico(id);  // ← BORRADO FÍSICO
+            usuarioService.eliminarFisico(id);
             Map<String, String> response = new HashMap<>();
             response.put("mensaje", "Usuario eliminado correctamente");
             return ResponseEntity.ok(response);

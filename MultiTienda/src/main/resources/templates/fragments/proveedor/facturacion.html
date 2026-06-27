@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Facturación</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">📄 Facturación</div>
+        <div class="page-subtitle">Historial de facturas y pagos</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-outline btn-sm" onclick="cargarFacturacion()">
+            <i class="fas fa-sync"></i> Actualizar
+        </button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-toolbar">
+        <div class="toolbar-left">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar factura..." id="buscarFactura" oninput="filtrarFacturacion()">
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <select id="filtroEstado" onchange="filtrarFacturacion()" style="padding:6px 12px; border:1px solid #ddd; border-radius:6px;">
+                <option value="">Todos</option>
+                <option value="PENDIENTE">Pendientes</option>
+                <option value="PAGADO">Pagadas</option>
+                <option value="CANCELADO">Canceladas</option>
+            </select>
+            <span id="totalRegistros" style="margin-left:10px;font-size:0.75rem;color:var(--text-muted);">0 registros</span>
+        </div>
+    </div>
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Código</th>
+                    <th>Proveedor</th>
+                    <th>Total</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="tablaFacturacion">
+                <tr>
+                    <td colspan="6" style="text-align:center;padding:40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>
+                        Cargando facturación...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let facturacionData = [];
+
+        function getColorEstado(estado) {
+            const colores = {
+                'PENDIENTE': { bg: '#FFF8E1', text: '#F57F17' },
+                'PAGADO': { bg: '#E8F5E9', text: '#2E7D32' },
+                'COMPLETADO': { bg: '#E8F5E9', text: '#2E7D32' },
+                'CANCELADO': { bg: '#FFEBEE', text: '#C62828' }
+            };
+            return colores[estado] || { bg: '#F5F5F5', text: '#616161' };
+        }
+
+        function cargarFacturacion() {
+            console.log('🔍 Cargando facturación...');
+            
+            fetch('/api/ordenes')
+                .then(r => {
+                    if (!r.ok) throw new Error('Error al cargar: ' + r.status);
+                    return r.json();
+                })
+                .then(d => {
+                    console.log('📦 Datos recibidos:', d);
+                    facturacionData = d;
+                    renderizarTabla(d);
+                    document.getElementById('totalRegistros').textContent = d.length + ' registros';
+                })
+                .catch(err => {
+                    console.error('❌ Error:', err);
+                    document.getElementById('tablaFacturacion').innerHTML = 
+                        '<tr><td colspan="6" style="text-align:center;padding:40px;color:red;">Error al cargar facturación: ' + err.message + '</td></tr>';
+                });
+        }
+
+        function renderizarTabla(data) {
+            const tbody = document.getElementById('tablaFacturacion');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">No hay facturas registradas</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(item => {
+                let estadoPago = 'PENDIENTE';
+                if (item.idEstadoOrdenCompra === 4 || item.idEstadoOrdenCompra === 3) {
+                    estadoPago = 'PAGADO';
+                } else if (item.idEstadoOrdenCompra === 5) {
+                    estadoPago = 'CANCELADO';
+                }
+                
+                const color = getColorEstado(estadoPago);
+                const fecha = item.fechaOrden ? new Date(item.fechaOrden).toLocaleDateString() : '-';
+                const proveedor = item.proveedor?.razonSocial || 'N/A';
+                const total = item.total || 0;
+                
+                return `
+                <tr>
+                    <td>${item.idOrden}</td>
+                    <td><span class="badge badge-info">${item.codigoOrden || '-'}</span></td>
+                    <td>${proveedor}</td>
+                    <td><strong>S/ ${total.toFixed(2)}</strong></td>
+                    <td>${fecha}</td>
+                    <td>
+                        <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${color.bg};color:${color.text};font-size:0.75rem;font-weight:600;">
+                            ${estadoPago}
+                        </span>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function filtrarFacturacion() {
+            const term = document.getElementById('buscarFactura').value.toLowerCase();
+            const estadoFiltro = document.getElementById('filtroEstado').value;
+            
+            let filtrados = facturacionData;
+            
+            if (estadoFiltro) {
+                filtrados = filtrados.filter(item => {
+                    let estadoPago = 'PENDIENTE';
+                    if (item.idEstadoOrdenCompra === 4 || item.idEstadoOrdenCompra === 3) {
+                        estadoPago = 'PAGADO';
+                    } else if (item.idEstadoOrdenCompra === 5) {
+                        estadoPago = 'CANCELADO';
+                    }
+                    return estadoPago === estadoFiltro;
+                });
+            }
+            
+            if (term) {
+                filtrados = filtrados.filter(item => 
+                    (item.codigoOrden?.toLowerCase() || '').includes(term)
+                );
+            }
+            
+            renderizarTabla(filtrados);
+            document.getElementById('totalRegistros').textContent = filtrados.length + ' registros';
+        }
+
+        window.cargarFacturacion = cargarFacturacion;
+        window.filtrarFacturacion = filtrarFacturacion;
+
+        document.addEventListener('DOMContentLoaded', cargarFacturacion);
+        
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            cargarFacturacion();
+        }
+    })();
+</script>
+</body>
+</html>

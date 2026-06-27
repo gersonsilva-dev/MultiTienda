@@ -44,6 +44,10 @@ public class OrdenCompra {
     @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime fechaCreacion;
 
+    // 🔥 CAMPO TOTAL (NO SE GUARDA EN BD)
+    @Transient
+    private double total;
+
     // ============================================================
     // CONSTRUCTORES
     // ============================================================
@@ -93,6 +97,10 @@ public class OrdenCompra {
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
 
+    // 🔥 GETTER Y SETTER PARA TOTAL
+    public double getTotal() { return total; }
+    public void setTotal(double total) { this.total = total; }
+
     // ============================================================
     // MÉTODO PARA OBTENER EL NOMBRE DEL ESTADO
     // ============================================================
@@ -121,5 +129,15 @@ public class OrdenCompra {
             case 6: return "badge-secondary";
             default: return "badge-secondary";
         }
+    }
+
+    @Override
+    public String toString() {
+        return "OrdenCompra{" +
+                "idOrden=" + idOrden +
+                ", codigoOrden='" + codigoOrden + '\'' +
+                ", proveedor=" + (proveedor != null ? proveedor.getRazonSocial() : "null") +
+                ", total=" + total +
+                '}';
     }
 }

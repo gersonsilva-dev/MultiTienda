@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mis Entregas</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">🚚 Mis Entregas</div>
+        <div class="page-subtitle">Historial y estado de tus entregas</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-outline btn-sm" onclick="cargarEntregas()">
+            <i class="fas fa-sync"></i> Actualizar
+        </button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-toolbar">
+        <div class="toolbar-left">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar entrega..." id="buscarEntrega" oninput="filtrarEntregas()">
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <select id="filtroEstado" onchange="filtrarEntregas()" style="padding:6px 12px; border:1px solid #ddd; border-radius:6px;">
+                <option value="">Todos</option>
+                <option value="1">Pendientes</option>
+                <option value="2">Aprobadas</option>
+                <option value="3">Enviadas</option>
+                <option value="4">Recibidas</option>
+                <option value="5">Canceladas</option>
+                <option value="6">Parcial</option>
+            </select>
+            <span id="totalRegistros" style="margin-left:10px;font-size:0.75rem;color:var(--text-muted);">0 registros</span>
+        </div>
+    </div>
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Código</th>
+                    <th>Proveedor</th>
+                    <th>Tienda</th>
+                    <th>Fecha</th>
+                    <th>Entrega Estimada</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="tablaEntregas">
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>
+                        Cargando entregas...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let entregasData = [];
+
+        // ============================================================
+        // COLORES PARA ESTADOS
+        // ============================================================
+        function getColorEstado(estado) {
+            const colores = {
+                'PENDIENTE': { bg: '#FFF8E1', text: '#F57F17' },
+                'APROBADA': { bg: '#E8F5E9', text: '#2E7D32' },
+                'ENVIADA': { bg: '#E3F2FD', text: '#1565C0' },
+                'RECIBIDA': { bg: '#E8F5E9', text: '#2E7D32' },
+                'CANCELADA': { bg: '#FFEBEE', text: '#C62828' },
+                'PARCIAL': { bg: '#FFF8E1', text: '#F57F17' }
+            };
+            return colores[estado] || { bg: '#F5F5F5', text: '#616161' };
+        }
+
+        // ============================================================
+        // CARGAR ENTREGAS (DESDE ÓRDENES)
+        // ============================================================
+        function cargarEntregas() {
+            console.log('🔍 Cargando entregas...');
+            
+            fetch('/api/ordenes')
+                .then(r => {
+                    if (!r.ok) throw new Error('Error al cargar: ' + r.status);
+                    return r.json();
+                })
+                .then(d => {
+                    console.log('📦 Datos recibidos:', d);
+                    entregasData = d;
+                    renderizarTabla(d);
+                    document.getElementById('totalRegistros').textContent = d.length + ' registros';
+                })
+                .catch(err => {
+                    console.error('❌ Error:', err);
+                    document.getElementById('tablaEntregas').innerHTML = 
+                        '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error al cargar entregas: ' + err.message + '</td></tr>';
+                });
+        }
+
+        // ============================================================
+        // RENDERIZAR TABLA
+        // ============================================================
+        function renderizarTabla(data) {
+            const tbody = document.getElementById('tablaEntregas');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No hay entregas registradas</td></tr>';
+                return;
+            }
+
+            // Mapeo de estados de orden a estados de entrega
+            const estadoMap = {
+                1: 'PENDIENTE',
+                2: 'APROBADA',
+                3: 'ENVIADA',
+                4: 'RECIBIDA',
+                5: 'CANCELADA',
+                6: 'PARCIAL'
+            };
+
+            tbody.innerHTML = data.map(item => {
+                const estadoId = item.idEstadoOrdenCompra || 1;
+                const estado = estadoMap[estadoId] || 'PENDIENTE';
+                const color = getColorEstado(estado);
+                const fecha = item.fechaOrden ? new Date(item.fechaOrden).toLocaleDateString() : '-';
+                const entregaEstimada = item.fechaEntregaEstimada || '-';
+                const proveedor = item.proveedor?.razonSocial || 'N/A';
+                const tienda = item.tienda?.nombreTienda || 'N/A';
+                
+                return `
+                <tr>
+                    <td>${item.idOrden}</td>
+                    <td><span class="badge badge-info">${item.codigoOrden || '-'}</span></td>
+                    <td>${proveedor}</td>
+                    <td>${tienda}</td>
+                    <td>${fecha}</td>
+                    <td>${entregaEstimada}</td>
+                    <td>
+                        <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${color.bg};color:${color.text};font-size:0.75rem;font-weight:600;">
+                            ${estado}
+                        </span>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        // ============================================================
+        // FILTRAR ENTREGAS
+        // ============================================================
+        function filtrarEntregas() {
+            const term = document.getElementById('buscarEntrega').value.toLowerCase();
+            const estadoFiltro = document.getElementById('filtroEstado').value;
+            
+            let filtrados = entregasData;
+            
+            if (estadoFiltro) {
+                filtrados = filtrados.filter(item => item.idEstadoOrdenCompra === parseInt(estadoFiltro));
+            }
+            
+            if (term) {
+                filtrados = filtrados.filter(item => 
+                    (item.codigoOrden?.toLowerCase() || '').includes(term) ||
+                    (item.proveedor?.razonSocial?.toLowerCase() || '').includes(term)
+                );
+            }
+            
+            renderizarTabla(filtrados);
+            document.getElementById('totalRegistros').textContent = filtrados.length + ' registros';
+        }
+
+        // ============================================================
+        // EXPONER FUNCIONES
+        // ============================================================
+        window.cargarEntregas = cargarEntregas;
+        window.filtrarEntregas = filtrarEntregas;
+
+        // ============================================================
+        // INICIALIZAR
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', cargarEntregas);
+        
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            cargarEntregas();
+        }
+    })();
+</script>
+</body>
+</html>

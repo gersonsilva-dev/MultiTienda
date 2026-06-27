@@ -1,25 +1,46 @@
 package com.techventa.multitienda.proveedor.controller;
 
-import com.techventa.multitienda.proveedor.model.*;
+import com.techventa.multitienda.proveedor.model.DetalleOrdenCompra;
+import com.techventa.multitienda.proveedor.model.OrdenCompra;
 import com.techventa.multitienda.proveedor.service.OrdenCompraService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/proveedor/ordenes-compra")
+@RequestMapping("/api/ordenes")
 public class OrdenCompraController {
 
     @Autowired
     private OrdenCompraService ordenCompraService;
 
+    // ============================================================
+    // LISTAR TODAS LAS ÓRDENES CON TOTAL CALCULADO
+    // ============================================================
     @GetMapping
     public ResponseEntity<List<OrdenCompra>> listarTodas() {
-        return ResponseEntity.ok(ordenCompraService.listarTodas());
+        // 1. Obtener todas las órdenes
+        List<OrdenCompra> ordenes = ordenCompraService.listarTodas();
+        
+        // 2. Calcular total para cada orden
+        for (OrdenCompra orden : ordenes) {
+            List<DetalleOrdenCompra> detalles = ordenCompraService.listarDetallesPorOrden(orden.getIdOrden());
+            
+            double total = 0.0;
+            if (detalles != null && !detalles.isEmpty()) {
+                for (DetalleOrdenCompra detalle : detalles) {
+                    total += detalle.getCantidad() * detalle.getPrecioCompra().doubleValue();
+                }
+            }
+            orden.setTotal(total);
+        }
+        
+        return ResponseEntity.ok(ordenes);
     }
 
     @GetMapping("/activas")
@@ -73,23 +94,6 @@ public class OrdenCompraController {
         }
     }
 
-    @PutMapping("/{id}/estado")
-    public ResponseEntity<Object> actualizarEstado(@PathVariable Integer id, @RequestParam Integer idEstado) {
-        try {
-            OrdenCompra actualizada = ordenCompraService.actualizarEstado(id, idEstado);
-            if (actualizada == null) {
-                return ResponseEntity.notFound().build();
-            }
-            Map<String, String> response = new HashMap<>();
-            response.put("mensaje", "Estado actualizado correctamente");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Error al actualizar estado: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> eliminar(@PathVariable Integer id) {
         try {
@@ -107,6 +111,9 @@ public class OrdenCompraController {
         }
     }
 
+    // ============================================================
+    // INNER CLASS PARA REQUEST
+    // ============================================================
     public static class OrdenCompraRequest {
         private OrdenCompra ordenCompra;
         private List<DetalleOrdenCompra> detalles;

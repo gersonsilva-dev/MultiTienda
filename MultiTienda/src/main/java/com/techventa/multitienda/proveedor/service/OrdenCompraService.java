@@ -1,10 +1,13 @@
 package com.techventa.multitienda.proveedor.service;
 
-import com.techventa.multitienda.proveedor.model.*;
-import com.techventa.multitienda.proveedor.repository.*;
+import com.techventa.multitienda.proveedor.model.DetalleOrdenCompra;
+import com.techventa.multitienda.proveedor.model.OrdenCompra;
+import com.techventa.multitienda.proveedor.repository.DetalleOrdenCompraRepository;
+import com.techventa.multitienda.proveedor.repository.OrdenCompraRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +54,7 @@ public class OrdenCompraService {
         return ordenCompraRepository.findByCodigoOrden(codigo);
     }
 
+    // 🔥 LISTAR DETALLES POR ORDEN
     public List<DetalleOrdenCompra> listarDetallesPorOrden(Integer idOrden) {
         return detalleOrdenCompraRepository.findByOrdenCompra_IdOrden(idOrden);
     }
@@ -60,14 +64,15 @@ public class OrdenCompraService {
         ordenCompra.setCodigoOrden(generarCodigoOrden());
         ordenCompra.setFechaOrden(LocalDateTime.now());
         ordenCompra.setActivo(true);
-        // Estado por defecto: PENDIENTE (1)
         ordenCompra.setIdEstadoOrdenCompra(1);
 
         OrdenCompra saved = ordenCompraRepository.save(ordenCompra);
 
-        for (DetalleOrdenCompra detalle : detalles) {
-            detalle.setOrdenCompra(saved);
-            detalleOrdenCompraRepository.save(detalle);
+        if (detalles != null) {
+            for (DetalleOrdenCompra detalle : detalles) {
+                detalle.setOrdenCompra(saved);
+                detalleOrdenCompraRepository.save(detalle);
+            }
         }
 
         return saved;

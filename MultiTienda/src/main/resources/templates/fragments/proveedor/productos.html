@@ -25,13 +25,14 @@
                     <th>Código</th>
                     <th>Categoría</th>
                     <th>Precio</th>
+                    <th>Stock</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="tablaProductos">
                 <tr>
-                    <td colspan="7" style="text-align:center;padding:40px;">
+                    <td colspan="8" style="text-align:center;padding:40px;">
                         <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>
                         Cargando productos...
                     </td>
@@ -41,8 +42,63 @@
     </div>
 </div>
 
+<!-- Modal Editar Producto -->
+<div class="modal-overlay" id="modalProducto">
+    <div class="modal" style="max-width:500px;">
+        <div class="modal-header">
+            <div class="modal-title" id="modalProductoTitle">Editar Producto</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalProducto()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formProducto">
+                <input type="hidden" id="productoId">
+                <div class="form-group">
+                    <label class="form-label">Nombre</label>
+                    <input class="form-control" id="editNombre" disabled style="background:#f0f0f0;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Código</label>
+                    <input class="form-control" id="editCodigo" disabled style="background:#f0f0f0;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea class="form-control" id="editDescripcion" rows="2"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Precio Venta</label>
+                        <input class="form-control" id="editPrecio" type="number" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stock Mínimo</label>
+                        <input class="form-control" id="editStockMin" type="number">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Estado</label>
+                    <select class="form-control" id="editEstado">
+                        <option value="true">Activo</option>
+                        <option value="false">Inactivo</option>
+                    </select>
+                </div>
+                <div style="padding:10px;background:#fef2f2;border-radius:8px;font-size:0.75rem;color:#dc2626;margin-top:8px;">
+                    ⚠️ Solo puedes modificar descripción, precio, stock mínimo y estado.
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalProducto()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarProductoEditado()">
+                <i class="fas fa-save"></i> Actualizar
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     (function() {
+        let productosData = [];
+
         function cargarProductos() {
             console.log('🔍 Cargando productos...');
             
@@ -53,48 +109,186 @@
                 })
                 .then(d => {
                     console.log('📦 Datos recibidos:', d);
-                    const tbody = document.getElementById('tablaProductos');
-                    if (!d || d.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No tienes productos registrados</td></tr>';
-                        return;
-                    }
-                    tbody.innerHTML = d.map(p => `
-                        <tr>
-                            <td>${p.idProducto}</td>
-                            <td><strong>${p.nombreProducto || '-'}</strong></td>
-                            <td><span class="badge badge-info">${p.codigoBarras || '-'}</span></td>
-                            <td>${p.categoria?.nombreCategoria || '-'}</td>
-                            <td>S/ ${p.precioVenta?.toFixed(2) || '0.00'}</td>
-                            <td>
-                                <span class="badge ${p.activo ? 'badge-success' : 'badge-danger'}">
-                                    ${p.activo ? 'Activo' : 'Inactivo'}
-                                </span>
-                            </td>
-                            <td>
-                                <button class="btn btn-primary btn-sm" onclick="editarProducto(${p.idProducto})">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('');
+                    productosData = d;
+                    renderizarTabla(d);
                 })
                 .catch(err => {
                     console.error('❌ Error:', err);
                     document.getElementById('tablaProductos').innerHTML = 
-                        '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error al cargar productos</td></tr>';
+                        '<tr><td colspan="8" style="text-align:center;padding:40px;color:red;">Error al cargar productos</td></tr>';
                 });
         }
 
-        function editarProducto(id) {
-            alert('📦 Editar producto ID: ' + id + '\n(En desarrollo)');
+        function renderizarTabla(data) {
+            const tbody = document.getElementById('tablaProductos');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">No tienes productos registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(p => {
+                const estadoBadge = p.activo ? 'badge-success' : 'badge-danger';
+                const estadoTexto = p.activo ? 'Activo' : 'Inactivo';
+                const precio = p.precioVenta ? 'S/ ' + p.precioVenta.toFixed(2) : 'S/ 0.00';
+                
+                return `
+                <tr>
+                    <td>${p.idProducto}</td>
+                    <td><strong>${p.nombreProducto || '-'}</strong></td>
+                    <td><span class="badge badge-info">${p.codigoBarras || '-'}</span></td>
+                    <td>${p.categoria?.nombreCategoria || '-'}</td>
+                    <td>${precio}</td>
+                    <td>${p.stockMinimo || 0}</td>
+                    <td>
+                        <span class="badge ${estadoBadge}">${estadoTexto}</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="editarProducto(${p.idProducto})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="cambiarEstadoProducto(${p.idProducto}, ${!p.activo})">
+                            <i class="fas ${p.activo ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
+                        </button>
+                    </td>
+                </tr>
+            `}).join('');
         }
 
-        window.cargarProductos = cargarProductos;
+        // ============================================================
+        // EDITAR PRODUCTO
+        // ============================================================
+        function editarProducto(id) {
+            const p = productosData.find(x => x.idProducto === id);
+            if (!p) {
+                alert('Producto no encontrado');
+                return;
+            }
 
+            document.getElementById('modalProductoTitle').textContent = 'Editar Producto';
+            document.getElementById('productoId').value = p.idProducto;
+            document.getElementById('editNombre').value = p.nombreProducto || '';
+            document.getElementById('editCodigo').value = p.codigoBarras || '';
+            document.getElementById('editDescripcion').value = p.descripcionProducto || '';
+            document.getElementById('editPrecio').value = p.precioVenta || 0;
+            document.getElementById('editStockMin').value = p.stockMinimo || 0;
+            document.getElementById('editEstado').value = p.activo ? 'true' : 'false';
+
+            document.getElementById('modalProducto').classList.add('open');
+        }
+
+        // ============================================================
+        // GUARDAR PRODUCTO EDITADO
+        // ============================================================
+		function guardarProductoEditado() {
+		    const id = document.getElementById('productoId').value;
+		    
+		    // Obtener el producto original
+		    const productoOriginal = productosData.find(p => p.idProducto === parseInt(id));
+		    if (!productoOriginal) {
+		        alert('Producto no encontrado');
+		        return;
+		    }
+		
+		    // ✅ ENVIAR SOLO LOS IDs DE LAS RELACIONES
+		    const data = {
+		        nombreProducto: productoOriginal.nombreProducto,
+		        codigoBarras: productoOriginal.codigoBarras,
+		        marca: productoOriginal.marca,
+		        modelo: productoOriginal.modelo,
+		        precioCompra: productoOriginal.precioCompra,
+		        descripcionProducto: document.getElementById('editDescripcion').value,
+		        precioVenta: parseFloat(document.getElementById('editPrecio').value) || 0,
+		        stockMinimo: parseInt(document.getElementById('editStockMin').value) || 0,
+		        activo: document.getElementById('editEstado').value === 'true',
+		        // 🔥 ENVIAR SOLO LOS IDs
+		        categoria: {
+		            idCategoria: productoOriginal.categoria?.idCategoria || productoOriginal.idCategoria
+		        },
+		        unidadMedida: {
+		            idUnidadMedida: productoOriginal.unidadMedida?.idUnidadMedida || productoOriginal.idUnidadMedida
+		        }
+		    };
+		
+		    console.log('📤 Enviando actualización:', data);
+		
+		    fetch(`/api/productos/${id}`, {
+		        method: 'PUT',
+		        headers: { 'Content-Type': 'application/json' },
+		        body: JSON.stringify(data)
+		    })
+		    .then(r => {
+		        if (!r.ok) {
+		            return r.text().then(text => {
+		                console.error('❌ Error del servidor:', text);
+		                throw new Error('Error al actualizar: ' + text);
+		            });
+		        }
+		        return r.json();
+		    })
+		    .then(() => {
+		        cerrarModalProducto();
+		        cargarProductos();
+		        alert('✅ Producto actualizado exitosamente');
+		    })
+		    .catch(err => {
+		        console.error('❌ Error:', err);
+		        alert('❌ Error al actualizar: ' + err.message);
+		    });
+		}
+		
+        // ============================================================
+        // CAMBIAR ESTADO DEL PRODUCTO
+        // ============================================================
+        function cambiarEstadoProducto(id, nuevoEstado) {
+            const estadoTexto = nuevoEstado ? 'Activar' : 'Desactivar';
+            if (!confirm(`¿${estadoTexto} este producto?`)) return;
+
+            const data = {
+                activo: nuevoEstado
+            };
+
+            fetch(`/api/productos/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('Error al cambiar estado');
+                return r.json();
+            })
+            .then(() => {
+                cargarProductos();
+                alert(`✅ Producto ${estadoTexto}do correctamente`);
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('❌ Error al cambiar estado: ' + err.message);
+            });
+        }
+
+        // ============================================================
+        // CERRAR MODAL
+        // ============================================================
+        function cerrarModalProducto() {
+            document.getElementById('modalProducto').classList.remove('open');
+        }
+
+        // ============================================================
+        // EXPONER FUNCIONES GLOBALMENTE
+        // ============================================================
+        window.cargarProductos = cargarProductos;
+        window.editarProducto = editarProducto;
+        window.guardarProductoEditado = guardarProductoEditado;
+        window.cambiarEstadoProducto = cambiarEstadoProducto;
+        window.cerrarModalProducto = cerrarModalProducto;
+
+        // ============================================================
+        // INICIALIZAR
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', cargarProductos);
+        
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
             cargarProductos();
-        } else {
-            document.addEventListener('DOMContentLoaded', cargarProductos);
         }
     })();
 </script>

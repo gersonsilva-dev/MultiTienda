@@ -1,12 +1,18 @@
 package com.techventa.multitienda.admin.controller;
 
+import com.techventa.multitienda.admin.dto.ProductoRequest;
+import com.techventa.multitienda.admin.model.CategoriaProducto;
 import com.techventa.multitienda.admin.model.Producto;
+import com.techventa.multitienda.admin.model.UnidadMedida;
+import com.techventa.multitienda.admin.model.Usuario;
 import com.techventa.multitienda.admin.service.ProductoService;
+import com.techventa.multitienda.admin.service.UsuarioService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,100 +25,154 @@ public class ProductoController {
     @Autowired
     private ProductoService productoService;
 
-    // Listar todos los productos
+    @Autowired
+    private UsuarioService usuarioService;
+
     @GetMapping
     public ResponseEntity<List<Producto>> listarTodos() {
-        List<Producto> productos = productoService.listarTodos();
-        return ResponseEntity.ok(productos);
+        return ResponseEntity.ok(productoService.listarTodos());
     }
 
-    // Listar solo productos activos
     @GetMapping("/activos")
     public ResponseEntity<List<Producto>> listarActivos() {
-        List<Producto> productos = productoService.listarActivos();
-        return ResponseEntity.ok(productos);
+        return ResponseEntity.ok(productoService.listarActivos());
     }
 
-    // Buscar producto por ID
     @GetMapping("/{id}")
     public ResponseEntity<Producto> buscarPorId(@PathVariable Integer id) {
         Optional<Producto> producto = productoService.buscarPorId(id);
         return producto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Buscar producto por código de barras
     @GetMapping("/codigo/{codigo}")
     public ResponseEntity<Producto> buscarPorCodigoBarras(@PathVariable String codigo) {
         Optional<Producto> producto = productoService.buscarPorCodigoBarras(codigo);
         return producto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Buscar por nombre
     @GetMapping("/buscar")
     public ResponseEntity<List<Producto>> buscarPorNombre(@RequestParam String nombre) {
-        List<Producto> productos = productoService.buscarPorNombre(nombre);
-        return ResponseEntity.ok(productos);
+        return ResponseEntity.ok(productoService.buscarPorNombre(nombre));
     }
 
-    // Buscar por categoría
     @GetMapping("/categoria/{idCategoria}")
     public ResponseEntity<List<Producto>> buscarPorCategoria(@PathVariable Integer idCategoria) {
-        List<Producto> productos = productoService.buscarPorCategoria(idCategoria);
-        return ResponseEntity.ok(productos);
+        return ResponseEntity.ok(productoService.buscarPorCategoria(idCategoria));
     }
 
-    // Buscar por marca
     @GetMapping("/marca/{marca}")
     public ResponseEntity<List<Producto>> buscarPorMarca(@PathVariable String marca) {
-        List<Producto> productos = productoService.buscarPorMarca(marca);
-        return ResponseEntity.ok(productos);
+        return ResponseEntity.ok(productoService.buscarPorMarca(marca));
     }
 
-    // Buscar por estado
     @GetMapping("/estado/{idEstado}")
     public ResponseEntity<List<Producto>> buscarPorEstado(@PathVariable Integer idEstado) {
-        List<Producto> productos = productoService.buscarPorEstado(idEstado);
-        return ResponseEntity.ok(productos);
+        return ResponseEntity.ok(productoService.buscarPorEstado(idEstado));
     }
 
-    // Crear nuevo producto
+    // ============================================================
+    // CREAR PRODUCTO (CON REQUEST DTO)
+    // ============================================================
     @PostMapping
-    public ResponseEntity<Object> crear(@RequestBody Producto producto) {
+    public ResponseEntity<Object> crear(@RequestBody ProductoRequest request) {
         try {
-            // Verificar si el código de barras ya existe
-            if (producto.getCodigoBarras() != null && productoService.existeCodigoBarras(producto.getCodigoBarras())) {
+            System.out.println("📦 Creando producto: " + request.getNombreProducto());
+
+            if (request.getCodigoBarras() != null && productoService.existeCodigoBarras(request.getCodigoBarras())) {
                 Map<String, String> error = new HashMap<>();
-                error.put("error", "Ya existe un producto con el código de barras: " + producto.getCodigoBarras());
+                error.put("error", "Ya existe un producto con el código de barras: " + request.getCodigoBarras());
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
             }
-            Producto nuevoProducto = productoService.crear(producto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoProducto);
+
+            // Crear el producto
+            Producto producto = new Producto();
+            producto.setNombreProducto(request.getNombreProducto());
+            producto.setCodigoBarras(request.getCodigoBarras());
+            producto.setDescripcionProducto(request.getDescripcionProducto());
+            producto.setMarca(request.getMarca());
+            producto.setModelo(request.getModelo());
+            producto.setPrecioCompra(request.getPrecioCompra());
+            producto.setPrecioVenta(request.getPrecioVenta());
+            producto.setStockMinimo(request.getStockMinimo());
+            producto.setStockMaximo(request.getStockMaximo());
+
+            // Asignar categoría
+            CategoriaProducto categoria = new CategoriaProducto();
+            categoria.setIdCategoria(request.getIdCategoria());
+            producto.setCategoria(categoria);
+
+            // Asignar unidad de medida
+            UnidadMedida unidadMedida = new UnidadMedida();
+            unidadMedida.setIdUnidadMedida(request.getIdUnidadMedida());
+            producto.setUnidadMedida(unidadMedida);
+
+            producto.setIdEstadoProducto(1);
+            producto.setActivo(true);
+
+            Producto nuevo = productoService.crear(producto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
+
         } catch (Exception e) {
+            e.printStackTrace();
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al crear el producto: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
 
-    // Actualizar producto
+    /// ============================================================
+	// ACTUALIZAR PRODUCTO (CORREGIDO)
+	// ============================================================
     @PutMapping("/{id}")
-    public ResponseEntity<Object> actualizar(@PathVariable Integer id, @RequestBody Producto producto) {
+    public ResponseEntity<Object> actualizar(@PathVariable Integer id, @RequestBody ProductoRequest request) {
         try {
             Optional<Producto> existente = productoService.buscarPorId(id);
             if (existente.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            producto.setIdProducto(id);
+
+            Producto producto = existente.get();
+            
+            // ✅ ACTUALIZAR SOLO LOS CAMPOS PERMITIDOS
+            if (request.getDescripcionProducto() != null) {
+                producto.setDescripcionProducto(request.getDescripcionProducto());
+            }
+            if (request.getPrecioVenta() != null) {
+                producto.setPrecioVenta(request.getPrecioVenta());
+            }
+            if (request.getStockMinimo() != null) {
+                producto.setStockMinimo(request.getStockMinimo());
+            }
+            if (request.getActivo() != null) {
+                producto.setActivo(request.getActivo());
+            }
+
+            // 🔥 Si el request tiene ID de categoría, actualizar
+            if (request.getIdCategoria() != null) {
+                CategoriaProducto categoria = new CategoriaProducto();
+                categoria.setIdCategoria(request.getIdCategoria());
+                producto.setCategoria(categoria);
+            }
+            
+            // 🔥 Si el request tiene ID de unidad de medida, actualizar
+            if (request.getIdUnidadMedida() != null) {
+                UnidadMedida unidadMedida = new UnidadMedida();
+                unidadMedida.setIdUnidadMedida(request.getIdUnidadMedida());
+                producto.setUnidadMedida(unidadMedida);
+            }
+
             Producto actualizado = productoService.actualizar(producto);
             return ResponseEntity.ok(actualizado);
+
         } catch (Exception e) {
+            e.printStackTrace();
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al actualizar el producto: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-
-    // Eliminar producto (borrado lógico)
+    
+    
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> eliminar(@PathVariable Integer id) {
         try {
@@ -120,7 +180,7 @@ public class ProductoController {
             if (existente.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            productoService.eliminarFisico(id);  // ← CAMBIADO
+            productoService.eliminarFisico(id);
             Map<String, String> response = new HashMap<>();
             response.put("mensaje", "Producto eliminado correctamente");
             return ResponseEntity.ok(response);

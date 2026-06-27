@@ -1,9 +1,8 @@
 package com.techventa.multitienda.proveedor.model;
 
+import com.techventa.multitienda.admin.model.Producto;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-
-import com.techventa.multitienda.admin.model.Producto;
 
 @Entity
 @Table(name = "detalle_orden_compra")
@@ -28,24 +27,19 @@ public class DetalleOrdenCompra {
     @Column(name = "precio_compra", nullable = false, precision = 12, scale = 2)
     private BigDecimal precioCompra;
 
-    public DetalleOrdenCompra() {}
-
-    public DetalleOrdenCompra(OrdenCompra ordenCompra, Producto producto, Integer cantidad, BigDecimal precioCompra) {
-        this.ordenCompra = ordenCompra;
-        this.producto = producto;
-        this.cantidad = cantidad;
-        this.precioCompra = precioCompra;
-    }
-
     // Getters y Setters
     public Integer getIdDetalle() { return idDetalle; }
     public void setIdDetalle(Integer idDetalle) { this.idDetalle = idDetalle; }
+
     public OrdenCompra getOrdenCompra() { return ordenCompra; }
     public void setOrdenCompra(OrdenCompra ordenCompra) { this.ordenCompra = ordenCompra; }
+
     public Producto getProducto() { return producto; }
     public void setProducto(Producto producto) { this.producto = producto; }
+
     public Integer getCantidad() { return cantidad; }
     public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
+
     public BigDecimal getPrecioCompra() { return precioCompra; }
     public void setPrecioCompra(BigDecimal precioCompra) { this.precioCompra = precioCompra; }
 }

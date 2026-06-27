@@ -11,7 +11,7 @@
         <div class="page-subtitle">Gestiona los usuarios del sistema</div>
     </div>
     <div class="page-header-right">
-        <button class="btn btn-primary" onclick="abrirModalCrear()"><i class="fas fa-plus"></i> Nuevo usuario</button>
+        <button class="btn btn-primary" onclick="abrirModalUsuario()"><i class="fas fa-plus"></i> Nuevo usuario</button>
     </div>
 </div>
 
@@ -36,12 +36,13 @@
                     <th>Apellidos</th>
                     <th>Correo</th>
                     <th>Rol</th>
+                    <th>Caja</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="tablaUsuarios">
-                <tr><td colspan="7" style="text-align:center;padding:40px;">Cargando...</td></tr>
+                <tr><td colspan="8" style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>
             </tbody>
         </table>
     </div>
@@ -49,48 +50,52 @@
 
 <!-- Modal -->
 <div class="modal-overlay" id="modalUsuario">
-    <div class="modal">
+    <div class="modal" style="max-width:600px;">
         <div class="modal-header">
             <div class="modal-title" id="modalUsuarioTitle">Nuevo Usuario</div>
             <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalUsuario()"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
             <form id="formUsuario">
-                <input type="hidden" id="userId">
+                <input type="hidden" id="usuarioId">
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Nombres</label>
-                        <input class="form-control" id="nombres" placeholder="Nombres" required>
+                        <input class="form-control" id="userNombres" placeholder="Nombres" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Apellidos</label>
-                        <input class="form-control" id="apellidos" placeholder="Apellidos" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Correo</label>
-                        <input class="form-control" id="correo" type="email" placeholder="correo@empresa.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Teléfono</label>
-                        <input class="form-control" id="telefono" placeholder="Teléfono">
+                        <input class="form-control" id="userApellidos" placeholder="Apellidos" required>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Documento</label>
-                        <input class="form-control" id="documento" placeholder="DNI o RUC">
+                        <input class="form-control" id="userDocumento" placeholder="Número de documento">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Contraseña</label>
-                        <input class="form-control" id="contrasena" type="password" placeholder="******">
+                        <label class="form-label">Teléfono</label>
+                        <input class="form-control" id="userTelefono" placeholder="Teléfono">
                     </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Correo Electrónico</label>
+                    <input class="form-control" id="userEmail" type="email" placeholder="correo@ejemplo.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dirección</label>
+                    <input class="form-control" id="userDireccion" placeholder="Dirección">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contraseña</label>
+                    <input class="form-control" id="userPassword" type="password" placeholder="Ingrese una contraseña">
+                    <small style="color:var(--text-muted);font-size:0.65rem;">Obligatorio para nuevo usuario.</small>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Rol</label>
-                        <select class="form-control" id="rolUsuario">
+                        <select class="form-control" id="userRol" required>
+                            <option value="">Seleccionar...</option>
                             <option value="1">Administrador</option>
                             <option value="2">Supervisor</option>
                             <option value="3">Almacenero</option>
@@ -100,148 +105,343 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Tienda</label>
-                        <select class="form-control" id="tiendaUsuario">
-                            <option value="1">Tienda Principal</option>
+                        <select class="form-control" id="userTienda" required>
+                            <option value="">Seleccionar...</option>
                         </select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Estado</label>
-                    <select class="form-control" id="estadoUsuario">
-                        <option value="1">Activo</option>
-                        <option value="2">Inactivo</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Caja</label>
+                        <select class="form-control" id="userCaja">
+                            <option value="">Sin caja</option>
+                        </select>
+                        <small style="color:var(--text-muted);font-size:0.65rem;">Opcional. Solo para cajeros.</small>
+                    </div>
                 </div>
             </form>
         </div>
         <div class="modal-footer">
             <button class="btn btn-ghost" onclick="cerrarModalUsuario()">Cancelar</button>
-            <button class="btn btn-primary" onclick="guardarUsuario()">Guardar</button>
+            <button class="btn btn-primary" onclick="guardarUsuario()">
+                <i class="fas fa-save"></i> Guardar
+            </button>
         </div>
     </div>
 </div>
 
 <script>
-    let usuariosData = [];
+    (function() {
+        let usuariosData = [];
 
-    function cargarUsuarios() {
-        fetch('/api/usuarios')
-            .then(r => r.json())
-            .then(d => { usuariosData = d; renderizarUsuarios(d); document.getElementById('totalRegistros').textContent = d.length + ' registros'; })
-            .catch(() => document.getElementById('tablaUsuarios').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error</td></tr>');
-    }
-	
-	
-	function cambiarEstadoUsuario(id, nuevoEstado) {
-	    if (!confirm(`¿${nuevoEstado ? 'Activar' : 'Desactivar'} este usuario?`)) return;
-	    fetch(`/api/usuarios/${id}/estado?activo=${nuevoEstado}`, {
-	        method: 'PUT'
-	    })
-	    .then(r => {
-	        if (!r.ok) {
-	            return r.text().then(text => { throw new Error(text); });
-	        }
-	        return r.json();
-	    })
-	    .then(() => {
-	        cargarUsuarios();
-	        alert('✅ Estado actualizado');
-	    })
-	    .catch((error) => {
-	        console.error('Error:', error);
-	        alert('❌ Error: ' + error.message);
-	    });
-	}
-
-
-    function renderizarUsuarios(data) {
-        const tbody = document.getElementById('tablaUsuarios');
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No hay usuarios</td></tr>';
-            return;
+        // ============================================================
+        // CARGAR TIENDAS PARA SELECT
+        // ============================================================
+        function cargarTiendasSelect() {
+            fetch('/api/tiendas')
+                .then(r => r.json())
+                .then(d => {
+                    const select = document.getElementById('userTienda');
+                    select.innerHTML = '<option value="">Seleccionar...</option>' +
+                        d.map(t => `<option value="${t.idTienda}">${t.nombreTienda}</option>`).join('');
+                })
+                .catch(() => {});
         }
-		tbody.innerHTML = data.map(u => `
-		    <tr>
-		        <td>${u.idUsuario}</td>
-		        <td>${u.nombres || '-'}</td>
-		        <td>${u.apellidos || '-'}</td>
-		        <td>${u.correoElectronico || '-'}</td>
-		        <td><span class="badge badge-info">${u.rol?.nombreRol || 'Sin rol'}</span></td>
-		        <td><span class="badge ${u.activo ? 'badge-success' : 'badge-danger'}">${u.activo ? 'Activo' : 'Inactivo'}</span></td>
-		        <td>
-		            <button class="btn btn-primary btn-sm" onclick="editarUsuario(${u.idUsuario})"><i class="fas fa-edit"></i></button>
-		            <button class="btn btn-success btn-sm" onclick="cambiarEstadoUsuario(${u.idUsuario}, ${!u.activo})">
-		                <i class="fas ${u.activo ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
-		            </button>
-		            <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${u.idUsuario})"><i class="fas fa-trash"></i></button>
-		        </td>
-		    </tr>
-		`).join('');
-    }
 
-    function filtrarUsuarios() {
-        const term = document.getElementById('buscarUsuario').value.toLowerCase();
-        const filtrados = usuariosData.filter(u => (u.nombres?.toLowerCase() || '').includes(term) || (u.apellidos?.toLowerCase() || '').includes(term) || (u.correoElectronico?.toLowerCase() || '').includes(term));
-        renderizarUsuarios(filtrados);
-        document.getElementById('totalRegistros').textContent = filtrados.length + ' registros';
-    }
+        // ============================================================
+        // CARGAR CAJAS PARA SELECT
+        // ============================================================
+        function cargarCajasSelect() {
+            fetch('/api/cajas')
+                .then(r => r.json())
+                .then(d => {
+                    const select = document.getElementById('userCaja');
+                    select.innerHTML = '<option value="">Sin caja</option>' +
+                        d.map(c => `<option value="${c.idCaja}">${c.nombreCaja}</option>`).join('');
+                })
+                .catch(() => {});
+        }
 
-    function abrirModalCrear() {
-        document.getElementById('modalUsuarioTitle').textContent = 'Nuevo Usuario';
-        document.getElementById('formUsuario').reset();
-        document.getElementById('userId').value = '';
-        document.getElementById('modalUsuario').classList.add('open');
-    }
+        // ============================================================
+        // CARGAR USUARIOS
+        // ============================================================
+        function cargarUsuarios() {
+            console.log('🔍 Cargando usuarios...');
+            
+            fetch('/api/usuarios')
+                .then(r => {
+                    if (!r.ok) throw new Error('Error al cargar: ' + r.status);
+                    return r.json();
+                })
+                .then(d => {
+                    console.log('📦 Datos recibidos:', d);
+                    usuariosData = d;
+                    renderizarUsuarios(d);
+                    document.getElementById('totalRegistros').textContent = d.length + ' registros';
+                })
+                .catch(err => {
+                    console.error('❌ Error:', err);
+                    document.getElementById('tablaUsuarios').innerHTML = 
+                        '<tr><td colspan="8" style="text-align:center;padding:40px;color:red;">Error al cargar usuarios</td></tr>';
+                });
+        }
 
-    function cerrarModalUsuario() { document.getElementById('modalUsuario').classList.remove('open'); }
+        // ============================================================
+        // RENDERIZAR USUARIOS
+        // ============================================================
+        function renderizarUsuarios(data) {
+            const tbody = document.getElementById('tablaUsuarios');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">No hay usuarios registrados</td></tr>';
+                return;
+            }
 
-    function editarUsuario(id) {
-        const u = usuariosData.find(x => x.idUsuario === id);
-        if (!u) return;
-        document.getElementById('modalUsuarioTitle').textContent = 'Editar Usuario';
-        document.getElementById('userId').value = u.idUsuario;
-        document.getElementById('nombres').value = u.nombres || '';
-        document.getElementById('apellidos').value = u.apellidos || '';
-        document.getElementById('correo').value = u.correoElectronico || '';
-        document.getElementById('telefono').value = u.telefono || '';
-        document.getElementById('documento').value = u.numeroDocumento || '';
-        document.getElementById('rolUsuario').value = u.rol?.idRol || 1;
-        document.getElementById('estadoUsuario').value = u.activo ? 1 : 2;
-        document.getElementById('modalUsuario').classList.add('open');
-    }
+            tbody.innerHTML = data.map(u => `
+                <tr>
+                    <td>${u.idUsuario}</td>
+                    <td><strong>${u.nombres || ''}</strong></td>
+                    <td>${u.apellidos || ''}</td>
+                    <td>${u.correoElectronico || '-'}</td>
+                    <td><span class="badge badge-info">${u.rol?.nombreRol || '-'}</span></td>
+                    <td>${u.caja?.nombreCaja || '-'}</td>
+                    <td>
+                        <span class="badge ${u.activo ? 'badge-success' : 'badge-danger'}">
+                            ${u.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="editarUsuario(${u.idUsuario})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="cambiarEstadoUsuario(${u.idUsuario}, ${!u.activo})">
+                            <i class="fas ${u.activo ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${u.idUsuario})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
 
-    function guardarUsuario() {
-        const id = document.getElementById('userId').value;
-        const data = {
-            nombres: document.getElementById('nombres').value,
-            apellidos: document.getElementById('apellidos').value,
-            correoElectronico: document.getElementById('correo').value,
-            telefono: document.getElementById('telefono').value,
-            numeroDocumento: document.getElementById('documento').value,
-            contrasenaHash: document.getElementById('contrasena').value || '123456',
-            rol: { idRol: parseInt(document.getElementById('rolUsuario').value) },
-            activo: document.getElementById('estadoUsuario').value === '1'
-        };
-        const method = id ? 'PUT' : 'POST';
-        const url = id ? `/api/usuarios/${id}` : '/api/usuarios';
-        fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-            .then(r => r.json())
-            .then(() => { cerrarModalUsuario(); cargarUsuarios(); showToast('success', 'Éxito', id ? 'Actualizado' : 'Creado'); })
-            .catch(() => showToast('error', 'Error', 'No se pudo guardar'));
-    }
+        // ============================================================
+        // FILTRAR USUARIOS
+        // ============================================================
+        function filtrarUsuarios() {
+            const term = document.getElementById('buscarUsuario').value.toLowerCase();
+            const filtrados = usuariosData.filter(u => 
+                (u.nombres?.toLowerCase() || '').includes(term) || 
+                (u.apellidos?.toLowerCase() || '').includes(term) ||
+                (u.correoElectronico?.toLowerCase() || '').includes(term)
+            );
+            renderizarUsuarios(filtrados);
+            document.getElementById('totalRegistros').textContent = filtrados.length + ' registros';
+        }
 
-	function eliminarUsuario(id) {
-	    if (!confirm('¿Eliminar este usuario?')) return;
-	    fetch(`/api/usuarios/${id}`, { method: 'DELETE' })
-	        .then(() => {
-	            cargarUsuarios();
-	            alert('✅ Usuario eliminado');
-	        })
-	        .catch(() => alert('❌ Error al eliminar'));
-	}
+        // ============================================================
+        // ABRIR MODAL (NUEVO)
+        // ============================================================
+        function abrirModalUsuario() {
+            document.getElementById('modalUsuarioTitle').textContent = 'Nuevo Usuario';
+            document.getElementById('formUsuario').reset();
+            document.getElementById('usuarioId').value = '';
+            document.getElementById('userPassword').value = '';
+            document.getElementById('userPassword').required = true;
+            cargarTiendasSelect();
+            cargarCajasSelect();
+            document.getElementById('modalUsuario').classList.add('open');
+        }
 
-	cargarUsuarios();
+        // ============================================================
+        // EDITAR USUARIO
+        // ============================================================
+        function editarUsuario(id) {
+            const u = usuariosData.find(x => x.idUsuario === id);
+            if (!u) {
+                alert('Usuario no encontrado');
+                return;
+            }
 
+            document.getElementById('modalUsuarioTitle').textContent = 'Editar Usuario';
+            document.getElementById('usuarioId').value = u.idUsuario;
+            document.getElementById('userNombres').value = u.nombres || '';
+            document.getElementById('userApellidos').value = u.apellidos || '';
+            document.getElementById('userDocumento').value = u.numeroDocumento || '';
+            document.getElementById('userEmail').value = u.correoElectronico || '';
+            document.getElementById('userTelefono').value = u.telefono || '';
+            document.getElementById('userDireccion').value = u.direccion || '';
+            document.getElementById('userPassword').value = '';
+            document.getElementById('userPassword').required = false;
+            document.getElementById('userPassword').placeholder = 'Dejar vacío para no cambiar';
+
+            cargarTiendasSelect();
+            cargarCajasSelect();
+            
+            setTimeout(() => {
+                document.getElementById('userRol').value = u.rol?.idRol || '';
+                document.getElementById('userTienda').value = u.tienda?.idTienda || '';
+                document.getElementById('userCaja').value = u.caja?.idCaja || '';
+            }, 100);
+
+            document.getElementById('modalUsuario').classList.add('open');
+        }
+
+        // ============================================================
+        // CERRAR MODAL
+        // ============================================================
+        function cerrarModalUsuario() {
+            document.getElementById('modalUsuario').classList.remove('open');
+            document.getElementById('usuarioId').value = '';
+            document.getElementById('userPassword').value = '';
+            document.getElementById('userPassword').required = false;
+        }
+
+        // ============================================================
+        // GUARDAR USUARIO
+        // ============================================================
+        function guardarUsuario() {
+            const id = document.getElementById('usuarioId').value;
+            
+            const data = {
+                nombres: document.getElementById('userNombres').value.trim(),
+                apellidos: document.getElementById('userApellidos').value.trim(),
+                numeroDocumento: document.getElementById('userDocumento').value.trim(),
+                correoElectronico: document.getElementById('userEmail').value.trim(),
+                telefono: document.getElementById('userTelefono').value.trim(),
+                direccion: document.getElementById('userDireccion').value.trim(),
+                contrasena: document.getElementById('userPassword').value,
+                rol: {
+                    idRol: parseInt(document.getElementById('userRol').value)
+                },
+                tienda: {
+                    idTienda: parseInt(document.getElementById('userTienda').value)
+                },
+                caja: {
+                    idCaja: parseInt(document.getElementById('userCaja').value) || null
+                }
+            };
+
+            if (!data.nombres || !data.apellidos || !data.correoElectronico) {
+                alert('Los campos Nombre, Apellido y Correo son obligatorios');
+                return;
+            }
+
+            if (!id && !data.contrasena) {
+                alert('La contraseña es obligatoria para un nuevo usuario');
+                document.getElementById('userPassword').focus();
+                return;
+            }
+
+            if (id && !data.contrasena) {
+                delete data.contrasena;
+            }
+
+            if (data.contrasena && data.contrasena.length < 4) {
+                alert('La contraseña debe tener al menos 4 caracteres');
+                document.getElementById('userPassword').focus();
+                return;
+            }
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/api/usuarios/${id}` : '/api/usuarios';
+
+            console.log('📤 Enviando:', method, url, data);
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(r => {
+                if (!r.ok) {
+                    return r.text().then(text => {
+                        throw new Error(text || 'Error al guardar');
+                    });
+                }
+                return r.json();
+            })
+            .then(respuesta => {
+                console.log('✅ Respuesta:', respuesta);
+                cerrarModalUsuario();
+                cargarUsuarios();
+                alert(id ? '✅ Usuario actualizado exitosamente' : '✅ Usuario creado exitosamente');
+            })
+            .catch(error => {
+                console.error('❌ Error:', error);
+                alert('❌ Error al guardar usuario: ' + error.message);
+            });
+        }
+
+        // ============================================================
+        // CAMBIAR ESTADO USUARIO
+        // ============================================================
+        function cambiarEstadoUsuario(id, nuevoEstado) {
+            const estadoTexto = nuevoEstado ? 'Activar' : 'Desactivar';
+            if (!confirm(`¿${estadoTexto} este usuario?`)) return;
+
+            fetch(`/api/usuarios/${id}/estado?activo=${nuevoEstado}`, {
+                method: 'PUT'
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('Error al cambiar estado');
+                return r.json();
+            })
+            .then(() => {
+                cargarUsuarios();
+                alert(`✅ Usuario ${estadoTexto}do correctamente`);
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('❌ Error al cambiar estado');
+            });
+        }
+
+        // ============================================================
+        // ELIMINAR USUARIO
+        // ============================================================
+        function eliminarUsuario(id) {
+            if (!confirm('¿Eliminar este usuario permanentemente?')) return;
+
+            fetch(`/api/usuarios/${id}`, {
+                method: 'DELETE'
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('Error al eliminar');
+                return r.json();
+            })
+            .then(() => {
+                cargarUsuarios();
+                alert('✅ Usuario eliminado exitosamente');
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('❌ Error al eliminar usuario');
+            });
+        }
+
+        // ============================================================
+        // EXPONER FUNCIONES GLOBALMENTE
+        // ============================================================
+        window.cargarUsuarios = cargarUsuarios;
+        window.filtrarUsuarios = filtrarUsuarios;
+        window.abrirModalUsuario = abrirModalUsuario;
+        window.editarUsuario = editarUsuario;
+        window.guardarUsuario = guardarUsuario;
+        window.cambiarEstadoUsuario = cambiarEstadoUsuario;
+        window.eliminarUsuario = eliminarUsuario;
+        window.cerrarModalUsuario = cerrarModalUsuario;
+
+        // ============================================================
+        // INICIALIZAR
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', cargarUsuarios);
+        
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            cargarUsuarios();
+        }
+    })();
 </script>
 </body>
 </html>

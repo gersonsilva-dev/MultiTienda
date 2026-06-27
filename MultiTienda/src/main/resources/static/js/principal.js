@@ -83,7 +83,6 @@ const ROLES = {
       { type:'item', view:'ordenes', icon:'fas fa-clipboard-list', label:'Órdenes' },
       { type:'item', view:'entregas', icon:'fas fa-truck', label:'Entregas' },
       { type:'item', view:'facturacion', icon:'fas fa-file-invoice', label:'Facturación' },
-      { type:'item', view:'pagos', icon:'fas fa-dollar-sign', label:'Pagos' },
       { type:'section', label:'CUENTA' },
       { type:'item', view:'perfil', icon:'fas fa-user-circle', label:'Mi perfil' },
     ]

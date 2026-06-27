@@ -3,7 +3,9 @@ package com.techventa.multitienda.admin.service;
 import com.techventa.multitienda.admin.model.Usuario;
 import com.techventa.multitienda.admin.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +14,9 @@ public class UsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     public List<Usuario> listarTodos() {
         return usuarioRepository.findAll();
@@ -41,25 +46,39 @@ public class UsuarioService {
         return usuarioRepository.findByTienda_IdTienda(idTienda);
     }
 
-    public Usuario crear(Usuario usuario) {
+    // ============================================================
+    // CREAR USUARIO (CON CONTRASEÑA ENCRIPTADA)
+    // ============================================================
+    public Usuario crear(Usuario usuario, String contrasena) {
+        String hash = passwordEncoder.encode(contrasena);
+        usuario.setContrasenaHash(hash);
         usuario.setActivo(true);
+        usuario.setIdEstadoUsuario(1);  // ACTIVO
         return usuarioRepository.save(usuario);
     }
 
+    // ============================================================
+    // ACTUALIZAR USUARIO (CON CONTRASEÑA ENCRIPTADA)
+    // ============================================================
+    public Usuario actualizar(Usuario usuario, String contrasena) {
+        if (contrasena != null && !contrasena.isEmpty()) {
+            String hash = passwordEncoder.encode(contrasena);
+            usuario.setContrasenaHash(hash);
+        }
+        return usuarioRepository.save(usuario);
+    }
+
+    // ============================================================
+    // ACTUALIZAR USUARIO (SIN CAMBIAR CONTRASEÑA)
+    // ============================================================
     public Usuario actualizar(Usuario usuario) {
         return usuarioRepository.save(usuario);
     }
-    
+
     public Usuario obtenerUsuarioActual() {
-        // Usa el ID 3 que es tu usuario de prueba
-        // Cuando tengas sesión, reemplázalo con:
-        // return (Usuario) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return usuarioRepository.findById(3).orElse(null);
     }
 
-    // ============================================================
-    // ELIMINAR FÍSICAMENTE
-    // ============================================================
     public void eliminarFisico(Integer id) {
         usuarioRepository.deleteById(id);
     }

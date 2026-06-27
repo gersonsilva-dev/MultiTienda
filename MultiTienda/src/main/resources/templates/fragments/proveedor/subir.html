@@ -96,48 +96,52 @@
                 .catch(() => {});
         }
 
-        function guardarProducto() {
-            const data = {
-                nombreProducto: document.getElementById('nombreProducto').value,
-                codigoBarras: document.getElementById('codigoBarras').value,
-                descripcion: document.getElementById('descripcion').value,
-                marca: document.getElementById('marca').value,
-                modelo: document.getElementById('modelo').value,
-                idCategoria: parseInt(document.getElementById('categoria').value),
-                idUnidadMedida: parseInt(document.getElementById('unidadMedida').value),
-                precioCompra: parseFloat(document.getElementById('precioCompra').value) || 0,
-                precioVenta: parseFloat(document.getElementById('precioVenta').value) || 0,
-                stockMinimo: parseInt(document.getElementById('stockMinimo').value) || 5,
-                stockMaximo: parseInt(document.getElementById('stockMaximo').value) || 100
-            };
+		function guardarProducto() {
+		    const data = {
+		        nombreProducto: document.getElementById('nombreProducto').value,
+		        codigoBarras: document.getElementById('codigoBarras').value,
+		        descripcionProducto: document.getElementById('descripcion').value,
+		        marca: document.getElementById('marca').value,
+		        modelo: document.getElementById('modelo').value,
+		        idCategoria: parseInt(document.getElementById('categoria').value),
+		        idUnidadMedida: parseInt(document.getElementById('unidadMedida').value),
+		        precioCompra: parseFloat(document.getElementById('precioCompra').value) || 0,
+		        precioVenta: parseFloat(document.getElementById('precioVenta').value) || 0,
+		        stockMinimo: parseInt(document.getElementById('stockMinimo').value) || 5,
+		        stockMaximo: parseInt(document.getElementById('stockMaximo').value) || 100
+		    };
 
-            if (!data.nombreProducto || !data.precioVenta) {
-                alert('El nombre y precio de venta son obligatorios');
-                return;
-            }
+		    if (!data.nombreProducto || !data.precioVenta) {
+		        alert('El nombre y precio de venta son obligatorios');
+		        return;
+		    }
 
-            fetch('/api/productos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(r => {
-                if (!r.ok) {
-                    return r.text().then(text => { throw new Error(text); });
-                }
-                return r.json();
-            })
-            .then(() => {
-                alert('✅ Producto subido exitosamente');
-                document.getElementById('formProducto').reset();
-                cargarSelects();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('❌ Error al guardar: ' + error.message);
-            });
-        }
-
+		    fetch('/api/productos', {
+		        method: 'POST',
+		        headers: { 'Content-Type': 'application/json' },
+		        body: JSON.stringify(data)
+		    })
+		    .then(r => {
+		        if (!r.ok) {
+		            return r.text().then(text => { throw new Error(text); });
+		        }
+		        return r.json();
+		    })
+		    .then(() => {
+		        alert('✅ Producto subido exitosamente');
+		        // 🔥 REDIRIGIR A "MIS PRODUCTOS"
+		        loadView('productos');
+		    })
+		    .catch(error => {
+		        console.error('Error:', error);
+		        alert('❌ Error al guardar: ' + error.message);
+		    });
+		}
+		
+		
+		
+		
+		
         window.guardarProducto = guardarProducto;
         window.cargarSelects = cargarSelects;
 
