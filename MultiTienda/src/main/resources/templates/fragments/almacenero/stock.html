@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <script th:src="@{/webjars/font-awesome/6.5.1/js/all.min.js}"></script>
+    
+    <style>
+        /* ==================== VARIABLES Y BASE ==================== */
+        :root {
+            --bg-main: #f8fafc;
+            --surface: #ffffff;
+            --surface-hover: #f1f5f9;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --text-light: #94a3b8;
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            
+            --success: #16a34a;
+            --success-light: #f0fdf4;
+            
+            --info: #06b6d4;
+            --info-light: #ecfeff;
+            
+            --radius-sm: 6px;
+            --radius: 12px;
+            --radius-lg: 16px;
+            
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -1px rgba(0,0,0,0.04);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+            
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .inventario-dashboard {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== HEADER ==================== */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0 0 0.25rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .page-title-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        /* ==================== RESUMEN CARDS ==================== */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+
+        .card-total::before { background-color: var(--primary); }
+        .card-total .icon-wrapper { color: var(--primary); background: var(--primary-light); }
+        
+        .card-bajo-minimo::before { background-color: var(--warning); }
+        .card-bajo-minimo .icon-wrapper { color: var(--warning); background: var(--warning-light); }
+        
+        .card-valor::before { background-color: var(--success); }
+        .card-valor .icon-wrapper { color: var(--success); background: var(--success-light); }
+        
+        .card-categorias::before { background-color: var(--info); }
+        .card-categorias .icon-wrapper { color: var(--info); background: var(--info-light); }
+
+        .card-info h6 {
+            margin: 0 0 0.4rem 0;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .card-info h2 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+        .card-info small {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .icon-wrapper {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        /* ==================== FILTROS ==================== */
+        .filter-section {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .filter-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            background: #fafbfc;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .filter-header i {
+            color: var(--primary);
+        }
+
+        .filter-body {
+            padding: 1.25rem 1.5rem;
+        }
+
+        .filter-form {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 0.75rem;
+            align-items: end;
+        }
+
+        @media (max-width: 768px) {
+            .filter-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-wrapper .search-icon {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .search-wrapper input {
+            width: 100%;
+            padding: 0.7rem 0.9rem 0.7rem 2.5rem;
+            font-size: 0.95rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background-color: #fff;
+            color: var(--text-main);
+            outline: none;
+            transition: var(--transition);
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .search-wrapper input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .btn {
+            padding: 0.7rem 1.25rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: inherit;
+            white-space: nowrap;
+            height: 42px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background-color: var(--border-light);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        /* ==================== TABLA ==================== */
+        .table-section {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            background: #fafbfc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .table-title i {
+            color: var(--primary);
+        }
+
+        .table-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.65rem;
+            border-radius: 50px;
+            margin-left: 0.5rem;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .stock-table th {
+            background-color: #fafbfc;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 0.9rem 1.25rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stock-table th.text-center {
+            text-align: center;
+        }
+
+        .stock-table td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        .stock-table tbody tr {
+            transition: var(--transition);
+        }
+
+        .stock-table tbody tr:hover {
+            background-color: var(--surface-hover);
+        }
+
+        .stock-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ==================== CELDA DE PRODUCTO ==================== */
+        .producto-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .producto-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .producto-info strong {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .producto-info small {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .stock-number {
+            text-align: center;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .stock-number.critical { color: var(--danger); }
+        .stock-number.warning { color: var(--warning); }
+        .stock-number.good { color: var(--success); }
+
+        .stock-minimo {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* ==================== BARRA DE PROGRESO ==================== */
+        .progress-bar-stock {
+            height: 8px;
+            border-radius: 9999px;
+            background: var(--border-light);
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease;
+        }
+
+        .stock-good { background: linear-gradient(90deg, #16a34a, #22c55e); }
+        .stock-warning { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .stock-critical { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+        .stock-status {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .status-good {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .status-warning {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .status-critical {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        /* ==================== ESTADO VACÍO ==================== */
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--border-light);
+            color: var(--text-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1rem;
+        }
+
+        .empty-state h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        /* ==================== LOADING ==================== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(2px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="loading-overlay" id="stockLoadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Cargando inventario...</div>
+</div>
+
+<div class="inventario-dashboard">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-icon">
+                <i class="fas fa-boxes-stacked"></i>
+            </span>
+            Stock Actual
+        </h1>
+        <p class="page-subtitle">Control de inventario en tiempo real por producto</p>
+    </div>
+
+    <!-- RESUMEN CARDS -->
+    <div class="summary-grid">
+        <div class="summary-card card-total">
+            <div class="card-info">
+                <h6>Total Productos</h6>
+                <h2 th:text="${resumen != null ? resumen.totalProductos : 0}">0</h2>
+                <small>Productos activos</small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-box"></i>
+            </div>
+        </div>
+        
+        <div class="summary-card card-bajo-minimo">
+            <div class="card-info">
+                <h6>Bajo Mínimo</h6>
+                <h2 th:text="${resumen != null ? resumen.bajoMinimo : 0}" style="color: var(--warning);">0</h2>
+                <small>Requieren reposición</small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+        
+        <div class="summary-card card-valor">
+            <div class="card-info">
+                <h6>Valor del Stock</h6>
+                <h2 th:text="'S/ ' + ${resumen != null ? #numbers.formatDecimal(resumen.valorTotalStock, 0, 2) : '0.00'}">S/ 0.00</h2>
+                <small>Inventario total</small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-coins"></i>
+            </div>
+        </div>
+        
+        <div class="summary-card card-categorias">
+            <div class="card-info">
+                <h6>Categorías Activas</h6>
+                <h2 th:text="${resumen != null ? resumen.categoriasActivas : 0}">0</h2>
+                <small>Con stock disponible</small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-tags"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filter-section">
+        <div class="filter-header">
+            <i class="fas fa-search"></i>
+            Buscar productos
+        </div>
+        <div class="filter-body">
+            <form onsubmit="buscarStock(event)" class="filter-form">
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" 
+                           id="searchInput" 
+                           name="search" 
+                           placeholder="Buscar por nombre o código de barras..."
+                           th:value="${search}" 
+                           autocomplete="off" />
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+                <button type="button" onclick="limpiarBusqueda()" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Limpiar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-section">
+        <div class="table-header">
+            <h5 class="table-title">
+                <i class="fas fa-warehouse"></i>
+                Productos en Almacén
+                <span class="table-badge" th:text="${inventario != null ? inventario.size() : 0}">0</span>
+            </h5>
+        </div>
+        
+        <!-- Estado vacío -->
+        <div th:if="${inventario == null or inventario.isEmpty()}" class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-box-open"></i>
+            </div>
+            <h4>No hay productos en el inventario</h4>
+            <p th:if="${search != null and !search.isEmpty()}">No se encontraron resultados para "<span th:text="${search}"></span>"</p>
+            <p th:unless="${search != null and !search.isEmpty()}">Aún no has registrado productos en tu almacén</p>
+        </div>
+
+        <!-- Tabla con datos -->
+        <div th:if="${inventario != null and !inventario.isEmpty()}" class="table-responsive">
+            <table class="stock-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th class="text-center">Stock Actual</th>
+                        <th class="text-center">Mínimo</th>
+                        <th style="min-width: 220px;">Nivel de Stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${inventario != null ? inventario : {}}">
+                        <td>
+                            <div class="producto-cell">
+                                <div class="producto-avatar">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div class="producto-info">
+                                    <strong th:text="${item.producto.nombreProducto}">Producto</strong>
+                                    <small th:text="${item.producto.codigoBarras}">COD001</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="stock-number"
+                            th:classappend="${item.stockActual <= item.stockMinimo ? 'critical' :
+                                           (item.stockMinimo > 0 and item.stockActual < item.stockMinimo * 1.5) ? 'warning' : 'good'}"
+                            th:text="${item.stockActual}">0</td>
+                        <td class="stock-minimo" th:text="${item.stockMinimo}">0</td>
+                        <td>
+                            <div class="progress-bar-stock">
+                                <div class="progress-fill"
+                                     th:classappend="${item.stockActual <= item.stockMinimo ? 'stock-critical' :
+                                                      (item.stockMinimo > 0 and item.stockActual < item.stockMinimo * 1.5) ? 'stock-warning' : 'stock-good'}"
+                                     th:style="'width: ' + ${item.stockMinimo > 0 ?
+                                              (#numbers.formatDecimal(
+                                                (item.stockActual < item.stockMinimo * 2.0 ?
+                                                 (item.stockActual / (item.stockMinimo * 2.0)) * 100 : 100), 0, 0))
+                                              : '100'} + '%'"></div>
+                            </div>
+                            <span class="stock-status"
+                                  th:classappend="${item.stockActual <= item.stockMinimo ? 'status-critical' :
+                                                  (item.stockMinimo > 0 and item.stockActual < item.stockMinimo * 1.5) ? 'status-warning' : 'status-good'}"
+                                  th:text="${item.stockActual <= item.stockMinimo ? 'CRÍTICO' :
+                                          (item.stockMinimo > 0 and item.stockActual < item.stockMinimo * 1.5) ? 'BAJO' : 'BUENO'}">BUENO</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function buscarStock(event) {
+    event.preventDefault();
+    const search = document.getElementById('searchInput').value;
+    const overlay = document.getElementById('stockLoadingOverlay');
+    const url = search ? `/api/views/stock?search=${encodeURIComponent(search)}` : '/api/views/stock';
+    
+    if (overlay) overlay.classList.add('active');
+    
+    fetch(url)
+        .then(response => response.text())
+        .then(html => {
+            // Reemplazar el dashboard
+            document.querySelector('.inventario-dashboard').outerHTML = html;
+            
+            // ✅ QUITAR EL OVERLAY DESPUÉS DE CARGAR
+            const newOverlay = document.getElementById('stockLoadingOverlay');
+            if (newOverlay) newOverlay.classList.remove('active');
+        })
+        .catch(error => {
+            console.error('Error al buscar:', error);
+            if (overlay) overlay.classList.remove('active');
+        });
+}
+
+function limpiarBusqueda() {
+    document.getElementById('searchInput').value = '';
+    const overlay = document.getElementById('stockLoadingOverlay');
+    if (overlay) overlay.classList.add('active');
+    
+    fetch('/api/views/stock')
+        .then(response => response.text())
+        .then(html => {
+            document.querySelector('.inventario-dashboard').outerHTML = html;
+            
+            // ✅ QUITAR EL OVERLAY DESPUÉS DE CARGAR
+            const newOverlay = document.getElementById('stockLoadingOverlay');
+            if (newOverlay) newOverlay.classList.remove('active');
+        })
+        .catch(error => {
+            console.error('Error al limpiar:', error);
+            if (overlay) overlay.classList.remove('active');
+        });
+}
+</script>
+
+</body>
+</html>

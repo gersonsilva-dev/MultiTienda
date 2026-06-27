@@ -3,6 +3,7 @@ package com.techventa.multitienda;
 import com.techventa.multitienda.admin.model.Usuario;
 import com.techventa.multitienda.admin.service.CajaService;
 import com.techventa.multitienda.admin.service.TiendaService;
+import com.techventa.multitienda.almacenero.service.InventarioService;
 import com.techventa.multitienda.almacenero.service.KardexService;
 import com.techventa.multitienda.cajero.service.TurnoCajaService;
 
@@ -27,6 +28,9 @@ public class ViewFragmentController {
     
     @Autowired
     private CajaService cajaService;
+    @Autowired
+    private InventarioService inventarioService;
+
     
     @Autowired
     private TurnoCajaService turnoCajaService;
@@ -106,6 +110,30 @@ public class ViewFragmentController {
                 e.printStackTrace();
             }
         }
+        
+        
+        
+      // Stock/Inventario
+        if (viewName.equals("stock")) {
+            Integer idTienda = usuario.getTienda() != null ? usuario.getTienda().getIdTienda() : 1;
+            
+            try {
+                model.addAttribute("resumen", inventarioService.getResumenInventario(idTienda));
+                
+                if (search != null && !search.trim().isEmpty()) {
+                    model.addAttribute("inventario", inventarioService.buscarProductos(idTienda, search));
+                } else {
+                    model.addAttribute("inventario", inventarioService.listarInventarioPorTienda(idTienda));
+                }
+                
+                model.addAttribute("search", search);
+            } catch (Exception e) {
+                System.err.println("Error al cargar inventario: " + e.getMessage());
+                model.addAttribute("resumen", new java.util.HashMap<>());
+                model.addAttribute("inventario", java.util.Collections.emptyList());
+            }
+        }
+        
 
         // ============================================================
         // CONSTRUIR RUTA SEGÚN ROL (NUEVA ESTRUCTURA)

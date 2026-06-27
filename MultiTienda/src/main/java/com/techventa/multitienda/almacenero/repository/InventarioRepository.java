@@ -3,7 +3,9 @@ package com.techventa.multitienda.almacenero.repository;
 import com.techventa.multitienda.almacenero.model.InventarioTienda;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -17,45 +19,44 @@ public interface InventarioRepository extends JpaRepository<InventarioTienda, In
     List<InventarioTienda> findByStockActualLessThanEqual(Integer stock);
     List<InventarioTienda> findByActivoTrue();
 
-    // ========== MÉTODOS PARA REPORTES ==========
+    // ========== MÉTODOS PARA LA VISTA "STOCK" ==========
 
-    /**
-     * Productos con stock bajo (menor o igual al mínimo)
-     */
-    @Query("SELECT p.idProducto, p.nombreProducto, t.nombreTienda, i.stockActual, i.stockMinimo " +
-           "FROM InventarioTienda i JOIN i.producto p JOIN i.tienda t " +
-           "WHERE i.stockActual <= i.stockMinimo")
-    List<Object[]> findBajoStock();
+    @Query("SELECT COUNT(i) FROM InventarioTienda i WHERE i.activo = true AND i.tienda.idTienda = :idTienda")
+    long countTotalProductosActivos(@Param("idTienda") Integer idTienda);
 
-    /**
-     * Productos con stock bajo por tienda
-     */
-    @Query("SELECT p.idProducto, p.nombreProducto, t.nombreTienda, i.stockActual, i.stockMinimo " +
-           "FROM InventarioTienda i JOIN i.producto p JOIN i.tienda t " +
-           "WHERE i.stockActual <= i.stockMinimo AND t.idTienda = :idTienda")
-    List<Object[]> findBajoStockByTienda(Integer idTienda);
-    
-    
-    
-    
-    
-    
+    @Query("SELECT COUNT(i) FROM InventarioTienda i WHERE i.stockActual <= i.stockMinimo " +
+           "AND i.activo = true AND i.tienda.idTienda = :idTienda")
+    long countProductosBajoMinimo(@Param("idTienda") Integer idTienda);
 
-    /**
-     * Resumen de inventario por tienda
-     */
-    @Query("SELECT t.idTienda, t.nombreTienda, COUNT(i), SUM(i.stockActual), AVG(i.stockActual) " +
-           "FROM InventarioTienda i JOIN i.tienda t " +
-           "GROUP BY t.idTienda, t.nombreTienda")
-    List<Object[]> findResumenInventarioPorTienda();
+    // ✅ CORREGIDO: p.categoria.idCategoria en vez de p.idCategoria
+    @Query("SELECT COUNT(DISTINCT p.categoria.idCategoria) FROM InventarioTienda i " +
+           "JOIN i.producto p WHERE i.activo = true AND i.tienda.idTienda = :idTienda")
+    long countCategoriasActivas(@Param("idTienda") Integer idTienda);
 
-    /**
-     * Productos con stock agotado (stock = 0)
-     */
-    @Query("SELECT p.idProducto, p.nombreProducto, t.nombreTienda, i.stockActual " +
-           "FROM InventarioTienda i JOIN i.producto p JOIN i.tienda t " +
-           "WHERE i.stockActual = 0")
-    List<Object[]> findProductosAgotados();
-    
-    
+    @Query("SELECT i FROM InventarioTienda i " +
+           "JOIN FETCH i.producto p " +
+           "JOIN FETCH p.categoria c " +
+           "WHERE i.tienda.idTienda = :idTienda AND i.activo = true " +
+           "ORDER BY i.stockActual ASC")
+    List<InventarioTienda> findInventarioCompletoByTienda(@Param("idTienda") Integer idTienda);
+
+    @Query("SELECT i FROM InventarioTienda i " +
+           "JOIN FETCH i.producto p " +
+           "WHERE i.tienda.idTienda = :idTienda AND i.activo = true " +
+           "AND (LOWER(p.nombreProducto) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(p.codigoBarras) LIKE LOWER(CONCAT('%', :search, '%')))")
+    List<InventarioTienda> buscarPorNombreOCodigo(@Param("idTienda") Integer idTienda,
+                                                  @Param("search") String search);
+
+    @Query("SELECT COALESCE(SUM(i.stockActual * p.precioVenta), 0) FROM InventarioTienda i " +
+           "JOIN i.producto p WHERE i.tienda.idTienda = :idTienda AND i.activo = true")
+    Double calcularValorTotalStock(@Param("idTienda") Integer idTienda);
+
+    // ✅ NUEVO: productos críticos directo en BD (más eficiente)
+    @Query("SELECT i FROM InventarioTienda i " +
+           "JOIN FETCH i.producto p " +
+           "WHERE i.tienda.idTienda = :idTienda AND i.activo = true " +
+           "AND i.stockActual <= i.stockMinimo AND i.stockActual > 0 " +
+           "ORDER BY i.stockActual ASC")
+    List<InventarioTienda> findProductosCriticos(@Param("idTienda") Integer idTienda);
 }
