@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <meta charset="UTF-8">
     <title>Autorizar</title>
@@ -7,28 +7,23 @@
 <body>
 <div class="page-header">
     <div>
-        <div class="page-title">✅ Autorizar Solicitudes</div>
-        <div class="page-subtitle">Aprueba o rechaza solicitudes pendientes de tu tienda</div>
+        <div class="page-title">✅ Autorizar</div>
+        <div class="page-subtitle">Solicitudes de autorización pendientes</div>
     </div>
     <div class="page-header-right">
-        <span class="badge badge-warning" id="totalPendientes">0 pendientes</span>
+        <select id="filtroEstado" onchange="cargarAutorizaciones()" style="padding:8px 12px; border:1px solid #ddd; border-radius:6px; margin-right:10px;">
+            <option value="PENDIENTE">Pendientes</option>
+            <option value="APROBADO">Aprobadas</option>
+            <option value="RECHAZADO">Rechazadas</option>
+            <option value="TODAS">Todas</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="cargarAutorizaciones()">
+            <i class="fas fa-sync"></i> Actualizar
+        </button>
     </div>
 </div>
 
 <div class="table-wrapper">
-    <div class="table-toolbar">
-        <div class="toolbar-left">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Buscar solicitud..." id="buscarSolicitud" oninput="filtrarSolicitudes()">
-            </div>
-        </div>
-        <div class="toolbar-right">
-            <button class="btn btn-outline btn-sm" onclick="cargarAutorizaciones()">
-                <i class="fas fa-sync"></i> Actualizar
-            </button>
-        </div>
-    </div>
     <div class="table-scroll">
         <table>
             <thead>
@@ -38,139 +33,333 @@
                     <th>Cajero</th>
                     <th>Monto</th>
                     <th>Detalle</th>
-                    <th>Fecha</th>
+                    <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="tablaAutorizaciones">
-                <tr><td colspan="7" style="text-align:center;padding:40px;">
-                    <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>
-                    Cargando solicitudes...
-                </td></tr>
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>
+                        Cargando solicitudes...
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 </div>
 
+<!-- Modal Detalle -->
+<div class="modal-overlay" id="modalAutorizacion">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitulo">Detalle de Solicitud</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- Se llena con JS -->
+        </div>
+        <div class="modal-footer" id="modalFooter">
+            <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+            <button class="btn btn-success" id="btnAprobar" onclick="aprobarSolicitud()" style="display:none;">
+                <i class="fas fa-check"></i> Aprobar
+            </button>
+            <button class="btn btn-danger" id="btnRechazar" onclick="rechazarSolicitud()" style="display:none;">
+                <i class="fas fa-times"></i> Rechazar
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
-    let solicitudes = [];
+    (function() {
+        let autorizacionesData = [];
+        let solicitudActual = null;
 
-    function cargarAutorizaciones() {
-        const tbody = document.getElementById('tablaAutorizaciones');
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>Cargando...</td></tr>';
+        function getColorEstado(estado) {
+            const colores = {
+                'PENDIENTE': { bg: '#FFF8E1', text: '#F57F17' },
+                'APROBADO': { bg: '#E8F5E9', text: '#2E7D32' },
+                'RECHAZADO': { bg: '#FFEBEE', text: '#C62828' }
+            };
+            return colores[estado] || { bg: '#F5F5F5', text: '#616161' };
+        }
 
-        fetch('/api/supervisor/autorizaciones/pendientes')
-            .then(r => {
-                if (!r.ok) throw new Error('Error al cargar');
-                return r.json();
-            })
-            .then(d => {
-                solicitudes = d;
-                renderizarTabla(d);
-                document.getElementById('totalPendientes').textContent = d.length + ' pendientes';
-            })
-            .catch(() => {
+        function getColorTipo(tipo) {
+            const colores = {
+                'DESCUENTO': '#1976D2',
+                'DEVOLUCION': '#F59E0B',
+                'RETIRO': '#EF4444',
+                'ANULACION': '#6B7280'
+            };
+            return colores[tipo] || '#6B7280';
+        }
+
+        function cargarAutorizaciones() {
+            const filtro = document.getElementById('filtroEstado').value;
+            let url = '/supervisor/autorizaciones';
+            if (filtro !== 'TODAS') {
+                url = '/supervisor/autorizaciones?estado=' + filtro;
+            }
+            
+            console.log('🔍 Cargando autorizaciones...', url);
+            
+            fetch(url)
+                .then(r => {
+                    if (!r.ok) throw new Error('Error al cargar: ' + r.status);
+                    return r.json();
+                })
+                .then(data => {
+                    console.log('📦 Datos recibidos:', data);
+                    autorizacionesData = data;
+                    renderizarTabla(data);
+                })
+                .catch(err => {
+                    console.error('❌ Error:', err);
+                    document.getElementById('tablaAutorizaciones').innerHTML = 
+                        '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error al cargar solicitudes</td></tr>';
+                });
+        }
+
+        function renderizarTabla(data) {
+            const tbody = document.getElementById('tablaAutorizaciones');
+            
+            if (!data || data.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="7" style="text-align:center;padding:60px 20px;color:var(--text-muted);">
                             <i class="fas fa-check-circle" style="font-size:2.5rem;display:block;margin-bottom:10px;color:#10B981;"></i>
-                            <h3 style="font-weight:500;">No hay solicitudes pendientes</h3>
-                            <p style="font-size:0.8rem;">Todas las solicitudes han sido atendidas</p>
+                            <h3 style="font-weight:500;">No hay solicitudes</h3>
+                            <p style="font-size:0.8rem;">No hay solicitudes de autorización pendientes</p>
                         </td>
                     </tr>
                 `;
-                document.getElementById('totalPendientes').textContent = '0 pendientes';
-            });
-    }
+                return;
+            }
 
-    function renderizarTabla(data) {
-        const tbody = document.getElementById('tablaAutorizaciones');
-        if (!data || data.length === 0) {
-            tbody.innerHTML = `
+            tbody.innerHTML = data.map(item => {
+                const estado = item.estadoSolicitud || 'PENDIENTE';
+                const colorEstado = getColorEstado(estado);
+                const colorTipo = getColorTipo(item.tipoSolicitud);
+                const esPendiente = estado === 'PENDIENTE';
+                const cajero = item.cajero?.nombres + ' ' + item.cajero?.apellidos || 'N/A';
+                
+                // Parsear detalle JSON
+                let detalle = '-';
+                try {
+                    const detalleObj = JSON.parse(item.detalleSolicitud);
+                    detalle = detalleObj.motivo || detalleObj.producto || detalleObj.venta || 'Ver detalle';
+                } catch(e) {
+                    detalle = item.detalleSolicitud?.substring(0, 30) || '-';
+                }
+                
+                return `
                 <tr>
-                    <td colspan="7" style="text-align:center;padding:60px 20px;color:var(--text-muted);">
-                        <i class="fas fa-check-circle" style="font-size:2.5rem;display:block;margin-bottom:10px;color:#10B981;"></i>
-                        <h3 style="font-weight:500;">No hay solicitudes pendientes</h3>
-                        <p style="font-size:0.8rem;">Todas las solicitudes han sido atendidas</p>
+                    <td>${item.idSolicitud}</td>
+                    <td>
+                        <span style="display:inline-block;padding:2px 10px;border-radius:12px;background:${colorTipo}22;color:${colorTipo};font-size:0.7rem;font-weight:600;">
+                            ${item.tipoSolicitud || '-'}
+                        </span>
+                    </td>
+                    <td>${cajero}</td>
+                    <td>S/ ${item.montoAfectado?.toFixed(2) || '0.00'}</td>
+                    <td>${detalle}</td>
+                    <td>
+                        <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${colorEstado.bg};color:${colorEstado.text};font-size:0.75rem;font-weight:600;">
+                            ${estado}
+                        </span>
+                    </td>
+                    <td>
+                        ${esPendiente ? `
+                            <button class="btn btn-success btn-sm" onclick="abrirModal(${item.idSolicitud}, 'aprobar')">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="abrirModal(${item.idSolicitud}, 'rechazar')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : `
+                            <button class="btn btn-primary btn-sm" onclick="verDetalle(${item.idSolicitud})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        `}
                     </td>
                 </tr>
-            `;
-            return;
+            `}).join('');
         }
 
-        tbody.innerHTML = data.map(s => {
-            const fecha = s.fechaSolicitud ? s.fechaSolicitud.substring(0,16).replace('T', ' ') : '-';
-            return `
-                <tr>
-                    <td><strong>#${s.idSolicitud}</strong></td>
-                    <td><span class="badge badge-info">${s.tipoSolicitud || '-'}</span></td>
-                    <td>${s.cajero?.nombres || '-'} ${s.cajero?.apellidos || ''}</td>
-                    <td><strong>S/ ${s.montoAfectado || '0.00'}</strong></td>
-                    <td style="font-size:0.8rem;">${s.detalle || '-'}</td>
-                    <td style="font-size:0.7rem;color:var(--text-muted);">${fecha}</td>
-                    <td>
-                        <button class="btn btn-success btn-sm" onclick="aprobar(${s.idSolicitud})" style="padding:4px 10px;">
-                            <i class="fas fa-check"></i> Aprobar
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="rechazar(${s.idSolicitud})" style="padding:4px 10px;">
-                            <i class="fas fa-times"></i> Rechazar
-                        </button>
-                    </td>
-                </tr>
+        function abrirModal(id, accion) {
+            const item = autorizacionesData.find(x => x.idSolicitud === id);
+            if (!item) {
+                alert('Solicitud no encontrada');
+                return;
+            }
+            
+            solicitudActual = item;
+            
+            const estado = item.estadoSolicitud || 'PENDIENTE';
+            const colorEstado = getColorEstado(estado);
+            const accionTexto = accion === 'aprobar' ? 'Aprobar' : 'Rechazar';
+            const accionColor = accion === 'aprobar' ? '#2E7D32' : '#C62828';
+            const accionBg = accion === 'aprobar' ? '#E8F5E9' : '#FFEBEE';
+            const cajero = item.cajero?.nombres + ' ' + item.cajero?.apellidos || 'N/A';
+            
+            // Parsear detalle
+            let detalleHtml = item.detalleSolicitud;
+            try {
+                const detalleObj = JSON.parse(item.detalleSolicitud);
+                detalleHtml = Object.entries(detalleObj).map(([key, val]) => 
+                    `<div><strong>${key}:</strong> ${val}</div>`
+                ).join('');
+            } catch(e) {
+                detalleHtml = `<div>${item.detalleSolicitud || '-'}</div>`;
+            }
+            
+            document.getElementById('modalTitulo').textContent = `${accionTexto} Solicitud #${item.idSolicitud}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div style="display:grid;gap:12px;">
+                    <div><strong>Tipo:</strong> ${item.tipoSolicitud || '-'}</div>
+                    <div><strong>Cajero:</strong> ${cajero}</div>
+                    <div><strong>Monto:</strong> S/ ${item.montoAfectado?.toFixed(2) || '0.00'}</div>
+                    <div><strong>Detalle:</strong></div>
+                    <div style="background:var(--bg-card);padding:12px;border-radius:8px;border:1px solid var(--border-color);font-size:0.85rem;">
+                        ${detalleHtml}
+                    </div>
+                    <div>
+                        <strong>Estado:</strong> 
+                        <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${colorEstado.bg};color:${colorEstado.text};font-size:0.75rem;font-weight:600;">
+                            ${estado}
+                        </span>
+                    </div>
+                    <hr>
+                    <div style="padding:12px;border-radius:8px;background:${accionBg};color:${accionColor};text-align:center;font-weight:600;">
+                        ¿Estás seguro de ${accion === 'aprobar' ? 'aprobar' : 'rechazar'} esta solicitud?
+                    </div>
+                    ${accion === 'rechazar' ? `
+                        <div>
+                            <label style="display:block;font-weight:600;margin-bottom:5px;">Motivo de Rechazo</label>
+                            <textarea id="motivoRechazo" rows="3" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:4px;font-family:inherit;" placeholder="Ingrese el motivo del rechazo..."></textarea>
+                        </div>
+                    ` : `
+                        <div>
+                            <label style="display:block;font-weight:600;margin-bottom:5px;">ID Supervisor</label>
+                            <input type="number" id="idSupervisor" value="1" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:4px;font-family:inherit;">
+                        </div>
+                    `}
+                </div>
             `;
-        }).join('');
-    }
+            
+            document.getElementById('btnAprobar').style.display = accion === 'aprobar' ? 'inline-block' : 'none';
+            document.getElementById('btnRechazar').style.display = accion === 'rechazar' ? 'inline-block' : 'none';
+            document.getElementById('modalAutorizacion').classList.add('open');
+        }
 
-    function filtrarSolicitudes() {
-        const term = document.getElementById('buscarSolicitud').value.toLowerCase();
-        const filtrados = solicitudes.filter(s => 
-            (s.tipoSolicitud?.toLowerCase() || '').includes(term) ||
-            (s.cajero?.nombres?.toLowerCase() || '').includes(term) ||
-            (s.detalle?.toLowerCase() || '').includes(term)
-        );
-        renderizarTabla(filtrados);
-        document.getElementById('totalPendientes').textContent = filtrados.length + ' pendientes';
-    }
+        function aprobarSolicitud() {
+            if (!solicitudActual) return;
+            
+            const id = solicitudActual.idSolicitud;
+            const idSupervisor = document.getElementById('idSupervisor')?.value || 1;
+            
+            fetch(`/supervisor/autorizaciones/${id}/aprobar?idSupervisor=${idSupervisor}`, { method: 'PUT' })
+                .then(res => {
+                    if (!res.ok) throw new Error('Error al aprobar');
+                    return res.json();
+                })
+                .then(() => {
+                    cerrarModal();
+                    cargarAutorizaciones();
+                    alert('✅ Solicitud aprobada exitosamente');
+                })
+                .catch(err => alert('Error al aprobar: ' + err.message));
+        }
 
-    function aprobar(id) {
-        if (!confirm('¿Aprobar esta solicitud?')) return;
-        fetch(`/api/supervisor/autorizaciones/${id}/aprobar`, { 
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(r => {
-            if (!r.ok) throw new Error('Error al aprobar');
-            return r.json();
-        })
-        .then(() => {
-            alert('✅ Solicitud aprobada');
+        function rechazarSolicitud() {
+            if (!solicitudActual) return;
+            
+            const id = solicitudActual.idSolicitud;
+            const motivo = document.getElementById('motivoRechazo')?.value || '';
+            
+            if (!motivo.trim()) {
+                alert('El motivo de rechazo es obligatorio');
+                return;
+            }
+            
+            fetch(`/supervisor/autorizaciones/${id}/rechazar?motivo=${encodeURIComponent(motivo)}`, { method: 'PUT' })
+                .then(res => {
+                    if (!res.ok) throw new Error('Error al rechazar');
+                    return res.json();
+                })
+                .then(() => {
+                    cerrarModal();
+                    cargarAutorizaciones();
+                    alert('✅ Solicitud rechazada');
+                })
+                .catch(err => alert('Error al rechazar: ' + err.message));
+        }
+
+        function verDetalle(id) {
+            const item = autorizacionesData.find(x => x.idSolicitud === id);
+            if (!item) {
+                alert('Solicitud no encontrada');
+                return;
+            }
+            
+            const estado = item.estadoSolicitud || 'PENDIENTE';
+            const colorEstado = getColorEstado(estado);
+            const cajero = item.cajero?.nombres + ' ' + item.cajero?.apellidos || 'N/A';
+            
+            let detalleHtml = item.detalleSolicitud;
+            try {
+                const detalleObj = JSON.parse(item.detalleSolicitud);
+                detalleHtml = Object.entries(detalleObj).map(([key, val]) => 
+                    `<div><strong>${key}:</strong> ${val}</div>`
+                ).join('');
+            } catch(e) {
+                detalleHtml = `<div>${item.detalleSolicitud || '-'}</div>`;
+            }
+            
+            document.getElementById('modalTitulo').textContent = `Detalle Solicitud #${item.idSolicitud}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div style="display:grid;gap:12px;">
+                    <div><strong>Tipo:</strong> ${item.tipoSolicitud || '-'}</div>
+                    <div><strong>Cajero:</strong> ${cajero}</div>
+                    <div><strong>Monto:</strong> S/ ${item.montoAfectado?.toFixed(2) || '0.00'}</div>
+                    <div><strong>Detalle:</strong></div>
+                    <div style="background:var(--bg-card);padding:12px;border-radius:8px;border:1px solid var(--border-color);font-size:0.85rem;">
+                        ${detalleHtml}
+                    </div>
+                    <div>
+                        <strong>Estado:</strong> 
+                        <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${colorEstado.bg};color:${colorEstado.text};font-size:0.75rem;font-weight:600;">
+                            ${estado}
+                        </span>
+                    </div>
+                    ${item.respuestaSupervisor ? `<div><strong>Respuesta:</strong> ${item.respuestaSupervisor}</div>` : ''}
+                    ${item.fechaAtencion ? `<div><strong>Fecha atención:</strong> ${new Date(item.fechaAtencion).toLocaleString()}</div>` : ''}
+                </div>
+            `;
+            
+            document.getElementById('btnAprobar').style.display = 'none';
+            document.getElementById('btnRechazar').style.display = 'none';
+            document.getElementById('modalAutorizacion').classList.add('open');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalAutorizacion').classList.remove('open');
+            solicitudActual = null;
+        }
+
+        window.cargarAutorizaciones = cargarAutorizaciones;
+        window.abrirModal = abrirModal;
+        window.aprobarSolicitud = aprobarSolicitud;
+        window.rechazarSolicitud = rechazarSolicitud;
+        window.verDetalle = verDetalle;
+        window.cerrarModal = cerrarModal;
+
+        document.addEventListener('DOMContentLoaded', cargarAutorizaciones);
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
             cargarAutorizaciones();
-        })
-        .catch(() => {
-            alert('❌ Error al aprobar');
-        });
-    }
-
-    function rechazar(id) {
-        if (!confirm('¿Rechazar esta solicitud?')) return;
-        fetch(`/api/supervisor/autorizaciones/${id}/rechazar`, { 
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(r => {
-            if (!r.ok) throw new Error('Error al rechazar');
-            return r.json();
-        })
-        .then(() => {
-            alert('⛔ Solicitud rechazada');
-            cargarAutorizaciones();
-        })
-        .catch(() => {
-            alert('❌ Error al rechazar');
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', cargarAutorizaciones);
+        }
+    })();
 </script>
 </body>
 </html>

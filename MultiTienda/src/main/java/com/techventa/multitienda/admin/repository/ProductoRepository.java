@@ -28,6 +28,8 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
 
     // Buscar por estado del producto
     List<Producto> findByIdEstadoProducto(Integer idEstadoProducto);
+    
+    
 
     // Verificar si existe código de barras
     boolean existsByCodigoBarras(String codigoBarras);

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Perfil</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">👤 Mi Perfil</div>
+        <div class="page-subtitle">Información de tu cuenta de proveedor</div>
+    </div>
+</div>
+
+<div class="card" style="max-width:600px;margin:0 auto;">
+    <div class="card-body">
+        <div style="display:grid;gap:12px;">
+            <div><strong>Nombre:</strong> <span th:text="${usuario.nombres}"></span> <span th:text="${usuario.apellidos}"></span></div>
+            <div><strong>Email:</strong> <span th:text="${usuario.correoElectronico}"></span></div>
+            <div><strong>Rol:</strong> <span class="badge badge-primary" th:text="${usuario.rol.nombreRol}"></span></div>
+            <div><strong>Teléfono:</strong> <span th:text="${usuario.telefono}"></span></div>
+            <div><strong>Dirección:</strong> <span th:text="${usuario.direccion}"></span></div>
+            <div><strong>Estado:</strong> 
+                <span class="badge" th:class="${usuario.activo ? 'badge-success' : 'badge-danger'}" 
+                      th:text="${usuario.activo ? 'Activo' : 'Inactivo'}"></span>
+            </div>
+            <hr>
+            <div style="text-align:center;color:var(--text-muted);font-size:0.75rem;">
+                <i class="fas fa-building"></i> TechVenta Pro · v2.0
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

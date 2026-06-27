@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Subir Producto</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">📤 Subir Producto</div>
+        <div class="page-subtitle">Agrega un nuevo producto al catálogo</div>
+    </div>
+</div>
+
+<div class="card" style="max-width:600px;margin:0 auto;">
+    <div class="card-body">
+        <form id="formProducto">
+            <div class="form-group">
+                <label class="form-label">Nombre del Producto</label>
+                <input class="form-control" id="nombreProducto" placeholder="Nombre del producto" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Código de Barras</label>
+                <input class="form-control" id="codigoBarras" placeholder="Código de barras">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Descripción</label>
+                <textarea class="form-control" id="descripcion" rows="3" placeholder="Descripción del producto"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Marca</label>
+                    <input class="form-control" id="marca" placeholder="Marca">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Modelo</label>
+                    <input class="form-control" id="modelo" placeholder="Modelo">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Categoría</label>
+                    <select class="form-control" id="categoria"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Unidad de Medida</label>
+                    <select class="form-control" id="unidadMedida"></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Precio de Compra</label>
+                    <input class="form-control" id="precioCompra" type="number" step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Precio de Venta</label>
+                    <input class="form-control" id="precioVenta" type="number" step="0.01" placeholder="0.00" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Stock Mínimo</label>
+                    <input class="form-control" id="stockMinimo" type="number" placeholder="5" value="5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stock Máximo</label>
+                    <input class="form-control" id="stockMaximo" type="number" placeholder="100" value="100">
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="guardarProducto()" style="width:100%;margin-top:10px;">
+                <i class="fas fa-save"></i> Guardar Producto
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function() {
+        function cargarSelects() {
+            // Categorías
+            fetch('/api/categorias')
+                .then(r => r.json())
+                .then(d => {
+                    const select = document.getElementById('categoria');
+                    select.innerHTML = d.map(c => `<option value="${c.idCategoria}">${c.nombreCategoria}</option>`).join('');
+                })
+                .catch(() => {});
+
+            // Unidades de medida
+            fetch('/api/unidades-medida')
+                .then(r => r.json())
+                .then(d => {
+                    const select = document.getElementById('unidadMedida');
+                    select.innerHTML = d.map(u => `<option value="${u.idUnidadMedida}">${u.nombreUnidad}</option>`).join('');
+                })
+                .catch(() => {});
+        }
+
+        function guardarProducto() {
+            const data = {
+                nombreProducto: document.getElementById('nombreProducto').value,
+                codigoBarras: document.getElementById('codigoBarras').value,
+                descripcion: document.getElementById('descripcion').value,
+                marca: document.getElementById('marca').value,
+                modelo: document.getElementById('modelo').value,
+                idCategoria: parseInt(document.getElementById('categoria').value),
+                idUnidadMedida: parseInt(document.getElementById('unidadMedida').value),
+                precioCompra: parseFloat(document.getElementById('precioCompra').value) || 0,
+                precioVenta: parseFloat(document.getElementById('precioVenta').value) || 0,
+                stockMinimo: parseInt(document.getElementById('stockMinimo').value) || 5,
+                stockMaximo: parseInt(document.getElementById('stockMaximo').value) || 100
+            };
+
+            if (!data.nombreProducto || !data.precioVenta) {
+                alert('El nombre y precio de venta son obligatorios');
+                return;
+            }
+
+            fetch('/api/productos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => {
+                if (!r.ok) {
+                    return r.text().then(text => { throw new Error(text); });
+                }
+                return r.json();
+            })
+            .then(() => {
+                alert('✅ Producto subido exitosamente');
+                document.getElementById('formProducto').reset();
+                cargarSelects();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error al guardar: ' + error.message);
+            });
+        }
+
+        window.guardarProducto = guardarProducto;
+        window.cargarSelects = cargarSelects;
+
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            cargarSelects();
+        } else {
+            document.addEventListener('DOMContentLoaded', cargarSelects);
+        }
+    })();
+</script>
+</body>
+</html>

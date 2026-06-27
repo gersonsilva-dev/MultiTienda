@@ -5,7 +5,7 @@
 const ROLES = {
   administrador: {
     label:'Admin', color:'#2563EB', colorHover:'#1D4ED8', sidebar:'#0D1B2E',
-    name:'Alan Díaz', role:'Administrador Global', initials:'AD',
+    name:'ADMINISTRADOR', initials:'AD',
     nav:[
       { type:'section', label:'PRINCIPAL' },
       { type:'item', view:'dashboard', icon:'fas fa-tachometer-alt', label:'Dashboard' },
@@ -21,28 +21,38 @@ const ROLES = {
       { type:'item', view:'clientes', icon:'fas fa-user', label:'Clientes' },
       { type:'section', label:'OPERACIONES' },
       { type:'item', view:'ofertas', icon:'fas fa-tag', label:'Ofertas' },
+	  { type:'item', view:'ordenes', icon:'fas fa-clipboard-list', label:'Órdenes de compra' },
       { type:'item', view:'incidencias', icon:'fas fa-exclamation-triangle', label:'Incidencias' },
-      { type:'item', view:'mermas', icon:'fas fa-trash', label:'Mermas' },
       { type:'item', view:'lotes', icon:'fas fa-cubes', label:'Lotes' },
       { type:'section', label:'SISTEMA' },
       { type:'item', view:'reportes', icon:'fas fa-chart-bar', label:'Reportes' },
     ]
   },
+  
+  
   supervisor: {
-    label:'Supervisor', color:'#D97706', colorHover:'#B45309', sidebar:'#1C1208',
-    name:'Rosa López', role:'Supervisora', initials:'RL',
-    nav:[
-      { type:'section', label:'MONITOREO' },
-      { type:'item', view:'dashboard', icon:'fas fa-eye', label:'Dashboard en vivo' },
-      { type:'item', view:'tickets', icon:'fas fa-ticket-alt', label:'Tickets', badge:'2' },
-      { type:'section', label:'OPERACIONES' },
-      { type:'item', view:'cajas', icon:'fas fa-cash-register', label:'Cajas' },
-      { type:'item', view:'devoluciones', icon:'fas fa-undo', label:'Devoluciones' },
-      { type:'item', view:'ofertas', icon:'fas fa-tags', label:'Ofertas' },
-      { type:'section', label:'REPORTES' },
-      { type:'item', view:'reportes', icon:'fas fa-chart-line', label:'Reportes' },
-    ]
-  },
+      label:'Supervisor', color:'#D97706', colorHover:'#B45309', sidebar:'#1C1208',
+      name:'SUPERVISOR', initials:'SP',
+      nav:[
+        { type:'section', label:'MONITOREO' },
+        { type:'item', view:'dashboard', icon:'fas fa-eye', label:'Dashboard en vivo' },
+        { type:'item', view:'tickets', icon:'fas fa-ticket-alt', label:'Incidencias' },
+        { type:'section', label:'OPERACIONES' },
+        { type:'item', view:'cajas', icon:'fas fa-cash-register', label:'Cajas' },
+        { type:'item', view:'devoluciones', icon:'fas fa-undo', label:'Devoluciones' },
+        { type:'item', view:'ofertas', icon:'fas fa-tags', label:'Ofertas' },
+		
+        { type:'item', view:'stock', icon:'fas fa-boxes', label:'Stock' },
+        { type:'section', label:'AUTORIZACIONES' },
+        { type:'item', view:'autorizar', icon:'fas fa-check-circle', label:'Autorizar' },
+        { type:'section', label:'REPORTES' },
+        { type:'item', view:'reportes', icon:'fas fa-chart-line', label:'Reportes' },
+      ]
+    },
+
+  
+  
+  
   almacenero: {
     label:'Almacén', color:'#059669', colorHover:'#047857', sidebar:'#021F14',
     name:'Carlos Ruiz', role:'Almacenero', initials:'CR',
@@ -61,7 +71,7 @@ const ROLES = {
   },
   proveedor: {
     label:'Proveedor', color:'#7C3AED', colorHover:'#6D28D9', sidebar:'#1A0A40',
-    name:'Lácteos del Norte', role:'Proveedor', initials:'LN',
+    name:'PROVEEDOR', initials:'PV',
     nav:[
       { type:'section', label:'MI PORTAL' },
       { type:'item', view:'dashboard', icon:'fas fa-tachometer-alt', label:'Dashboard' },
@@ -70,7 +80,7 @@ const ROLES = {
         { view:'subir', label:'Subir nuevo' },
       ]},
       { type:'section', label:'OPERACIONES' },
-      { type:'item', view:'ordenes', icon:'fas fa-clipboard-list', label:'Órdenes', badge:'3' },
+      { type:'item', view:'ordenes', icon:'fas fa-clipboard-list', label:'Órdenes' },
       { type:'item', view:'entregas', icon:'fas fa-truck', label:'Entregas' },
       { type:'item', view:'facturacion', icon:'fas fa-file-invoice', label:'Facturación' },
       { type:'item', view:'pagos', icon:'fas fa-dollar-sign', label:'Pagos' },
@@ -90,6 +100,14 @@ const ROLES = {
     ]
   }
 };
+
+
+
+
+
+function cerrarSesion() {
+    window.location.href = '/login';
+}
 
 /* ── ESTADO ────────────────────────────────────────────── */
 const S = {
@@ -314,6 +332,8 @@ function ejecutarCargaDatos(viewName) {
             case 'transferencias': if (typeof cargarTransferencias === 'function') cargarTransferencias(); break;
             case 'lotes': if (typeof cargarLotes === 'function') cargarLotes(); break;
             case 'dashboard': if (typeof cargarDashboard === 'function') cargarDashboard(); break;
+            // 🔥 AGREGAR REPORTES
+            case 'reportes': if (typeof cargarReportes === 'function') cargarReportes(); break;
             default: break;
         }
     }, 100);

@@ -18,7 +18,6 @@
     <link th:href="@{/css/principal.css}" rel="stylesheet" />
 
     <style>
-        /* Estilos para el modo cajero - se activa cuando el rol es cajero */
         body.rol-cajero .sidebar {
             display: none !important;
         }
@@ -50,7 +49,7 @@
 
 <div class="app-shell" id="appShell">
 
-    <!-- ═══════ SIDEBAR (solo para roles que no son cajero) ═══════ -->
+    <!-- ═══════ SIDEBAR ═══════ -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo-icon" id="logoIcon"><i class="fas fa-store"></i></div>
@@ -114,8 +113,7 @@
                     <i class="fas fa-chevron-down tp-chevron"></i>
 
                     <div class="profile-dropdown" id="profileDd">
-                        <div class="dd-item"><i class="fas fa-user"></i> Mi perfil</div>
-                        <div class="dd-item"><i class="fas fa-cog"></i> Configuración</div>
+                        <!-- ❌ ELIMINADO: Mi perfil y Configuración -->
                         <div class="dd-divider"></div>
                         <div class="dd-item danger" onclick="cerrarSesion()">
                             <i class="fas fa-sign-out-alt"></i> Cerrar sesión
@@ -137,17 +135,12 @@
 
         <!-- CONTENT AREA -->
         <div class="content-area" id="contentArea">
-
-            <!-- PAGE LOADER -->
             <div class="page-loader" id="pageLoader">
                 <div class="loader-spinner"></div>
             </div>
-
-            <!-- CONTENIDO DINÁMICO -->
             <main class="main-content" id="mainContent">
                 <!-- Se inyecta por JS -->
             </main>
-
         </div>
     </div>
 </div>

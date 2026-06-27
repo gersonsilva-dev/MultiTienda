@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Stock</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">📦 Stock</div>
+        <div class="page-subtitle">Productos y niveles de inventario</div>
+    </div>
+    <div class="page-header-right">
+        <div style="display:flex;gap:10px;align-items:center;">
+            <select id="filtroEstadoStock" onchange="cargarStock()" style="padding:8px 12px; border:1px solid #ddd; border-radius:6px;">
+                <option value="0">Todos</option>
+                <option value="1">Stock crítico</option>
+                <option value="2">Stock normal</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Producto</th>
+                    <th>Código</th>
+                    <th>Stock Actual</th>
+                    <th>Stock Mínimo</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaStock">
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>
+                        Cargando stock...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ============================================================
+        // COLORES PARA ESTADOS
+        // ============================================================
+        function getColorStock(estado) {
+            const colores = {
+                'CRÍTICO': { bg: '#FFEBEE', text: '#C62828' },
+                'NORMAL': { bg: '#E8F5E9', text: '#2E7D32' }
+            };
+            return colores[estado] || { bg: '#F5F5F5', text: '#616161' };
+        }
+
+        // ============================================================
+        // CARGAR STOCK
+        // ============================================================
+        function cargarStock() {
+            console.log('🔍 Cargando stock...');
+            
+            const filtro = document.getElementById('filtroEstadoStock').value;
+            
+            fetch('/api/stock')
+                .then(r => {
+                    if (!r.ok) throw new Error('Error al cargar: ' + r.status);
+                    return r.json();
+                })
+                .then(data => {
+                    console.log('📦 Datos recibidos:', data);
+                    
+                    let productos = data.map(p => {
+                        const stockActual = p.stockActual || 0;
+                        const stockMinimo = p.stockMinimo || 5;
+                        const estado = stockActual <= stockMinimo ? 'CRÍTICO' : 'NORMAL';
+                        
+                        return {
+                            id: p.idProducto,
+                            nombre: p.nombreProducto || 'Sin nombre',
+                            codigo: p.codigoBarras || '-',
+                            stockActual: stockActual,
+                            stockMinimo: stockMinimo,
+                            estado: estado
+                        };
+                    });
+                    
+                    // Aplicar filtro
+                    if (filtro === '1') {
+                        productos = productos.filter(p => p.estado === 'CRÍTICO');
+                    } else if (filtro === '2') {
+                        productos = productos.filter(p => p.estado === 'NORMAL');
+                    }
+                    
+                    renderizarTabla(productos);
+                })
+                .catch(err => {
+                    console.error('❌ Error:', err);
+                    document.getElementById('tablaStock').innerHTML = 
+                        '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error al cargar el stock: ' + err.message + '</td></tr>';
+                });
+        }
+
+        // ============================================================
+        // RENDERIZAR TABLA
+        // ============================================================
+        function renderizarTabla(productos) {
+            const tbody = document.getElementById('tablaStock');
+            
+            if (!productos || productos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+                            <i class="fas fa-box-open" style="font-size:2.5rem;display:block;margin-bottom:10px;color:#10B981;"></i>
+                            <h3 style="font-weight:500;">No hay productos registrados</h3>
+                            <p style="font-size:0.8rem;">No se encontraron productos en el inventario</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = productos.map(item => {
+                const color = getColorStock(item.estado);
+                
+                return `
+                <tr>
+                    <td>${item.id}</td>
+                    <td><strong>${item.nombre}</strong></td>
+                    <td><span class="badge badge-info">${item.codigo}</span></td>
+                    <td>
+                        <span style="font-weight:600;font-size:1.1rem;">${item.stockActual}</span>
+                    </td>
+                    <td>${item.stockMinimo}</td>
+                    <td>
+                        <span style="display:inline-block;padding:4px 12px;border-radius:12px;background:${color.bg};color:${color.text};font-size:0.75rem;font-weight:600;">
+                            ${item.estado}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="verProducto(${item.id})">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        // ============================================================
+        // VER PRODUCTO
+        // ============================================================
+        function verProducto(id) {
+            fetch(`/api/productos/${id}`)
+                .then(r => r.json())
+                .then(p => {
+                    let mensaje = `📦 ${p.nombreProducto || 'Producto'}\n`;
+                    mensaje += `Código: ${p.codigoBarras || '-'}\n`;
+                    mensaje += `Marca: ${p.marca || '-'}\n`;
+                    mensaje += `Modelo: ${p.modelo || '-'}\n`;
+                    mensaje += `Stock: ${p.stockActual || 0}\n`;
+                    mensaje += `Stock mínimo: ${p.stockMinimo || 5}`;
+                    alert(mensaje);
+                })
+                .catch(() => {
+                    alert('No se pudo obtener información del producto');
+                });
+        }
+
+        // ============================================================
+        // EXPONER FUNCIONES
+        // ============================================================
+        window.cargarStock = cargarStock;
+        window.verProducto = verProducto;
+
+        // ============================================================
+        // INICIALIZAR
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', cargarStock);
+        
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            cargarStock();
+        }
+    })();
+</script>
+</body>
+</html>

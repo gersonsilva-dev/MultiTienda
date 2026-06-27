@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Órdenes</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">📋 Órdenes</div>
+        <div class="page-subtitle">Órdenes de compra de tus productos</div>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Código</th>
+                    <th>Proveedor</th>
+                    <th>Tienda</th>
+                    <th>Fecha Orden</th>
+                    <th>Fecha Entrega</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="tablaOrdenes">
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>
+                        Cargando órdenes...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    (function() {
+        function cargarOrdenes() {
+            console.log('🔍 Cargando órdenes...');
+            
+            fetch('/api/ordenes')
+                .then(r => {
+                    console.log('📡 Status:', r.status);
+                    if (!r.ok) throw new Error('Error al cargar: ' + r.status);
+                    return r.json();
+                })
+                .then(d => {
+                    console.log('📦 Datos recibidos:', d);
+                    const tbody = document.getElementById('tablaOrdenes');
+                    if (!d || d.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No hay órdenes registradas</td></tr>';
+                        return;
+                    }
+                    
+                    // Mapeo de estados
+                    const estados = {
+                        1: { nombre: 'PENDIENTE', clase: 'badge-warning' },
+                        2: { nombre: 'APROBADA', clase: 'badge-success' },
+                        3: { nombre: 'ENVIADA', clase: 'badge-info' },
+                        4: { nombre: 'RECIBIDA', clase: 'badge-primary' },
+                        5: { nombre: 'CANCELADA', clase: 'badge-danger' },
+                        6: { nombre: 'PARCIAL', clase: 'badge-secondary' }
+                    };
+                    
+                    tbody.innerHTML = d.map(o => {
+                        const estado = estados[o.idEstadoOrdenCompra] || { nombre: 'PENDIENTE', clase: 'badge-warning' };
+                        
+                        return `
+                        <tr>
+                            <td>${o.idOrden}</td>
+                            <td><strong>${o.codigoOrden || '-'}</strong></td>
+                            <td>${o.proveedor?.razonSocial || '-'}</td>
+                            <td>${o.tienda?.nombreTienda || '-'}</td>
+                            <td>${o.fechaOrden ? new Date(o.fechaOrden).toLocaleDateString() : '-'}</td>
+                            <td>${o.fechaEntregaEstimada || '-'}</td>
+                            <td>
+                                <span class="badge ${estado.clase}">${estado.nombre}</span>
+                            </td>
+                        </tr>
+                    `}).join('');
+                })
+                .catch(err => {
+                    console.error('❌ Error:', err);
+                    document.getElementById('tablaOrdenes').innerHTML = 
+                        '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error al cargar órdenes: ' + err.message + '</td></tr>';
+                });
+        }
+
+        window.cargarOrdenes = cargarOrdenes;
+
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            cargarOrdenes();
+        } else {
+            document.addEventListener('DOMContentLoaded', cargarOrdenes);
+        }
+    })();
+</script>
+</body>
+</html>

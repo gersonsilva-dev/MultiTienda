@@ -13,13 +13,12 @@
     <div class="page-header-right">
         <select id="filtroEstado" onchange="cargarDevoluciones()" style="padding:8px 12px; border:1px solid #ddd; border-radius:6px; margin-right:10px;">
             <option value="0">Todas</option>
-            <option value="1">Pendientes</option>
+            <option value="1">Solicitadas</option>
             <option value="2">Aprobadas</option>
             <option value="3">Rechazadas</option>
+            <option value="4">Completadas</option>
         </select>
-        <button class="btn btn-outline btn-sm" onclick="cargarDevoluciones()">
-            <i class="fas fa-sync"></i> Actualizar
-        </button>
+
     </div>
 </div>
 
@@ -88,34 +87,44 @@
         }
 
         function cargarDevoluciones() {
-            const estado = document.getElementById('filtroEstado').value;
+            const estadoFiltro = document.getElementById('filtroEstado').value;
             let url = '/supervisor/devoluciones';
+            
+            console.log('🔍 Cargando devoluciones desde:', url);
             
             fetch(url)
                 .then(r => {
-                    if (!r.ok) throw new Error('Error al cargar');
+                    console.log('📡 Respuesta status:', r.status);
+                    if (!r.ok) throw new Error('Error al cargar: ' + r.status);
                     return r.json();
                 })
                 .then(d => {
-                    // Filtrar por estado
-                    if (estado !== '0') {
+                    console.log('📦 Datos recibidos:', d);
+                    
+                    // 🔥 FILTRO CORREGIDO
+                    let datosFiltrados = d;
+                    if (estadoFiltro !== '0') {
                         const estadoMap = {
                             '1': 'SOLICITADA',
                             '2': 'APROBADA',
-                            '3': 'RECHAZADA'
+                            '3': 'RECHAZADA',
+                            '4': 'COMPLETADA'
                         };
-                        d = d.filter(item => item.estado === estadoMap[estado]);
+                        datosFiltrados = d.filter(item => {
+                            const estadoActual = item.estadoDevolucion?.nombreEstado || item.estado || 'SOLICITADA';
+                            return estadoActual === estadoMap[estadoFiltro];
+                        });
                     }
                     
-                    devolucionesData = d;
+                    devolucionesData = datosFiltrados;
                     const tbody = document.getElementById('tablaDevoluciones');
-                    if (!d || d.length === 0) {
+                    if (!datosFiltrados || datosFiltrados.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No hay devoluciones registradas</td></tr>';
                         return;
                     }
                     
-                    tbody.innerHTML = d.map(item => {
-                        const estado = item.estado || 'SOLICITADA';
+                    tbody.innerHTML = datosFiltrados.map(item => {
+                        const estado = item.estadoDevolucion?.nombreEstado || item.estado || 'SOLICITADA';
                         const colorEst = getColorEstado(estado);
                         const esPendiente = estado === 'SOLICITADA' || estado === 'PENDIENTE';
                         const cliente = item.cliente?.nombres || item.cliente?.razon_social || 'N/A';
@@ -135,14 +144,14 @@
                             </td>
                             <td>
                                 ${esPendiente ? `
-                                    <button class="btn btn-success btn-sm" onclick="window.abrirModalDevolucion(${item.idDevolucion}, 'aprobar')">
+                                    <button class="btn btn-success btn-sm" onclick="abrirModalDevolucion(${item.idDevolucion}, 'aprobar')">
                                         <i class="fas fa-check"></i>
                                     </button>
-                                    <button class="btn btn-danger btn-sm" onclick="window.abrirModalDevolucion(${item.idDevolucion}, 'rechazar')">
+                                    <button class="btn btn-danger btn-sm" onclick="abrirModalDevolucion(${item.idDevolucion}, 'rechazar')">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 ` : `
-                                    <button class="btn btn-primary btn-sm" onclick="window.verDevolucion(${item.idDevolucion})">
+                                    <button class="btn btn-primary btn-sm" onclick="verDevolucion(${item.idDevolucion})">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 `}
@@ -151,21 +160,20 @@
                     `}).join('');
                 })
                 .catch(err => {
-                    console.error('Error:', err);
+                    console.error('❌ Error:', err);
                     document.getElementById('tablaDevoluciones').innerHTML = 
-                        '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error al cargar devoluciones</td></tr>';
+                        '<tr><td colspan="7" style="text-align:center;padding:40px;color:red;">Error al cargar devoluciones: ' + err.message + '</td></tr>';
                 });
         }
 
         function verDevolucion(id) {
-            console.log('👁️ Ver devolución:', id);
             const item = devolucionesData.find(x => x.idDevolucion === id);
             if (!item) {
                 alert('Devolución no encontrada');
                 return;
             }
 
-            const estado = item.estado || 'SOLICITADA';
+            const estado = item.estadoDevolucion?.nombreEstado || item.estado || 'SOLICITADA';
             const colorEst = getColorEstado(estado);
             const fecha = item.fechaSolicitud ? new Date(item.fechaSolicitud).toLocaleString() : '-';
             const cliente = item.cliente?.nombres || item.cliente?.razon_social || 'N/A';
@@ -196,7 +204,6 @@
         }
 
         function abrirModalDevolucion(id, accion) {
-            console.log('📋 Abrir modal:', id, accion);
             const item = devolucionesData.find(x => x.idDevolucion === id);
             if (!item) {
                 alert('Devolución no encontrada');
@@ -205,7 +212,7 @@
 
             devolucionActual = item;
 
-            const estado = item.estado || 'SOLICITADA';
+            const estado = item.estadoDevolucion?.nombreEstado || item.estado || 'SOLICITADA';
             const colorEst = getColorEstado(estado);
             const accionTexto = accion === 'aprobar' ? 'Aprobar' : 'Rechazar';
             const accionColor = accion === 'aprobar' ? '#2E7D32' : '#C62828';
@@ -252,7 +259,6 @@
         }
 
         function confirmarAccion(accion) {
-            console.log('✅ Confirmar acción:', accion);
             if (!devolucionActual) {
                 alert('No hay devolución seleccionada');
                 return;
@@ -270,7 +276,7 @@
             let url = `/supervisor/devoluciones/${id}/${accion}`;
             let params = accion === 'aprobar' ? `?idSupervisor=${idSupervisor}` : `?motivo=${encodeURIComponent(motivo)}`;
 
-            console.log('📡 Enviando petición:', url + params);
+            console.log('📡 Enviando:', accion, url + params);
 
             fetch(url + params, { method: 'PUT' })
                 .then(res => {
@@ -282,7 +288,7 @@
                     console.log('✅ Respuesta:', data);
                     cerrarModalDevolucion();
                     cargarDevoluciones();
-                    alert(accion === 'aprobar' ? '✅ Devolución aprobada exitosamente' : '✅ Devolución rechazada exitosamente');
+                    alert(accion === 'aprobar' ? '✅ Devolución aprobada' : '✅ Devolución rechazada');
                 })
                 .catch(err => {
                     console.error('❌ Error:', err);
@@ -295,18 +301,12 @@
             devolucionActual = null;
         }
 
-        // ============================================================
-        // EXPONER FUNCIONES GLOBALMENTE
-        // ============================================================
         window.cargarDevoluciones = cargarDevoluciones;
         window.verDevolucion = verDevolucion;
         window.abrirModalDevolucion = abrirModalDevolucion;
         window.confirmarAccion = confirmarAccion;
         window.cerrarModalDevolucion = cerrarModalDevolucion;
 
-        // ============================================================
-        // INICIALIZAR
-        // ============================================================
         document.addEventListener('DOMContentLoaded', cargarDevoluciones);
         
         if (document.readyState === 'complete' || document.readyState === 'interactive') {

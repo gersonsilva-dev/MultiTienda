@@ -1,11 +1,10 @@
 package com.techventa.multitienda.proveedor.model;
 
+import com.techventa.multitienda.admin.model.Proveedor;
+import com.techventa.multitienda.admin.model.Tienda;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
-import com.techventa.multitienda.admin.model.Proveedor;
-import com.techventa.multitienda.admin.model.Tienda;
 
 @Entity
 @Table(name = "ordenes_compra")
@@ -16,7 +15,7 @@ public class OrdenCompra {
     @Column(name = "id_orden")
     private Integer idOrden;
 
-    @Column(name = "codigo_orden", unique = true, length = 50)
+    @Column(name = "codigo_orden", unique = true, nullable = false, length = 50)
     private String codigoOrden;
 
     @ManyToOne
@@ -34,7 +33,7 @@ public class OrdenCompra {
     private LocalDate fechaEntregaEstimada;
 
     @Column(name = "id_estado_orden_compra")
-    private Integer idEstadoOrdenCompra;
+    private Integer idEstadoOrdenCompra = 1;
 
     @Column(name = "observaciones")
     private String observaciones;
@@ -45,49 +44,82 @@ public class OrdenCompra {
     @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime fechaCreacion;
 
-    @Column(name = "fecha_actualizacion")
-    private LocalDateTime fechaActualizacion;
-
+    // ============================================================
+    // CONSTRUCTORES
+    // ============================================================
     public OrdenCompra() {}
 
-    // Constructor básico
-    public OrdenCompra(Tienda tienda, Proveedor proveedor) {
+    public OrdenCompra(String codigoOrden, Tienda tienda, Proveedor proveedor, 
+                       LocalDateTime fechaOrden, LocalDate fechaEntregaEstimada) {
+        this.codigoOrden = codigoOrden;
         this.tienda = tienda;
         this.proveedor = proveedor;
-        this.fechaOrden = LocalDateTime.now();
+        this.fechaOrden = fechaOrden;
+        this.fechaEntregaEstimada = fechaEntregaEstimada;
+        this.idEstadoOrdenCompra = 1;
         this.activo = true;
     }
 
-    // Getters y Setters
+    // ============================================================
+    // GETTERS Y SETTERS
+    // ============================================================
     public Integer getIdOrden() { return idOrden; }
     public void setIdOrden(Integer idOrden) { this.idOrden = idOrden; }
+
     public String getCodigoOrden() { return codigoOrden; }
     public void setCodigoOrden(String codigoOrden) { this.codigoOrden = codigoOrden; }
+
     public Tienda getTienda() { return tienda; }
     public void setTienda(Tienda tienda) { this.tienda = tienda; }
+
     public Proveedor getProveedor() { return proveedor; }
     public void setProveedor(Proveedor proveedor) { this.proveedor = proveedor; }
+
     public LocalDateTime getFechaOrden() { return fechaOrden; }
     public void setFechaOrden(LocalDateTime fechaOrden) { this.fechaOrden = fechaOrden; }
+
     public LocalDate getFechaEntregaEstimada() { return fechaEntregaEstimada; }
     public void setFechaEntregaEstimada(LocalDate fechaEntregaEstimada) { this.fechaEntregaEstimada = fechaEntregaEstimada; }
+
     public Integer getIdEstadoOrdenCompra() { return idEstadoOrdenCompra; }
     public void setIdEstadoOrdenCompra(Integer idEstadoOrdenCompra) { this.idEstadoOrdenCompra = idEstadoOrdenCompra; }
+
     public String getObservaciones() { return observaciones; }
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+
     public Boolean getActivo() { return activo; }
     public void setActivo(Boolean activo) { this.activo = activo; }
+
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
-    public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
-    public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
 
-    @Override
-    public String toString() {
-        return "OrdenCompra{" +
-                "idOrden=" + idOrden +
-                ", codigoOrden='" + codigoOrden + '\'' +
-                ", fechaOrden=" + fechaOrden +
-                '}';
+    // ============================================================
+    // MÉTODO PARA OBTENER EL NOMBRE DEL ESTADO
+    // ============================================================
+    public String getEstadoNombre() {
+        switch (idEstadoOrdenCompra != null ? idEstadoOrdenCompra : 0) {
+            case 1: return "PENDIENTE";
+            case 2: return "APROBADA";
+            case 3: return "ENVIADA";
+            case 4: return "RECIBIDA";
+            case 5: return "CANCELADA";
+            case 6: return "PARCIAL";
+            default: return "DESCONOCIDO";
+        }
+    }
+
+    // ============================================================
+    // MÉTODO PARA OBTENER EL COLOR DEL ESTADO
+    // ============================================================
+    public String getEstadoColor() {
+        switch (idEstadoOrdenCompra != null ? idEstadoOrdenCompra : 0) {
+            case 1: return "badge-warning";
+            case 2: return "badge-success";
+            case 3: return "badge-info";
+            case 4: return "badge-primary";
+            case 5: return "badge-danger";
+            case 6: return "badge-secondary";
+            default: return "badge-secondary";
+        }
     }
 }

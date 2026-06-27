@@ -15,122 +15,346 @@
     </div>
 </div>
 
-<!-- KPIs -->
-<div class="kpi-grid">
+<!-- ============================================================ -->
+<!-- KPIS (SOLO LOS QUE PUEDE VER EL SUPERVISOR) -->
+<!-- ============================================================ -->
+<div class="kpi-grid" id="kpiGrid">
     <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-clock"></i> Solicitudes</div>
-        <div class="kpi-value" id="totalSolicitudes">0</div>
-        <div class="kpi-delta warn"><i class="fas fa-hourglass-half"></i> Pendientes</div>
+        <div class="kpi-label"><i class="fas fa-clock"></i> Devoluciones</div>
+        <div class="kpi-value" id="totalDevoluciones">0</div>
+        <div class="kpi-delta warn"><i class="fas fa-hourglass-half"></i> <span id="devolucionesPendientes">0</span> pendientes</div>
+        <a href="#" onclick="loadView('devoluciones')" style="font-size:0.7rem;">Gestionar</a>
     </div>
     <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-ticket-alt"></i> Tickets</div>
-        <div class="kpi-value" id="totalTickets">0</div>
-        <div class="kpi-delta warn"><i class="fas fa-exclamation-circle"></i> Abiertos</div>
+        <div class="kpi-label"><i class="fas fa-exclamation-triangle"></i> Incidencias</div>
+        <div class="kpi-value" id="totalIncidencias">0</div>
+        <div class="kpi-delta warn"><i class="fas fa-exclamation-circle"></i> <span id="incidenciasAbiertas">0</span> abiertas</div>
+        <a href="#" onclick="loadView('incidencias')" style="font-size:0.7rem;">Ver todas</a>
     </div>
     <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-boxes"></i> Stock bajo</div>
-        <div class="kpi-value" id="totalStockBajo">0</div>
-        <div class="kpi-delta danger"><i class="fas fa-exclamation-triangle"></i> Crítico</div>
+        <div class="kpi-label"><i class="fas fa-tags"></i> Ofertas</div>
+        <div class="kpi-value" id="totalOfertas">0</div>
+        <div class="kpi-delta up"><i class="fas fa-check-circle"></i> <span id="ofertasActivas">0</span> activas</div>
+        <a href="#" onclick="loadView('ofertas')" style="font-size:0.7rem;">Ver todas</a>
     </div>
     <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-store"></i> Tienda</div>
-        <div class="kpi-value" id="nombreTienda" style="font-size:1rem;">-</div>
-        <div class="kpi-delta up"><span id="tiendaDireccion" style="font-size:0.7rem;">-</span></div>
+        <div class="kpi-label"><i class="fas fa-cash-register"></i> Cajas</div>
+        <div class="kpi-value" id="totalCajas">0</div>
+        <div class="kpi-delta up"><i class="fas fa-check-circle"></i> <span id="cajasActivas">0</span> activas</div>
+        <a href="#" onclick="loadView('cajas')" style="font-size:0.7rem;">Ver todas</a>
     </div>
 </div>
 
-<!-- Accesos rápidos -->
-<div class="grid-3" style="margin-top:18px;">
-    <div class="card" onclick="loadView('autorizar')" style="cursor:pointer;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.02)';this.style.borderColor='#D97706';" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent';">
-        <div class="card-body" style="text-align:center;padding:24px;">
-            <i class="fas fa-check-circle" style="font-size:2.5rem;color:#D97706;"></i>
-            <h4 style="margin-top:10px;">Autorizar</h4>
-            <p style="color:var(--text-muted);font-size:0.8rem;">Solicitudes pendientes</p>
+<!-- ============================================================ -->
+<!-- GRÁFICO DE INCIDENCIAS POR ESTADO -->
+<!-- ============================================================ -->
+<div class="card" style="margin-bottom:18px;">
+    <div class="card-header">
+        <div class="card-title">⚠️ Incidencias por estado</div>
+        <a href="#" onclick="loadView('incidencias')" style="font-size:0.7rem;">Ver todas</a>
+    </div>
+    <div class="card-body">
+        <div id="graficoIncidencias" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;padding:10px 0;">
+            <p style="color:var(--text-muted);font-size:0.8rem;">Cargando...</p>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- PRIORIDADES DE INCIDENCIAS -->
+        <!-- ============================================================ -->
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:12px;border-top:1px solid var(--border-color);padding-top:14px;">
+            <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:10px;text-align:center;border:2px solid #B71C1C;">
+                <span style="display:block;font-size:0.55rem;color:#B71C1C;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Crítica</span>
+                <span id="prioCritica" style="display:block;font-size:1.3rem;font-weight:700;color:#B71C1C;">0</span>
+            </div>
+            <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:10px;text-align:center;border:2px solid #DC2626;">
+                <span style="display:block;font-size:0.55rem;color:#DC2626;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Urgente</span>
+                <span id="prioUrgente" style="display:block;font-size:1.3rem;font-weight:700;color:#DC2626;">0</span>
+            </div>
+            <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:10px;text-align:center;border:2px solid #F59E0B;">
+                <span style="display:block;font-size:0.55rem;color:#F59E0B;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Alta</span>
+                <span id="prioAlta" style="display:block;font-size:1.3rem;font-weight:700;color:#F59E0B;">0</span>
+            </div>
+            <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:10px;text-align:center;border:2px solid #1976D2;">
+                <span style="display:block;font-size:0.55rem;color:#1976D2;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Media</span>
+                <span id="prioMedia" style="display:block;font-size:1.3rem;font-weight:700;color:#1976D2;">0</span>
+            </div>
+            <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:10px;text-align:center;border:2px solid #388E3C;">
+                <span style="display:block;font-size:0.55rem;color:#388E3C;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;">Baja</span>
+                <span id="prioBaja" style="display:block;font-size:1.3rem;font-weight:700;color:#388E3C;">0</span>
+            </div>
         </div>
     </div>
-    <div class="card" onclick="loadView('tickets')" style="cursor:pointer;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.02)';this.style.borderColor='#D97706';" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent';">
-        <div class="card-body" style="text-align:center;padding:24px;">
-            <i class="fas fa-ticket-alt" style="font-size:2.5rem;color:#D97706;"></i>
-            <h4 style="margin-top:10px;">Tickets</h4>
-            <p style="color:var(--text-muted);font-size:0.8rem;">Incidencias de tu tienda</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- LISTAS EN GRID DE 3 (LO QUE PUEDE VER EL SUPERVISOR) -->
+<!-- ============================================================ -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:18px;">
+    <!-- Últimas devoluciones -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">🔄 Últimas devoluciones</div>
+            <a href="#" onclick="loadView('devoluciones')" style="font-size:0.7rem;">Ver todas</a>
+        </div>
+        <div class="card-body" style="padding:0;">
+            <div id="listaDevoluciones" style="padding:8px 12px;">
+                <p style="color:var(--text-muted);font-size:0.75rem;">Cargando...</p>
+            </div>
         </div>
     </div>
-    <div class="card" onclick="loadView('stock')" style="cursor:pointer;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.02)';this.style.borderColor='#D97706';" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent';">
-        <div class="card-body" style="text-align:center;padding:24px;">
-            <i class="fas fa-boxes" style="font-size:2.5rem;color:#D97706;"></i>
-            <h4 style="margin-top:10px;">Stock crítico</h4>
-            <p style="color:var(--text-muted);font-size:0.8rem;">Productos con bajo stock</p>
+
+    <!-- Últimas incidencias -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">⚠️ Últimas incidencias</div>
+            <a href="#" onclick="loadView('incidencias')" style="font-size:0.7rem;">Ver todas</a>
+        </div>
+        <div class="card-body" style="padding:0;">
+            <div id="listaIncidencias" style="padding:8px 12px;">
+                <p style="color:var(--text-muted);font-size:0.75rem;">Cargando...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimas ofertas -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">🏷️ Últimas ofertas</div>
+            <a href="#" onclick="loadView('ofertas')" style="font-size:0.7rem;">Ver todas</a>
+        </div>
+        <div class="card-body" style="padding:0;">
+            <div id="listaOfertas" style="padding:8px 12px;">
+                <p style="color:var(--text-muted);font-size:0.75rem;">Cargando...</p>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    function cargarDashboardSupervisor() {
-        // ============================================================
-        // Solicitudes pendientes (desde BD)
-        // ============================================================
-        fetch('/api/supervisor/autorizaciones/pendientes')
-            .then(r => r.json())
-            .then(d => {
-                document.getElementById('totalSolicitudes').textContent = d.length || 0;
-            })
-            .catch(() => {
-                document.getElementById('totalSolicitudes').textContent = '0';
-            });
+    (function() {
+        function cargarDashboardSupervisor() {
+            console.log('📊 ====== DASHBOARD SUPERVISOR ======');
 
-        // ============================================================
-        // Tickets abiertos (desde BD)
-        // ============================================================
-        fetch('/api/incidencias')
-            .then(r => r.json())
-            .then(d => {
-                const abiertos = d.filter(i => 
-                    i.estadoIncidencia?.nombreEstado === 'ABIERTO' || 
-                    i.estadoIncidencia?.nombreEstado === 'EN_PROCESO'
-                );
-                document.getElementById('totalTickets').textContent = abiertos.length || 0;
-            })
-            .catch(() => {
-                document.getElementById('totalTickets').textContent = '0';
-            });
-
-        // ============================================================
-        // Stock bajo (desde BD)
-        // ============================================================
-        fetch('/api/productos')
-            .then(r => r.json())
-            .then(d => {
-                const criticos = d.filter(p => {
-                    const stockActual = p.stockMinimo || 0;
-                    const stockMinimo = p.stockMinimo || 5;
-                    return stockActual < stockMinimo;
+            // ============================================================
+            // 1. DEVOLUCIONES - /supervisor/devoluciones
+            // ============================================================
+            fetch('/supervisor/devoluciones')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => {
+                    const total = d?.length || 0;
+                    const pendientes = d?.filter(item => {
+                        const estado = item.estadoDevolucion?.nombreEstado || item.estado || 'SOLICITADA';
+                        return estado === 'SOLICITADA' || estado === 'PENDIENTE';
+                    }).length || 0;
+                    document.getElementById('totalDevoluciones').textContent = total;
+                    document.getElementById('devolucionesPendientes').textContent = pendientes;
+                })
+                .catch(() => {
+                    document.getElementById('totalDevoluciones').textContent = '0';
+                    document.getElementById('devolucionesPendientes').textContent = '0';
                 });
-                document.getElementById('totalStockBajo').textContent = criticos.length || 0;
-            })
-            .catch(() => {
-                document.getElementById('totalStockBajo').textContent = '0';
-            });
 
-        // ============================================================
-        // Datos de tienda del supervisor
-        // ============================================================
-        fetch('/api/tiendas')
-            .then(r => r.json())
-            .then(d => {
-                // Usar tienda con id = 1 (o la del supervisor)
-                const tienda = d.find(t => t.idTienda === 1);
-                if (tienda) {
-                    document.getElementById('nombreTienda').textContent = tienda.nombreTienda || '-';
-                    document.getElementById('tiendaDireccion').textContent = tienda.direccion || '-';
+            // ============================================================
+            // 2. INCIDENCIAS - /supervisor/incidencias
+            // ============================================================
+            fetch('/supervisor/incidencias')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => {
+                    const total = d?.length || 0;
+                    const abiertas = d?.filter(i => {
+                        const estado = i.estadoIncidencia?.nombreEstado || 'ABIERTO';
+                        return estado === 'ABIERTO' || estado === 'EN_PROCESO';
+                    }).length || 0;
+                    document.getElementById('totalIncidencias').textContent = total;
+                    document.getElementById('incidenciasAbiertas').textContent = abiertas;
+                })
+                .catch(() => {
+                    document.getElementById('totalIncidencias').textContent = '0';
+                    document.getElementById('incidenciasAbiertas').textContent = '0';
+                });
+
+            // ============================================================
+            // 3. OFERTAS - /supervisor/ofertas
+            // ============================================================
+            fetch('/supervisor/ofertas')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => {
+                    const total = d?.length || 0;
+                    const activas = d?.filter(o => {
+                        const estado = o.estadoOferta?.nombreEstado || o.estado || 'BORRADOR';
+                        return estado === 'ACTIVA' || estado === 'APROBADA';
+                    }).length || 0;
+                    document.getElementById('totalOfertas').textContent = total;
+                    document.getElementById('ofertasActivas').textContent = activas;
+                })
+                .catch(() => {
+                    document.getElementById('totalOfertas').textContent = '0';
+                    document.getElementById('ofertasActivas').textContent = '0';
+                });
+
+            // ============================================================
+            // 4. CAJAS - /supervisor/cajas
+            // ============================================================
+            fetch('/supervisor/cajas')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => {
+                    const total = d?.length || 0;
+                    const activas = d?.filter(c => c.estado === 'ACTIVA' || c.estadoCaja?.nombreEstado === 'ABIERTA').length || 0;
+                    document.getElementById('totalCajas').textContent = total;
+                    document.getElementById('cajasActivas').textContent = activas;
+                })
+                .catch(() => {
+                    document.getElementById('totalCajas').textContent = '0';
+                    document.getElementById('cajasActivas').textContent = '0';
+                });
+
+            // ============================================================
+            // 5. GRÁFICO DE INCIDENCIAS POR ESTADO
+            // ============================================================
+            fetch('/supervisor/incidencias')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => {
+                    const contenedor = document.getElementById('graficoIncidencias');
+                    if (!d || d.length === 0) {
+                        contenedor.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Sin incidencias registradas</p>';
+                        return;
+                    }
+                    const estados = {};
+                    const colores = {
+                        'ABIERTO': '#F59E0B',
+                        'EN_PROCESO': '#1976D2',
+                        'RESUELTO': '#388E3C',
+                        'CERRADO': '#6B7280',
+                        'RECHAZADO': '#D32F2F'
+                    };
+                    d.forEach(i => {
+                        const nombre = i.estadoIncidencia?.nombreEstado || 'ABIERTO';
+                        estados[nombre] = (estados[nombre] || 0) + 1;
+                    });
+                    const total = d.length;
+                    let html = '';
+                    for (const [estado, cantidad] of Object.entries(estados)) {
+                        const porcentaje = ((cantidad / total) * 100).toFixed(1);
+                        const color = colores[estado] || '#F59E0B';
+                        html += `
+                            <div style="display:flex;flex-direction:column;align-items:center;min-width:60px;">
+                                <div style="width:50px;height:50px;border-radius:50%;background:conic-gradient(${color} 0% ${porcentaje}%, #E5E7EB ${porcentaje}% 100%);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:var(--text-primary);">
+                                    <span style="background:var(--bg-card);padding:2px 6px;border-radius:99px;">${cantidad}</span>
+                                </div>
+                                <span style="font-size:0.6rem;color:var(--text-muted);margin-top:4px;text-align:center;">${estado}</span>
+                            </div>
+                        `;
+                    }
+                    contenedor.innerHTML = html;
+                })
+                .catch(() => {
+                    document.getElementById('graficoIncidencias').innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Error al cargar</p>';
+                });
+
+            // ============================================================
+            // 6. PRIORIDADES DE INCIDENCIAS
+            // ============================================================
+            fetch('/supervisor/incidencias')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => {
+                    const prioridades = {
+                        'CRÍTICA': 0,
+                        'URGENTE': 0,
+                        'ALTA': 0,
+                        'MEDIA': 0,
+                        'BAJA': 0
+                    };
+                    d.forEach(i => {
+                        const nombre = i.prioridad?.nombrePrioridad?.toUpperCase() || '';
+                        if (prioridades.hasOwnProperty(nombre)) {
+                            prioridades[nombre]++;
+                        }
+                    });
+                    document.getElementById('prioCritica').textContent = prioridades['CRÍTICA'] || 0;
+                    document.getElementById('prioUrgente').textContent = prioridades['URGENTE'] || 0;
+                    document.getElementById('prioAlta').textContent = prioridades['ALTA'] || 0;
+                    document.getElementById('prioMedia').textContent = prioridades['MEDIA'] || 0;
+                    document.getElementById('prioBaja').textContent = prioridades['BAJA'] || 0;
+                })
+                .catch(() => {});
+
+            // ============================================================
+            // 7. LISTAS (3 registros por lista)
+            // ============================================================
+            function renderizarLista(id, datos, campoNombre, estadoKey) {
+                const contenedor = document.getElementById(id);
+                if (!contenedor) return;
+                if (!datos || datos.length === 0) {
+                    contenedor.innerHTML = '<p style="color:var(--text-muted);font-size:0.75rem;padding:4px 0;">Sin registros</p>';
+                    return;
                 }
-            })
-            .catch(() => {
-                document.getElementById('nombreTienda').textContent = '-';
-                document.getElementById('tiendaDireccion').textContent = '-';
-            });
-    }
+                const items = datos.slice(0, 3);
+                contenedor.innerHTML = items.map(item => {
+                    const nombre = item[campoNombre] || 'Sin nombre';
+                    let estadoHtml = '';
+                    if (estadoKey) {
+                        const estado = item[estadoKey]?.nombreEstado || 'SOLICITADA';
+                        const colors = {
+                            'SOLICITADA': { bg: '#FFF8E1', text: '#F57F17' },
+                            'APROBADA': { bg: '#E8F5E9', text: '#2E7D32' },
+                            'RECHAZADA': { bg: '#FFEBEE', text: '#C62828' },
+                            'COMPLETADA': { bg: '#E3F2FD', text: '#1565C0' },
+                            'ABIERTO': { bg: '#FFF8E1', text: '#F57F17' },
+                            'EN_PROCESO': { bg: '#E3F2FD', text: '#1565C0' },
+                            'RESUELTO': { bg: '#E8F5E9', text: '#2E7D32' },
+                            'CERRADO': { bg: '#F5F5F5', text: '#616161' },
+                            'RECHAZADO': { bg: '#FFEBEE', text: '#C62828' },
+                            'ACTIVA': { bg: '#E8F5E9', text: '#2E7D32' },
+                            'BORRADOR': { bg: '#F5F5F5', text: '#616161' },
+                            'FINALIZADA': { bg: '#E3F2FD', text: '#1565C0' }
+                        };
+                        const color = colors[estado] || { bg: '#F5F5F5', text: '#616161' };
+                        estadoHtml = `<span style="display:inline-block;padding:0px 8px;border-radius:8px;background:${color.bg};color:${color.text};font-size:0.6rem;font-weight:600;">${estado}</span>`;
+                    }
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border-color);font-size:0.78rem;">
+                            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;">${nombre}</span>
+                            ${estadoHtml}
+                        </div>
+                    `;
+                }).join('');
+            }
 
-    document.addEventListener('DOMContentLoaded', cargarDashboardSupervisor);
+            // Devoluciones
+            fetch('/supervisor/devoluciones')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => renderizarLista('listaDevoluciones', d.slice(0, 3), 'codigoDevolucion', 'estadoDevolucion'))
+                .catch(() => document.getElementById('listaDevoluciones').innerHTML = '<p style="color:var(--text-muted);font-size:0.75rem;">Error</p>');
+
+            // Incidencias
+            fetch('/supervisor/incidencias')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => renderizarLista('listaIncidencias', d.slice(0, 3), 'titulo', 'estadoIncidencia'))
+                .catch(() => document.getElementById('listaIncidencias').innerHTML = '<p style="color:var(--text-muted);font-size:0.75rem;">Error</p>');
+
+            // Ofertas
+            fetch('/supervisor/ofertas')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => renderizarLista('listaOfertas', d.slice(0, 3), 'nombreOferta', 'estadoOferta'))
+                .catch(() => document.getElementById('listaOfertas').innerHTML = '<p style="color:var(--text-muted);font-size:0.75rem;">Error</p>');
+
+            console.log('📊 ====== FIN DASHBOARD SUPERVISOR ======');
+        }
+
+        // ============================================================
+        // EXPONER FUNCIÓN
+        // ============================================================
+        window.cargarDashboardSupervisor = cargarDashboardSupervisor;
+
+        // ============================================================
+        // EJECUTAR INMEDIATAMENTE
+        // ============================================================
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            cargarDashboardSupervisor();
+        } else {
+            document.addEventListener('DOMContentLoaded', cargarDashboardSupervisor);
+        }
+    })();
 </script>
 </body>
 </html>

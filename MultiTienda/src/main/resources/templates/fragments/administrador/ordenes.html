@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Órdenes de Compra</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">📋 Órdenes de Compra</div>
+        <div class="page-subtitle">Gestiona las órdenes de compra</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-primary" onclick="abrirModalOrden()"><i class="fas fa-plus"></i> Nueva orden</button>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-toolbar">
+        <div class="toolbar-left">
+            <select id="filtroEstado" onchange="cargarOrdenes()" style="padding:8px 12px; border:1px solid #ddd; border-radius:6px;">
+                <option value="0">Todos</option>
+                <option value="1">Pendientes</option>
+                <option value="2">Aprobadas</option>
+                <option value="3">Enviadas</option>
+                <option value="4">Recibidas</option>
+                <option value="5">Canceladas</option>
+                <option value="6">Parcial</option>
+            </select>
+        </div>
+        <div class="toolbar-right">
+            <span id="totalRegistros">0 registros</span>
+        </div>
+    </div>
+    <div class="table-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Código</th>
+                    <th>Proveedor</th>
+                    <th>Tienda</th>
+                    <th>Fecha</th>
+                    <th>Entrega</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaOrdenes">
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:10px;"></i>
+                        Cargando órdenes...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Nueva/Editar Orden -->
+<div class="modal-overlay" id="modalOrden">
+    <div class="modal" style="max-width:600px;">
+        <div class="modal-header">
+            <div class="modal-title" id="modalOrdenTitle">Nueva Orden</div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModalOrden()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="formOrden">
+                <input type="hidden" id="ordenId">
+                <div class="form-group">
+                    <label class="form-label">Proveedor</label>
+                    <select class="form-control" id="ordenProveedor" required></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tienda</label>
+                    <select class="form-control" id="ordenTienda" required></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fecha Entrega Estimada</label>
+                    <input class="form-control" id="ordenFechaEntrega" type="date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Observaciones</label>
+                    <textarea class="form-control" id="ordenObservaciones" rows="2" placeholder="Observaciones..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cerrarModalOrden()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarOrden()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let ordenesData = [];
+
+        const ESTADOS = {
+            1: { nombre: 'PENDIENTE', clase: 'badge-warning' },
+            2: { nombre: 'APROBADA', clase: 'badge-success' },
+            3: { nombre: 'ENVIADA', clase: 'badge-info' },
+            4: { nombre: 'RECIBIDA', clase: 'badge-primary' },
+            5: { nombre: 'CANCELADA', clase: 'badge-danger' },
+            6: { nombre: 'PARCIAL', clase: 'badge-secondary' }
+        };
+
+        function cargarSelects() {
+            fetch('/api/proveedores')
+                .then(r => r.json())
+                .then(d => {
+                    const select = document.getElementById('ordenProveedor');
+                    select.innerHTML = d.map(p => `<option value="${p.idProveedor}">${p.razonSocial}</option>`).join('');
+                })
+                .catch(() => {});
+
+            fetch('/api/tiendas')
+                .then(r => r.json())
+                .then(d => {
+                    const select = document.getElementById('ordenTienda');
+                    select.innerHTML = d.map(t => `<option value="${t.idTienda}">${t.nombreTienda}</option>`).join('');
+                })
+                .catch(() => {});
+        }
+
+        function cargarOrdenes() {
+            const filtro = document.getElementById('filtroEstado').value;
+            let url = '/api/ordenes';
+            if (filtro !== '0') {
+                url = '/api/ordenes/estado/' + filtro;
+            }
+            
+            console.log('🔍 Cargando órdenes...', url);
+            
+            fetch(url)
+                .then(r => {
+                    if (!r.ok) throw new Error('Error al cargar: ' + r.status);
+                    return r.json();
+                })
+                .then(d => {
+                    console.log('📦 Datos recibidos:', d);
+                    ordenesData = d;
+                    renderizarTabla(d);
+                    document.getElementById('totalRegistros').textContent = d.length + ' registros';
+                })
+                .catch(err => {
+                    console.error('❌ Error:', err);
+                    document.getElementById('tablaOrdenes').innerHTML = 
+                        '<tr><td colspan="8" style="text-align:center;padding:40px;color:red;">Error al cargar órdenes</td></tr>';
+                });
+        }
+
+        function renderizarTabla(data) {
+            const tbody = document.getElementById('tablaOrdenes');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">No hay órdenes registradas</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(o => {
+                const estado = ESTADOS[o.idEstadoOrdenCompra] || ESTADOS[1];
+                const esPendiente = o.idEstadoOrdenCompra === 1;
+                
+                return `
+                <tr>
+                    <td>${o.idOrden}</td>
+                    <td><strong>${o.codigoOrden || '-'}</strong></td>
+                    <td>${o.proveedor?.razonSocial || '-'}</td>
+                    <td>${o.tienda?.nombreTienda || '-'}</td>
+                    <td>${o.fechaOrden ? new Date(o.fechaOrden).toLocaleDateString() : '-'}</td>
+                    <td>${o.fechaEntregaEstimada || '-'}</td>
+                    <td>
+                        <span class="badge ${estado.clase}">${estado.nombre}</span>
+                    </td>
+                    <td>
+                        ${esPendiente ? `
+                            <button class="btn btn-success btn-sm" onclick="cambiarEstado(${o.idOrden}, 2)" title="Aprobar">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="cambiarEstado(${o.idOrden}, 5)" title="Cancelar">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : `
+                            <button class="btn btn-primary btn-sm" onclick="verDetalle(${o.idOrden})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${o.idEstadoOrdenCompra === 2 ? `
+                                <button class="btn btn-info btn-sm" onclick="cambiarEstado(${o.idOrden}, 3)" title="Enviar">
+                                    <i class="fas fa-truck"></i>
+                                </button>
+                            ` : ''}
+                            ${o.idEstadoOrdenCompra === 3 ? `
+                                <button class="btn btn-success btn-sm" onclick="cambiarEstado(${o.idOrden}, 4)" title="Recibir">
+                                    <i class="fas fa-check-double"></i>
+                                </button>
+                            ` : ''}
+                        `}
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function cambiarEstado(id, nuevoEstado) {
+            const nombreEstado = ESTADOS[nuevoEstado]?.nombre || 'desconocido';
+            if (!confirm(`¿Cambiar el estado a "${nombreEstado}"?`)) return;
+            
+            fetch(`/api/ordenes/${id}/estado?idEstado=${nuevoEstado}`, {
+                method: 'PUT'
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('Error al cambiar estado');
+                return r.json();
+            })
+            .then(() => {
+                cargarOrdenes();
+                alert('✅ Estado actualizado a: ' + nombreEstado);
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('❌ Error al cambiar estado');
+            });
+        }
+
+        function abrirModalOrden() {
+            document.getElementById('modalOrdenTitle').textContent = 'Nueva Orden de Compra';
+            document.getElementById('formOrden').reset();
+            document.getElementById('ordenId').value = '';
+            cargarSelects();
+            document.getElementById('modalOrden').classList.add('open');
+        }
+
+        function cerrarModalOrden() {
+            document.getElementById('modalOrden').classList.remove('open');
+        }
+
+        function guardarOrden() {
+            const data = {
+                idProveedor: parseInt(document.getElementById('ordenProveedor').value),
+                idTienda: parseInt(document.getElementById('ordenTienda').value),
+                fechaEntregaEstimada: document.getElementById('ordenFechaEntrega').value,
+                observaciones: document.getElementById('ordenObservaciones').value
+            };
+
+            if (!data.idProveedor || !data.idTienda || !data.fechaEntregaEstimada) {
+                alert('Todos los campos son obligatorios');
+                return;
+            }
+
+            fetch('/api/ordenes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('Error al guardar');
+                return r.json();
+            })
+            .then(() => {
+                cerrarModalOrden();
+                cargarOrdenes();
+                alert('✅ Orden creada exitosamente');
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('❌ Error al guardar: ' + err.message);
+            });
+        }
+
+        function verDetalle(id) {
+            const orden = ordenesData.find(o => o.idOrden === id);
+            if (!orden) {
+                alert('Orden no encontrada');
+                return;
+            }
+            
+            const estado = ESTADOS[orden.idEstadoOrdenCompra] || ESTADOS[1];
+            alert(
+                `📋 ORDEN #${orden.idOrden}\n` +
+                `Código: ${orden.codigoOrden}\n` +
+                `Proveedor: ${orden.proveedor?.razonSocial || '-'}\n` +
+                `Tienda: ${orden.tienda?.nombreTienda || '-'}\n` +
+                `Fecha: ${orden.fechaOrden ? new Date(orden.fechaOrden).toLocaleString() : '-'}\n` +
+                `Entrega: ${orden.fechaEntregaEstimada || '-'}\n` +
+                `Estado: ${estado.nombre}\n` +
+                `Observaciones: ${orden.observaciones || '-'}`
+            );
+        }
+
+        window.cargarOrdenes = cargarOrdenes;
+        window.abrirModalOrden = abrirModalOrden;
+        window.guardarOrden = guardarOrden;
+        window.cambiarEstado = cambiarEstado;
+        window.verDetalle = verDetalle;
+        window.cerrarModalOrden = cerrarModalOrden;
+        window.cargarSelects = cargarSelects;
+
+        document.addEventListener('DOMContentLoaded', cargarOrdenes);
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            cargarOrdenes();
+        }
+    })();
+</script>
+</body>
+</html>

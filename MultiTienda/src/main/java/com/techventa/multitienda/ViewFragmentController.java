@@ -86,4 +86,11 @@ public class ViewFragmentController {
         // Para otros roles → usa el fragmento solo
         return path;
     }
+    
+    
+    
+    
+    
+    
+
 }

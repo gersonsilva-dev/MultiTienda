@@ -2,144 +2,214 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Reportes</title>
+    <title>Reportes - Supervisor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        #reportesContainer {
+            padding: 24px;
+            background: white;
+            border-radius: 8px;
+        }
+        #reportesContainer .kpi-card {
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 14px 10px !important;
+            text-align: center;
+        }
+        #reportesContainer .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #reportesContainer .card-header {
+            background: #f8fafc;
+            padding: 10px 14px !important;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        #reportesContainer .card-body {
+            padding: 12px 14px !important;
+        }
+        #reportesContainer .card-title {
+            font-size: 0.75rem !important;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        #reportesContainer .kpi-value {
+            font-size: 1.4rem !important;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        #reportesContainer .kpi-label {
+            font-size: 0.6rem !important;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        #reportesContainer .grid-kpis {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        #reportesContainer .grid-graficos {
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 16px;
+        }
+        @media print {
+            #reportesContainer { padding: 20px; }
+        }
+    </style>
 </head>
 <body>
 <div class="page-header">
     <div>
         <div class="page-title">📊 Reportes</div>
-        <div class="page-subtitle">Estadísticas de tu tienda</div>
+        <div class="page-subtitle">Estadísticas y análisis del sistema</div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-success" onclick="descargarPDF()">
+            <i class="fas fa-file-pdf"></i> Descargar PDF
+        </button>
     </div>
 </div>
 
-<!-- KPIs -->
-<div class="kpi-grid">
-    <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-shopping-cart"></i> Ventas hoy</div>
-        <div class="kpi-value" id="ventasHoy">0</div>
-        <div class="kpi-delta up">Registradas</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-box"></i> Productos vendidos</div>
-        <div class="kpi-value" id="productosVendidos">0</div>
-        <div class="kpi-delta up">Unidades</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-users"></i> Clientes atendidos</div>
-        <div class="kpi-value" id="clientesAtendidos">0</div>
-        <div class="kpi-delta up">Hoy</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label"><i class="fas fa-ticket-alt"></i> Tickets abiertos</div>
-        <div class="kpi-value" id="ticketsAbiertos">0</div>
-        <div class="kpi-delta danger">Pendientes</div>
-    </div>
-</div>
+<!-- CONTENEDOR DE REPORTES -->
+<div id="reportesContainer">
 
-<!-- Gráficos -->
-<div class="grid-2">
-    <div class="card">
-        <div class="card-header"><div class="card-title">📈 Ventas por día (última semana)</div></div>
-        <div class="card-body"><canvas id="chartVentas" height="180"></canvas></div>
+    <!-- KPIs (SOLO 4 - lo que puede ver el supervisor) -->
+    <div class="grid-kpis">
+        <div class="kpi-card">
+            <div class="kpi-label">🔄 Devoluciones</div>
+            <div class="kpi-value" id="kpiDevoluciones">0</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">⚠️ Incidencias</div>
+            <div class="kpi-value" id="kpiIncidencias">0</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">🏷️ Ofertas</div>
+            <div class="kpi-value" id="kpiOfertas">0</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">🧑 Clientes</div>
+            <div class="kpi-value" id="kpiClientes">0</div>
+        </div>
     </div>
-    <div class="card">
-        <div class="card-header"><div class="card-title">🏷️ Ventas por método de pago</div></div>
-        <div class="card-body"><canvas id="chartPagos" height="180"></canvas></div>
+
+    <!-- Gráficos (3 por fila) -->
+    <div class="grid-graficos">
+        <!-- 1. Incidencias por estado -->
+        <div class="card">
+            <div class="card-header"><div class="card-title">⚠️ Incidencias por estado</div></div>
+            <div class="card-body"><canvas id="chartIncidencias" height="120"></canvas></div>
+        </div>
+
+        <!-- 2. Devoluciones por estado -->
+        <div class="card">
+            <div class="card-header"><div class="card-title">🔄 Devoluciones por estado</div></div>
+            <div class="card-body"><canvas id="chartDevoluciones" height="120"></canvas></div>
+        </div>
+
+        <!-- 3. Ofertas por estado -->
+        <div class="card">
+            <div class="card-header"><div class="card-title">🏷️ Ofertas por estado</div></div>
+            <div class="card-body"><canvas id="chartOfertas" height="120"></canvas></div>
+        </div>
+
+        <!-- 4. Prioridades de incidencias -->
+        <div class="card">
+            <div class="card-header"><div class="card-title">📊 Prioridades de incidencias</div></div>
+            <div class="card-body"><canvas id="chartPrioridades" height="120"></canvas></div>
+        </div>
+
+        <!-- 5. Tipos de incidencias -->
+        <div class="card">
+            <div class="card-header"><div class="card-title">📋 Tipos de incidencias</div></div>
+            <div class="card-body"><canvas id="chartTiposIncidencias" height="120"></canvas></div>
+        </div>
+
+        <!-- 6. Motivos de devolución -->
+        <div class="card">
+            <div class="card-header"><div class="card-title">📋 Motivos de devolución</div></div>
+            <div class="card-body"><canvas id="chartMotivosDevolucion" height="120"></canvas></div>
+        </div>
     </div>
 </div>
 
 <script>
-    let chartVentas = null;
-    let chartPagos = null;
+    let chartIncidencias, chartDevoluciones, chartOfertas, chartPrioridades, chartTiposIncidencias, chartMotivosDevolucion;
 
-    function cargarReportesSupervisor() {
+    const colores = ['#2563EB', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16'];
+
+    // ============================================================
+    // ACTUALIZAR REPORTES (SIN FILTROS DE FECHA)
+    // ============================================================
+    function actualizarReportes() {
+        console.log('📊 Cargando reportes...');
+
         // ============================================================
-        // KPIs (datos desde BD)
+        // KPIs
         // ============================================================
-        fetch('/api/ventas/hoy')
+        // Devoluciones
+        fetch('/supervisor/devoluciones')
             .then(r => r.json())
-            .then(d => document.getElementById('ventasHoy').textContent = d.totalVentas || '0')
-            .catch(() => document.getElementById('ventasHoy').textContent = '0');
+            .then(d => document.getElementById('kpiDevoluciones').textContent = d?.length || 0)
+            .catch(() => document.getElementById('kpiDevoluciones').textContent = '0');
 
-        fetch('/api/ventas/productos')
+        // Incidencias
+        fetch('/supervisor/incidencias')
             .then(r => r.json())
-            .then(d => document.getElementById('productosVendidos').textContent = d.totalProductos || '0')
-            .catch(() => document.getElementById('productosVendidos').textContent = '0');
+            .then(d => document.getElementById('kpiIncidencias').textContent = d?.length || 0)
+            .catch(() => document.getElementById('kpiIncidencias').textContent = '0');
 
-        fetch('/api/clientes/hoy')
+        // Ofertas
+        fetch('/supervisor/ofertas')
             .then(r => r.json())
-            .then(d => document.getElementById('clientesAtendidos').textContent = d.length || '0')
-            .catch(() => document.getElementById('clientesAtendidos').textContent = '0');
+            .then(d => document.getElementById('kpiOfertas').textContent = d?.length || 0)
+            .catch(() => document.getElementById('kpiOfertas').textContent = '0');
 
-        fetch('/api/incidencias')
+        // Clientes (usando API de admin)
+        fetch('/api/clientes')
+            .then(r => r.json())
+            .then(d => document.getElementById('kpiClientes').textContent = d?.length || 0)
+            .catch(() => document.getElementById('kpiClientes').textContent = '0');
+
+        // ============================================================
+        // 1. Incidencias por estado
+        // ============================================================
+        fetch('/supervisor/incidencias')
             .then(r => r.json())
             .then(d => {
-                const abiertos = d.filter(i => i.estadoIncidencia?.nombreEstado === 'ABIERTO' || i.estadoIncidencia?.nombreEstado === 'EN_PROCESO');
-                document.getElementById('ticketsAbiertos').textContent = abiertos.length || '0';
-            })
-            .catch(() => document.getElementById('ticketsAbiertos').textContent = '0');
-
-        // ============================================================
-        // GRÁFICO DE VENTAS POR SEMANA
-        // ============================================================
-        fetch('/api/ventas/semana')
-            .then(r => r.json())
-            .then(d => {
-                if (chartVentas) chartVentas.destroy();
-                const labels = d.map(item => item.dia || '');
-                const data = d.map(item => item.total || 0);
-                chartVentas = new Chart(document.getElementById('chartVentas'), {
-                    type: 'bar',
-                    data: {
-                        labels: labels.length > 0 ? labels : ['Sin datos'],
-                        datasets: [{
-                            label: 'Ventas (S/)',
-                            data: data.length > 0 ? data : [0],
-                            backgroundColor: 'rgba(217,119,6,0.6)',
-                            borderColor: '#D97706',
-                            borderWidth: 2,
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-                            x: { grid: { display: false } }
-                        }
-                    }
+                const estados = {};
+                const coloresEstados = {
+                    'ABIERTO': '#F59E0B',
+                    'EN_PROCESO': '#3B82F6',
+                    'RESUELTO': '#10B981',
+                    'CERRADO': '#6B7280',
+                    'RECHAZADO': '#EF4444'
+                };
+                d.forEach(item => {
+                    const e = item.estadoIncidencia?.nombreEstado || 'ABIERTO';
+                    estados[e] = (estados[e] || 0) + 1;
                 });
-            })
-            .catch(() => {
-                if (chartVentas) chartVentas.destroy();
-                chartVentas = new Chart(document.getElementById('chartVentas'), {
-                    type: 'bar',
-                    data: { labels: ['Sin datos'], datasets: [{ label: 'Ventas', data: [0], backgroundColor: '#94A3B8' }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
-            });
-
-        // ============================================================
-        // GRÁFICO DE PAGOS
-        // ============================================================
-        fetch('/api/ventas/pagos')
-            .then(r => r.json())
-            .then(d => {
-                if (chartPagos) chartPagos.destroy();
-                const labels = d.map(item => item.metodo || '');
-                const data = d.map(item => item.total || 0);
-                const colors = ['#10B981', '#3B82F6', '#F59E0B', '#8B5CF6', '#EF4444'];
-                chartPagos = new Chart(document.getElementById('chartPagos'), {
+                const labels = Object.keys(estados);
+                const data = Object.values(estados);
+                const colors = labels.map(l => coloresEstados[l] || '#F59E0B');
+                
+                if (chartIncidencias) chartIncidencias.destroy();
+                chartIncidencias = new Chart(document.getElementById('chartIncidencias'), {
                     type: 'doughnut',
                     data: {
                         labels: labels.length > 0 ? labels : ['Sin datos'],
                         datasets: [{
                             data: data.length > 0 ? data : [1],
-                            backgroundColor: colors.slice(0, labels.length || 1),
-                            borderWidth: 2,
+                            backgroundColor: colors.length > 0 ? colors : ['#F59E0B'],
+                            borderWidth: 1,
                             borderColor: '#fff'
                         }]
                     },
@@ -149,23 +219,300 @@
                         plugins: {
                             legend: {
                                 position: 'bottom',
-                                labels: { boxWidth: 12, padding: 10, font: { size: 10 } }
+                                labels: { boxWidth: 10, padding: 3, font: { size: 7 } }
                             }
                         }
                     }
                 });
-            })
-            .catch(() => {
-                if (chartPagos) chartPagos.destroy();
-                chartPagos = new Chart(document.getElementById('chartPagos'), {
-                    type: 'doughnut',
-                    data: { labels: ['Sin datos'], datasets: [{ data: [1], backgroundColor: ['#94A3B8'] }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            }).catch(() => {});
+
+        // ============================================================
+        // 2. Devoluciones por estado
+        // ============================================================
+        fetch('/supervisor/devoluciones')
+            .then(r => r.json())
+            .then(d => {
+                const estados = {};
+                const coloresEstados = {
+                    'SOLICITADA': '#F59E0B',
+                    'PENDIENTE': '#F59E0B',
+                    'APROBADA': '#10B981',
+                    'RECHAZADA': '#EF4444',
+                    'COMPLETADA': '#3B82F6'
+                };
+                d.forEach(item => {
+                    const e = item.estadoDevolucion?.nombreEstado || item.estado || 'SOLICITADA';
+                    estados[e] = (estados[e] || 0) + 1;
                 });
-            });
+                const labels = Object.keys(estados);
+                const data = Object.values(estados);
+                const colors = labels.map(l => coloresEstados[l] || '#F59E0B');
+                
+                if (chartDevoluciones) chartDevoluciones.destroy();
+                chartDevoluciones = new Chart(document.getElementById('chartDevoluciones'), {
+                    type: 'pie',
+                    data: {
+                        labels: labels.length > 0 ? labels : ['Sin datos'],
+                        datasets: [{
+                            data: data.length > 0 ? data : [1],
+                            backgroundColor: colors.length > 0 ? colors : ['#F59E0B'],
+                            borderWidth: 1,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { boxWidth: 10, padding: 3, font: { size: 7 } }
+                            }
+                        }
+                    }
+                });
+            }).catch(() => {});
+
+        // ============================================================
+        // 3. Ofertas por estado
+        // ============================================================
+        fetch('/supervisor/ofertas')
+            .then(r => r.json())
+            .then(d => {
+                const estados = {};
+                const coloresEstados = {
+                    'BORRADOR': '#6B7280',
+                    'PENDIENTE': '#F59E0B',
+                    'ACTIVA': '#10B981',
+                    'APROBADA': '#10B981',
+                    'FINALIZADA': '#3B82F6',
+                    'SUSPENDIDA': '#EF4444'
+                };
+                d.forEach(item => {
+                    const e = item.estadoOferta?.nombreEstado || item.estado || 'BORRADOR';
+                    estados[e] = (estados[e] || 0) + 1;
+                });
+                const labels = Object.keys(estados);
+                const data = Object.values(estados);
+                const colors = labels.map(l => coloresEstados[l] || '#6B7280');
+                
+                if (chartOfertas) chartOfertas.destroy();
+                chartOfertas = new Chart(document.getElementById('chartOfertas'), {
+                    type: 'pie',
+                    data: {
+                        labels: labels.length > 0 ? labels : ['Sin datos'],
+                        datasets: [{
+                            data: data.length > 0 ? data : [1],
+                            backgroundColor: colors.length > 0 ? colors : ['#6B7280'],
+                            borderWidth: 1,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { boxWidth: 10, padding: 3, font: { size: 7 } }
+                            }
+                        }
+                    }
+                });
+            }).catch(() => {});
+
+        // ============================================================
+        // 4. Prioridades de incidencias
+        // ============================================================
+        fetch('/supervisor/incidencias')
+            .then(r => r.json())
+            .then(d => {
+                const prioridades = {};
+                const coloresPrio = {
+                    'CRÍTICA': '#B71C1C',
+                    'URGENTE': '#DC2626',
+                    'ALTA': '#F59E0B',
+                    'MEDIA': '#1976D2',
+                    'BAJA': '#388E3C'
+                };
+                d.forEach(item => {
+                    const p = item.prioridad?.nombrePrioridad?.toUpperCase() || 'MEDIA';
+                    prioridades[p] = (prioridades[p] || 0) + 1;
+                });
+                const labels = Object.keys(prioridades);
+                const data = Object.values(prioridades);
+                const colors = labels.map(l => coloresPrio[l] || '#1976D2');
+                
+                if (chartPrioridades) chartPrioridades.destroy();
+                chartPrioridades = new Chart(document.getElementById('chartPrioridades'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels.length > 0 ? labels : ['Sin datos'],
+                        datasets: [{
+                            label: 'Incidencias',
+                            data: data.length > 0 ? data : [0],
+                            backgroundColor: colors.length > 0 ? colors : ['#1976D2'],
+                            borderColor: '#1E293B',
+                            borderWidth: 0.5,
+                            borderRadius: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { font: { size: 7 } } },
+                            y: { grid: { display: false }, ticks: { font: { size: 7 } } }
+                        }
+                    }
+                });
+            }).catch(() => {});
+
+        // ============================================================
+        // 5. Tipos de incidencias
+        // ============================================================
+        fetch('/supervisor/incidencias')
+            .then(r => r.json())
+            .then(d => {
+                const tipos = {};
+                d.forEach(item => {
+                    const t = item.tipoIncidencia?.nombreTipo || 'Sin tipo';
+                    tipos[t] = (tipos[t] || 0) + 1;
+                });
+                const labels = Object.keys(tipos);
+                const data = Object.values(tipos);
+                
+                if (chartTiposIncidencias) chartTiposIncidencias.destroy();
+                chartTiposIncidencias = new Chart(document.getElementById('chartTiposIncidencias'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels.length > 0 ? labels : ['Sin datos'],
+                        datasets: [{
+                            label: 'Incidencias',
+                            data: data.length > 0 ? data : [0],
+                            backgroundColor: colores.slice(0, labels.length || 1),
+                            borderColor: '#1E293B',
+                            borderWidth: 0.5,
+                            borderRadius: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { font: { size: 7 } } },
+                            y: { grid: { display: false }, ticks: { font: { size: 7 } } }
+                        }
+                    }
+                });
+            }).catch(() => {});
+
+        // ============================================================
+        // 6. Motivos de devolución
+        // ============================================================
+        fetch('/supervisor/devoluciones')
+            .then(r => r.json())
+            .then(d => {
+                const motivos = {};
+                d.forEach(item => {
+                    const m = item.motivoDevolucion?.nombreMotivo || 'Sin motivo';
+                    motivos[m] = (motivos[m] || 0) + 1;
+                });
+                const labels = Object.keys(motivos);
+                const data = Object.values(motivos);
+                
+                if (chartMotivosDevolucion) chartMotivosDevolucion.destroy();
+                chartMotivosDevolucion = new Chart(document.getElementById('chartMotivosDevolucion'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels.length > 0 ? labels : ['Sin datos'],
+                        datasets: [{
+                            label: 'Devoluciones',
+                            data: data.length > 0 ? data : [0],
+                            backgroundColor: colores.slice(3, labels.length + 3 || 4),
+                            borderColor: '#1E293B',
+                            borderWidth: 0.5,
+                            borderRadius: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { font: { size: 7 } } },
+                            y: { grid: { display: false }, ticks: { font: { size: 7 } } }
+                        }
+                    }
+                });
+            }).catch(() => {});
     }
 
-    document.addEventListener('DOMContentLoaded', cargarReportesSupervisor);
+    // ============================================================
+    // DESCARGAR PDF
+    // ============================================================
+    function descargarPDF() {
+        const boton = document.querySelector('.btn-success');
+        boton.textContent = '⏳ Generando...';
+        boton.disabled = true;
+
+        const container = document.getElementById('reportesContainer');
+
+        html2canvas(container, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            logging: false,
+            allowTaint: true,
+            useCORS: true,
+            padding: 50
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('l', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            let heightLeft = pdfHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+            heightLeft -= pdf.internal.pageSize.getHeight();
+
+            while (heightLeft > 0) {
+                position = heightLeft - pdfHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+                heightLeft -= pdf.internal.pageSize.getHeight();
+            }
+
+            pdf.save(`reporte_supervisor_${new Date().toISOString().substring(0,10)}.pdf`);
+            boton.textContent = '📄 Descargar PDF';
+            boton.disabled = false;
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('❌ Error al generar el PDF');
+            boton.textContent = '📄 Descargar PDF';
+            boton.disabled = false;
+        });
+    }
+
+    // ============================================================
+    // EXPONER FUNCIONES GLOBALMENTE (para principal.js)
+    // ============================================================
+    window.cargarReportes = actualizarReportes;
+    window.descargarPDF = descargarPDF;
+
+    // ============================================================
+    // INICIALIZAR
+    // ============================================================
+    // Si el DOM ya está cargado, ejecutar directamente
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        actualizarReportes();
+    } else {
+        document.addEventListener('DOMContentLoaded', actualizarReportes);
+    }
 </script>
 </body>
 </html>

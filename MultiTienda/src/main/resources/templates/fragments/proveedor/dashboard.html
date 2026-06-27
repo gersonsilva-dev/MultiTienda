@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Proveedor</title>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <div class="page-title">📊 Dashboard</div>
+        <div class="page-subtitle">Bienvenido, <span th:text="${usuario.nombres}"></span> <span th:text="${usuario.apellidos}"></span></div>
+    </div>
+    <div class="page-header-right">
+        <span class="badge badge-primary">Rol: Proveedor</span>
+    </div>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-box"></i> Mis productos</div>
+        <div class="kpi-value" id="totalProductos">0</div>
+        <div class="kpi-delta up"><i class="fas fa-arrow-up"></i> Activos</div>
+        <a href="#" onclick="loadView('productos')" style="font-size:0.7rem;">Ver todos</a>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-clipboard-list"></i> Órdenes</div>
+        <div class="kpi-value" id="totalOrdenes">0</div>
+        <div class="kpi-delta warn"><i class="fas fa-clock"></i> Pendientes</div>
+        <a href="#" onclick="loadView('ordenes')" style="font-size:0.7rem;">Ver todas</a>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-truck"></i> Entregas</div>
+        <div class="kpi-value" id="totalEntregas">0</div>
+        <div class="kpi-delta up"><i class="fas fa-check-circle"></i> Completadas</div>
+        <a href="#" onclick="loadView('entregas')" style="font-size:0.7rem;">Ver todas</a>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label"><i class="fas fa-file-invoice"></i> Facturación</div>
+        <div class="kpi-value" id="totalFacturas">0</div>
+        <div class="kpi-delta up"><i class="fas fa-money-bill-wave"></i> Pagos</div>
+        <a href="#" onclick="loadView('facturacion')" style="font-size:0.7rem;">Ver todas</a>
+    </div>
+</div>
+
+<!-- Accesos rápidos -->
+<div class="grid-3" style="margin-top:18px;">
+    <div class="card" onclick="loadView('productos')" style="cursor:pointer;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.02)';this.style.borderColor='#7C3AED';" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent';">
+        <div class="card-body" style="text-align:center;padding:24px;">
+            <i class="fas fa-box" style="font-size:2.5rem;color:#7C3AED;"></i>
+            <h4 style="margin-top:10px;">Mis productos</h4>
+            <p style="color:var(--text-muted);font-size:0.8rem;">Gestionar mi catálogo</p>
+        </div>
+    </div>
+    <div class="card" onclick="loadView('subir')" style="cursor:pointer;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.02)';this.style.borderColor='#7C3AED';" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent';">
+        <div class="card-body" style="text-align:center;padding:24px;">
+            <i class="fas fa-upload" style="font-size:2.5rem;color:#7C3AED;"></i>
+            <h4 style="margin-top:10px;">Subir producto</h4>
+            <p style="color:var(--text-muted);font-size:0.8rem;">Agregar nuevo producto</p>
+        </div>
+    </div>
+    <div class="card" onclick="loadView('ordenes')" style="cursor:pointer;transition:transform 0.2s;border:2px solid transparent;" onmouseover="this.style.transform='scale(1.02)';this.style.borderColor='#7C3AED';" onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent';">
+        <div class="card-body" style="text-align:center;padding:24px;">
+            <i class="fas fa-clipboard-list" style="font-size:2.5rem;color:#7C3AED;"></i>
+            <h4 style="margin-top:10px;">Órdenes</h4>
+            <p style="color:var(--text-muted);font-size:0.8rem;">Consultar pedidos</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        function cargarDashboardProveedor() {
+            console.log('📊 ====== DASHBOARD PROVEEDOR ======');
+
+            // ============================================================
+            // 1. MIS PRODUCTOS
+            // ============================================================
+            fetch('/api/productos')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => {
+                    const total = d?.length || 0;
+                    document.getElementById('totalProductos').textContent = total;
+                })
+                .catch(() => {
+                    document.getElementById('totalProductos').textContent = '0';
+                });
+
+            // ============================================================
+            // 2. ÓRDENES
+            // ============================================================
+            fetch('/api/ordenes')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => {
+                    const total = d?.length || 0;
+                    document.getElementById('totalOrdenes').textContent = total;
+                })
+                .catch(() => {
+                    document.getElementById('totalOrdenes').textContent = '0';
+                });
+
+            // ============================================================
+            // 3. ENTREGAS
+            // ============================================================
+            fetch('/api/entregas')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => {
+                    const total = d?.length || 0;
+                    document.getElementById('totalEntregas').textContent = total;
+                })
+                .catch(() => {
+                    document.getElementById('totalEntregas').textContent = '0';
+                });
+
+            // ============================================================
+            // 4. FACTURACIÓN
+            // ============================================================
+            fetch('/api/facturas')
+                .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+                .then(d => {
+                    const total = d?.length || 0;
+                    document.getElementById('totalFacturas').textContent = total;
+                })
+                .catch(() => {
+                    document.getElementById('totalFacturas').textContent = '0';
+                });
+
+            console.log('📊 ====== FIN DASHBOARD PROVEEDOR ======');
+        }
+
+        window.cargarDashboardProveedor = cargarDashboardProveedor;
+
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            cargarDashboardProveedor();
+        } else {
+            document.addEventListener('DOMContentLoaded', cargarDashboardProveedor);
+        }
+    })();
+</script>
+</body>
+</html>
