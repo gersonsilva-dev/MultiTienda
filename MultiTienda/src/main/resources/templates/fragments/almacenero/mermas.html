@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script th:src="@{/webjars/font-awesome/6.5.1/js/all.min.js}"></script>
+    
+    <style>
+        /* ==================== VARIABLES Y BASE ==================== */
+        :root {
+            --bg-main: #f8fafc;
+            --surface: #ffffff;
+            --surface-hover: #f1f5f9;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --text-light: #94a3b8;
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            
+            --success: #16a34a;
+            --success-light: #f0fdf4;
+            
+            --info: #06b6d4;
+            --info-light: #ecfeff;
+            
+            --radius-sm: 6px;
+            --radius: 12px;
+            --radius-lg: 16px;
+            
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -1px rgba(0,0,0,0.04);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+            
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mermas-dashboard {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== TÍTULO ==================== */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0 0 0.25rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .page-title-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--danger-light);
+            color: var(--danger);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        /* ==================== RESUMEN CARDS ==================== */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+
+        .card-unidades::before { background-color: var(--danger); }
+        .card-unidades .icon-wrapper { color: var(--danger); background: var(--danger-light); }
+        
+        .card-perdidas::before { background-color: var(--warning); }
+        .card-perdidas .icon-wrapper { color: var(--warning); background: var(--warning-light); }
+        
+        .card-motivo::before { background-color: var(--primary); }
+        .card-motivo .icon-wrapper { color: var(--primary); background: var(--primary-light); }
+
+        .card-info h6 {
+            margin: 0 0 0.4rem 0;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .card-info h2 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+        .card-info small {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .icon-wrapper {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        /* ==================== LAYOUT PRINCIPAL ==================== */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ==================== SECCIONES ==================== */
+        .section {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header {
+            padding: 1.1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: #fafbfc;
+        }
+
+        .section-header i {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .section-header .badge-count {
+            margin-left: auto;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 50px;
+        }
+
+        .section-body {
+            padding: 1.5rem;
+        }
+
+        /* ==================== FORMULARIO ==================== */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-label .required {
+            color: var(--danger);
+            margin-left: 2px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.95rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background-color: #fff;
+            color: var(--text-main);
+            outline: none;
+            transition: var(--transition);
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .form-control:disabled {
+            background-color: var(--border-light);
+            cursor: not-allowed;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.9rem center;
+            background-size: 1rem;
+            padding-right: 2.5rem;
+        }
+
+        /* ==================== PRODUCTO SELECCIONADO ==================== */
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-wrapper .search-icon {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .search-wrapper .form-control {
+            padding-left: 2.5rem;
+        }
+
+        .autocomplete-list {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            max-height: 280px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: var(--shadow-lg);
+            display: none;
+        }
+
+        .autocomplete-list.show {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .autocomplete-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-light);
+            transition: background 0.15s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.highlighted {
+            background-color: var(--primary-light);
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-info strong {
+            display: block;
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+
+        .autocomplete-info small {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .autocomplete-code {
+            font-family: 'Courier New', monospace;
+            background: var(--border-light);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .autocomplete-empty {
+            padding: 1.5rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .autocomplete-empty i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        /* ==================== PRODUCTO SELECCIONADO CHIP ==================== */
+        .producto-seleccionado {
+            background: var(--success-light);
+            border: 1.5px solid #86efac;
+            border-radius: var(--radius-sm);
+            padding: 0.85rem 1rem;
+            margin-top: 0.75rem;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        .producto-seleccionado.show {
+            display: flex;
+        }
+
+        .producto-seleccionado i.fa-check-circle {
+            color: var(--success);
+            font-size: 1.3rem;
+        }
+
+        .producto-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .producto-info strong {
+            display: block;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .producto-info small {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .producto-remove {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .producto-remove:hover {
+            color: var(--danger);
+            background: var(--danger-light);
+        }
+
+        /* ==================== BOTONES ==================== */
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.8rem 1.25rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: inherit;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background-color: var(--border-light);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: var(--border-color);
+        }
+
+        /* ==================== MOTIVOS SIDEBAR ==================== */
+        .motivos-header {
+            padding: 1rem 1.5rem;
+            background: #fafbfc;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .motivos-header h5 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .motivos-header small {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .motivo-item {
+            padding: 0.9rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+            transition: var(--transition);
+        }
+
+        .motivo-item:hover {
+            background: var(--surface-hover);
+        }
+
+        .motivo-item:last-child {
+            border-bottom: none;
+        }
+
+        .motivo-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.4rem;
+        }
+
+        .motivo-name {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+
+        .motivo-stats {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .motivo-cantidad {
+            font-weight: 700;
+            color: var(--danger);
+        }
+
+        .motivo-porcentaje {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .progress-bar {
+            height: 6px;
+            border-radius: 9999px;
+            background: var(--border-light);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, var(--danger), #f87171);
+            transition: width 0.5s ease;
+        }
+
+        .empty-motivos {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-motivos i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.4;
+        }
+
+        /* ==================== TABLA ÚLTIMAS MERMAS ==================== */
+        .tabla-mermas {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .tabla-mermas th {
+            background-color: #fafbfc;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tabla-mermas td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        .tabla-mermas tbody tr {
+            transition: var(--transition);
+        }
+
+        .tabla-mermas tbody tr:hover {
+            background-color: var(--surface-hover);
+        }
+
+        .tabla-mermas tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .producto-cell {
+            max-width: 180px;
+        }
+
+        .producto-cell strong {
+            display: block;
+            font-size: 0.85rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .producto-cell small {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .badge-motivo {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: var(--danger-light);
+            color: var(--danger);
+            white-space: nowrap;
+        }
+
+        .fecha-cell {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.3;
+        }
+
+        .empty-state h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1rem;
+            color: var(--text-main);
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 0.85rem;
+        }
+
+        /* ==================== LOADING OVERLAY ==================== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(2px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .toast {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 300px;
+            max-width: 400px;
+            border-left: 4px solid;
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .toast.success { border-color: var(--success); }
+        .toast.success i { color: var(--success); }
+        
+        .toast.error { border-color: var(--danger); }
+        .toast.error i { color: var(--danger); }
+        
+        .toast.warning { border-color: var(--warning); }
+        .toast.warning i { color: var(--warning); }
+
+        .toast i {
+            font-size: 1.3rem;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .toast-message {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .toast.removing {
+            animation: slideOutRight 0.3s ease-in forwards;
+        }
+
+        @keyframes slideOutRight {
+            to { opacity: 0; transform: translateX(100%); }
+        }
+
+        /* ==================== VALIDACIÓN ==================== */
+        .form-control.is-invalid {
+            border-color: var(--danger);
+        }
+
+        .invalid-feedback {
+            color: var(--danger);
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .form-control.is-invalid + .invalid-feedback {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="loading-overlay" id="mermasLoadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Procesando...</div>
+</div>
+
+<div class="toast-container" id="mermasToastContainer"></div>
+
+<div class="mermas-dashboard" id="mermasContent">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-icon">
+                <i class="fas fa-trash-alt"></i>
+            </span>
+            Registro de Mermas
+        </h1>
+        <p class="page-subtitle">Gestiona productos dados de baja por daños, vencimiento u otros motivos</p>
+    </div>
+
+    <!-- RESUMEN CARDS -->
+    <div class="summary-grid">
+        <div class="summary-card card-unidades">
+            <div class="card-info">
+                <h6>Mermas este mes</h6>
+                <h2 th:text="${resumen.totalUnidades} + ' u.'">0 u.</h2>
+                <small>Unidades dadas de baja</small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-box-open"></i>
+            </div>
+        </div>
+        
+        <div class="summary-card card-perdidas">
+            <div class="card-info">
+                <h6>Pérdidas estimadas</h6>
+                <h2 th:text="'S/ ' + ${#numbers.formatDecimal(resumen.valorPerdidas, 0, 2)}">S/ 0.00</h2>
+                <small>Valor total del mes</small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-chart-line"></i>
+            </div>
+        </div>
+        
+        <div class="summary-card card-motivo">
+            <div class="card-info">
+                <h6>Motivo principal</h6>
+                <h2 th:text="${resumen.motivoPrincipal}" style="font-size: 1.3rem;">Sin datos</h2>
+                <small>Más frecuente este mes</small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="content-grid">
+        
+        <!-- COLUMNA IZQUIERDA: FORMULARIO -->
+        <div class="form-column">
+            <div class="section">
+                <h3 class="section-header">
+                    <i class="fas fa-plus-circle"></i>
+                    Registrar nueva merma
+                </h3>
+                <div class="section-body">
+                    <form id="formMerma" onsubmit="return registrarMerma(event)" novalidate>
+                        
+                        <!-- PRODUCTO -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                Producto <span class="required">*</span>
+                            </label>
+                            <div class="search-wrapper">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" 
+                                       id="searchProducto"
+                                       class="form-control" 
+                                       placeholder="Buscar por nombre o código de barras..."
+                                       autocomplete="off"
+                                       required />
+                                <input type="hidden" id="idProducto" name="idProducto" required />
+                                <div class="autocomplete-list" id="autocompleteList"></div>
+                            </div>
+                            <div class="producto-seleccionado" id="productoSeleccionado">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="producto-info">
+                                    <strong id="productoNombre"></strong>
+                                    <small id="productoCodigo"></small>
+                                </div>
+                                <button type="button" class="producto-remove" onclick="limpiarProductoSeleccionado()" title="Quitar">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">Debes seleccionar un producto</div>
+                        </div>
+
+                        <!-- CANTIDAD Y MOTIVO -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Cantidad a dar de baja <span class="required">*</span>
+                                </label>
+                                <input type="number" 
+                                       id="cantidad"
+                                       name="cantidad"
+                                       class="form-control" 
+                                       placeholder="Ej: 3"
+                                       min="1"
+                                       max="9999"
+                                       required />
+                                <div class="invalid-feedback">Ingresa una cantidad válida</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Motivo de merma <span class="required">*</span>
+                                </label>
+                                <select id="motivoMerma" name="idMotivoMerma" class="form-control" required>
+                                    <option value="">Seleccionar motivo...</option>
+                                    <option th:each="motivo : ${motivos}" 
+                                            th:value="${motivo.idMotivoMerma}" 
+                                            th:text="${motivo.nombreMotivo}"></option>
+                                </select>
+                                <div class="invalid-feedback">Selecciona un motivo</div>
+                            </div>
+                        </div>
+
+                        <!-- FECHA VENCIMIENTO -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                Fecha de vencimiento del lote
+                                <small style="color: var(--text-muted); font-weight: normal;">(opcional)</small>
+                            </label>
+                            <input type="date" 
+                                   id="fechaVencimiento"
+                                   name="fechaVencimiento"
+                                   class="form-control" />
+                        </div>
+
+                        <!-- OBSERVACIONES -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                Observaciones
+                                <small style="color: var(--text-muted); font-weight: normal;">(opcional)</small>
+                            </label>
+                            <textarea id="observaciones"
+                                      name="observaciones"
+                                      class="form-control" 
+                                      rows="3"
+                                      maxlength="500"
+                                      placeholder="Describe el estado del producto, lote, ubicación en almacén..."></textarea>
+                            <small style="color: var(--text-muted); font-size: 0.75rem;">
+                                <span id="contadorCaracteres">0</span>/500 caracteres
+                            </small>
+                        </div>
+
+                        <!-- BOTONES -->
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary" id="btnSubmit">
+                                <i class="fas fa-check"></i>
+                                Confirmar merma
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="limpiarFormulario()">
+                                <i class="fas fa-times"></i>
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: SIDEBAR -->
+        <div class="sidebar-column">
+            
+            <!-- MERMAS POR MOTIVO -->
+            <div class="section">
+                <div class="motivos-header">
+                    <h5>
+                        <i class="fas fa-chart-pie"></i>
+                        Mermas por motivo
+                    </h5>
+                    <small th:text="${#temporals.format(#temporals.createNow(), 'MMMM yyyy')}">Junio 2026</small>
+                </div>
+                
+                <div th:if="${#lists.isEmpty(mermasPorMotivo)}" class="empty-motivos">
+                    <i class="fas fa-inbox"></i>
+                    <p style="margin: 0;">Sin mermas registradas este mes</p>
+                </div>
+
+                <div th:unless="${#lists.isEmpty(mermasPorMotivo)}">
+                    <div th:each="item : ${mermasPorMotivo}" class="motivo-item">
+                        <div class="motivo-top">
+                            <span class="motivo-name" th:text="${item[0]}">Motivo</span>
+                            <div class="motivo-stats">
+                                <span class="motivo-cantidad" th:text="${item[1]} + ' u.'">0 u.</span>
+                                <span class="motivo-porcentaje">
+                                    — <span th:text="${resumen.totalUnidades > 0 ? #numbers.formatDecimal((item[1] / resumen.totalUnidades) * 100, 0, 0) : 0}">0</span>%
+                                </span>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" 
+                                 th:style="'width: ' + ${resumen.totalUnidades > 0 ? (item[1] / resumen.totalUnidades) * 100 : 0} + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÚLTIMAS MERMAS -->
+            <div class="section">
+                <h3 class="section-header">
+                    <i class="fas fa-history"></i>
+                    Últimas mermas
+                    <span class="badge-count" th:text="${#lists.size(ultimasMermas)}">0</span>
+                </h3>
+                
+                <div th:if="${#lists.isEmpty(ultimasMermas)}" class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h4>Sin registros</h4>
+                    <p>Las mermas que registres aparecerán aquí</p>
+                </div>
+
+                <div th:unless="${#lists.isEmpty(ultimasMermas)}" class="table-responsive">
+                    <table class="tabla-mermas">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th style="text-align: center;">Cant.</th>
+                                <th>Motivo</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="merma : ${ultimasMermas}">
+                                <td class="producto-cell">
+                                    <strong th:text="${merma.producto.nombreProducto}">Producto</strong>
+                                    <small th:text="${merma.producto.codigoBarras}">COD001</small>
+                                </td>
+                                <td style="text-align: center; font-weight: 600;" th:text="${merma.cantidad} + ' u.'">0 u.</td>
+                                <td>
+                                    <span class="badge-motivo" th:text="${merma.motivoMerma.nombreMotivo}">Motivo</span>
+                                </td>
+                                <td class="fecha-cell" th:text="${#temporals.format(merma.fechaMerma, 'dd/MM HH:mm')}">01/01</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// MERMAS - LÓGICA DE LA VISTA
+// ============================================================
+
+(function() {
+    'use strict';
+
+    // Estado del componente
+    const state = {
+        productoSeleccionado: null,
+        debounceTimer: null,
+        highlightedIndex: -1
+    };
+
+    // ============ INICIALIZACIÓN ============
+    function init() {
+        configurarAutocompletado();
+        configurarContadorCaracteres();
+        configurarValidacion();
+        console.log('✅ Vista de mermas inicializada');
+    }
+
+    // ============ AUTOCOMPLETADO DE PRODUCTOS ============
+    function configurarAutocompletado() {
+        const input = document.getElementById('searchProducto');
+        const list = document.getElementById('autocompleteList');
+        
+        if (!input || !list) return;
+
+        input.addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            
+            // Limpiar selección si el usuario modifica el texto
+            if (state.productoSeleccionado && query !== state.productoSeleccionado.nombre) {
+                limpiarProductoSeleccionado();
+            }
+
+            clearTimeout(state.debounceTimer);
+            
+            if (query.length < 2) {
+                list.classList.remove('show');
+                return;
+            }
+
+            state.debounceTimer = setTimeout(() => buscarProductos(query), 300);
+        });
+
+        input.addEventListener('keydown', function(e) {
+            const items = list.querySelectorAll('.autocomplete-item');
+            if (!items.length) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                state.highlightedIndex = Math.min(state.highlightedIndex + 1, items.length - 1);
+                actualizarHighlight(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                state.highlightedIndex = Math.max(state.highlightedIndex - 1, 0);
+                actualizarHighlight(items);
+            } else if (e.key === 'Enter' && state.highlightedIndex >= 0) {
+                e.preventDefault();
+                items[state.highlightedIndex].click();
+            } else if (e.key === 'Escape') {
+                list.classList.remove('show');
+            }
+        });
+
+        // Cerrar al hacer click fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-wrapper')) {
+                list.classList.remove('show');
+            }
+        });
+    }
+
+    function actualizarHighlight(items) {
+        items.forEach((item, i) => {
+            item.classList.toggle('highlighted', i === state.highlightedIndex);
+        });
+    }
+
+    async function buscarProductos(query) {
+        const list = document.getElementById('autocompleteList');
+        
+        try {
+            const response = await fetch(`/api/mermas/buscar-producto?search=${encodeURIComponent(query)}`);
+            
+            if (!response.ok) throw new Error('Error en la búsqueda');
+            
+            const productos = await response.json();
+            renderAutocompletado(productos, query);
+            
+        } catch (error) {
+            console.error('Error buscando productos:', error);
+            list.innerHTML = `
+                <div class="autocomplete-empty">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div>Error al buscar productos</div>
+                </div>
+            `;
+            list.classList.add('show');
+        }
+    }
+
+    function renderAutocompletado(productos, query) {
+        const list = document.getElementById('autocompleteList');
+        state.highlightedIndex = -1;
+
+        if (productos.length === 0) {
+            list.innerHTML = `
+                <div class="autocomplete-empty">
+                    <i class="fas fa-search"></i>
+                    <div>No se encontraron productos</div>
+                </div>
+            `;
+            list.classList.add('show');
+            return;
+        }
+
+        list.innerHTML = productos.map(p => `
+            <div class="autocomplete-item" 
+                 data-id="${p.id}" 
+                 data-nombre="${escapeHtml(p.nombre)}"
+                 data-codigo="${escapeHtml(p.codigoBarras || '')}"
+                 onclick="seleccionarProducto(this)">
+                <div class="autocomplete-info">
+                    <strong>${resaltarCoincidencia(p.nombre, query)}</strong>
+                    <small>${p.codigoBarras ? 'Código: ' + p.codigoBarras : 'Sin código'}</small>
+                </div>
+                ${p.codigoBarras ? `<span class="autocomplete-code">${p.codigoBarras}</span>` : ''}
+            </div>
+        `).join('');
+
+        list.classList.add('show');
+    }
+
+    function resaltarCoincidencia(texto, query) {
+        if (!query) return escapeHtml(texto);
+        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return escapeHtml(texto).replace(regex, '<mark style="background:#fef3c7;padding:0 2px;border-radius:2px;">$1</mark>');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+    }
+
+    // ============ SELECCIÓN DE PRODUCTO ============
+    window.seleccionarProducto = function(element) {
+        const id = element.dataset.id;
+        const nombre = element.dataset.nombre;
+        const codigo = element.dataset.codigo;
+
+        state.productoSeleccionado = { id, nombre, codigo };
+
+        document.getElementById('idProducto').value = id;
+        document.getElementById('searchProducto').value = nombre;
+        document.getElementById('searchProducto').classList.remove('is-invalid');
+        document.getElementById('autocompleteList').classList.remove('show');
+
+        // Mostrar chip del producto seleccionado
+        const chip = document.getElementById('productoSeleccionado');
+        document.getElementById('productoNombre').textContent = nombre;
+        document.getElementById('productoCodigo').textContent = codigo ? 'Código: ' + codigo : '';
+        chip.classList.add('show');
+    };
+
+    window.limpiarProductoSeleccionado = function() {
+        state.productoSeleccionado = null;
+        document.getElementById('idProducto').value = '';
+        document.getElementById('searchProducto').value = '';
+        document.getElementById('productoSeleccionado').classList.remove('show');
+        document.getElementById('searchProducto').focus();
+    };
+
+    // ============ CONTADOR DE CARACTERES ============
+    function configurarContadorCaracteres() {
+        const textarea = document.getElementById('observaciones');
+        const contador = document.getElementById('contadorCaracteres');
+        
+        if (!textarea || !contador) return;
+
+        textarea.addEventListener('input', () => {
+            contador.textContent = textarea.value.length;
+        });
+    }
+
+    // ============ VALIDACIÓN ============
+    function configurarValidacion() {
+        const form = document.getElementById('formMerma');
+        if (!form) return;
+
+        form.querySelectorAll('input[required], select[required]').forEach(el => {
+            el.addEventListener('blur', () => validarCampo(el));
+            el.addEventListener('input', () => {
+                if (el.classList.contains('is-invalid')) validarCampo(el);
+            });
+        });
+    }
+
+    function validarCampo(campo) {
+        const esValido = campo.checkValidity();
+        campo.classList.toggle('is-invalid', !esValido);
+        return esValido;
+    }
+
+    function validarFormulario() {
+        const form = document.getElementById('formMerma');
+        const campos = form.querySelectorAll('input[required], select[required]');
+        let valido = true;
+
+        campos.forEach(campo => {
+            if (!validarCampo(campo)) valido = false;
+        });
+
+        // Validar producto seleccionado
+        if (!state.productoSeleccionado) {
+            document.getElementById('searchProducto').classList.add('is-invalid');
+            valido = false;
+        }
+
+        return valido;
+    }
+
+    // ============ REGISTRO DE MERMA ============
+	window.registrarMerma = async function(event) {
+	    event.preventDefault();
+	    
+	    if (!validarFormulario()) {
+	        mostrarToast('error', 'Campos incompletos', 'Revisa los campos marcados en rojo');
+	        return false;
+	    }
+
+	    const btnSubmit = document.getElementById('btnSubmit');
+	    const overlay = document.getElementById('mermasLoadingOverlay');
+	    
+	    btnSubmit.disabled = true;
+	    btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+	    overlay.classList.add('active');
+
+	    const data = {
+	        idProducto: parseInt(document.getElementById('idProducto').value),
+	        cantidad: parseInt(document.getElementById('cantidad').value),
+	        idMotivoMerma: parseInt(document.getElementById('motivoMerma').value),
+	        observaciones: document.getElementById('observaciones').value.trim(),
+	        fechaVencimiento: document.getElementById('fechaVencimiento').value || null
+	    };
+
+	    try {
+	        const response = await fetch('/api/mermas/registrar', {
+	            method: 'POST',
+	            headers: { 
+	                'Content-Type': 'application/json',
+	                'X-Requested-With': 'XMLHttpRequest'
+	            },
+	            credentials: 'same-origin',
+	            body: JSON.stringify(data)
+	        });
+
+	        const contentType = response.headers.get('content-type');
+	        let result;
+	        
+	        if (contentType && contentType.includes('application/json')) {
+	            result = await response.json();
+	        } else {
+	            const text = await response.text();
+	            result = {
+	                success: false,
+	                message: text || 'Error desconocido del servidor'
+	            };
+	        }
+
+	        if (response.status === 401) {
+	            overlay.classList.remove('active'); // ✅ QUITAR OVERLAY
+	            btnSubmit.disabled = false;
+	            btnSubmit.innerHTML = '<i class="fas fa-check"></i> Confirmar merma';
+	            mostrarToast('warning', 'Sesión expirada', 'Redirigiendo al login...');
+	            setTimeout(() => {
+	                window.location.href = result.redirect || '/login';
+	            }, 1500);
+	            return false;
+	        }
+
+	        if (result.success) {
+	            mostrarToast('success', '¡Merma registrada!', result.message || 'Se actualizó el inventario correctamente');
+	            
+	            // ✅ CAMBIO CLAVE: QUITAR OVERLAY Y RESETEAR BOTÓN ANTES DE RECARGAR
+	            overlay.classList.remove('active');
+	            btnSubmit.disabled = false;
+	            btnSubmit.innerHTML = '<i class="fas fa-check"></i> Confirmar merma';
+	            
+	            setTimeout(() => recargarVista(), 800);
+	        } else {
+	            throw new Error(result.message || 'Error desconocido');
+	        }
+
+	    } catch (error) {
+	        console.error('Error al registrar merma:', error);
+	        mostrarToast('error', 'Error', error.message || 'No se pudo registrar la merma');
+	        
+	        // ✅ QUITAR OVERLAY Y RESETEAR BOTÓN EN CASO DE ERROR
+	        overlay.classList.remove('active');
+	        btnSubmit.disabled = false;
+	        btnSubmit.innerHTML = '<i class="fas fa-check"></i> Confirmar merma';
+	    }
+
+	    return false;
+	};
+
+    // ============ RECARGAR VISTA ============
+    function recargarVista() {
+        fetch('/api/views/mermas')
+            .then(response => response.text())
+            .then(html => {
+                const content = document.getElementById('mermasContent');
+                if (content) {
+                    content.outerHTML = html;
+                    // Reinicializar la vista después del reemplazo
+                    setTimeout(init, 100);
+                }
+            })
+            .catch(error => {
+                console.error('Error al recargar:', error);
+                window.location.reload();
+            });
+    }
+
+    // ============ LIMPIAR FORMULARIO ============
+    window.limpiarFormulario = function() {
+        const form = document.getElementById('formMerma');
+        if (form) form.reset();
+        
+        limpiarProductoSeleccionado();
+        
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        
+        const contador = document.getElementById('contadorCaracteres');
+        if (contador) contador.textContent = '0';
+    };
+
+    // ============ TOASTS ============
+    function mostrarToast(tipo, titulo, mensaje) {
+        const container = document.getElementById('mermasToastContainer');
+        if (!container) return;
+
+        const iconos = {
+            success: 'fa-check-circle',
+            error: 'fa-times-circle',
+            warning: 'fa-exclamation-triangle'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${tipo}`;
+        toast.innerHTML = `
+            <i class="fas ${iconos[tipo] || iconos.warning}"></i>
+            <div class="toast-content">
+                <div class="toast-title">${titulo}</div>
+                ${mensaje ? `<div class="toast-message">${mensaje}</div>` : ''}
+            </div>
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('removing');
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
+    }
+
+    // Iniciar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,15 +1,18 @@
 package com.techventa.multitienda.admin.controller;
 
+import com.techventa.multitienda.admin.model.Producto;
+import com.techventa.multitienda.admin.model.Usuario;
 import com.techventa.multitienda.admin.model.Merma;
 import com.techventa.multitienda.admin.service.MermaService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/mermas")
@@ -18,40 +21,81 @@ public class MermaController {
     @Autowired
     private MermaService mermaService;
 
-    @GetMapping
-    public ResponseEntity<List<Merma>> listarTodas() { return ResponseEntity.ok(mermaService.listarTodas()); }
-    @GetMapping("/activas") public ResponseEntity<List<Merma>> listarActivas() { return ResponseEntity.ok(mermaService.listarActivas()); }
-    @GetMapping("/producto/{idProducto}") public ResponseEntity<List<Merma>> listarPorProducto(@PathVariable Integer idProducto) { return ResponseEntity.ok(mermaService.listarPorProducto(idProducto)); }
-    @GetMapping("/tienda/{idTienda}") public ResponseEntity<List<Merma>> listarPorTienda(@PathVariable Integer idTienda) { return ResponseEntity.ok(mermaService.listarPorTienda(idTienda)); }
-    @GetMapping("/motivo/{idMotivo}") public ResponseEntity<List<Merma>> listarPorMotivo(@PathVariable Integer idMotivo) { return ResponseEntity.ok(mermaService.listarPorMotivo(idMotivo)); }
-    @GetMapping("/{id}") public ResponseEntity<Merma> buscarPorId(@PathVariable Integer id) { return mermaService.buscarPorId(id).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build()); }
+    @GetMapping("/buscar-producto")
+    public ResponseEntity<List<Map<String, Object>>> buscarProducto(@RequestParam String search) {
+        List<Producto> productos = mermaService.buscarProductosParaAutocompletado(search);
+        
+        List<Map<String, Object>> resultado = productos.stream()
+                .map(p -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", p.getIdProducto());
+                    map.put("nombre", p.getNombreProducto());
+                    map.put("codigoBarras", p.getCodigoBarras());
+                    return map;
+                })
+                .collect(Collectors.toList());
 
-    @PostMapping
-    public ResponseEntity<Object> crear(@RequestBody Merma merma) {
-        try {
-            Merma nueva = mermaService.crear(merma);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nueva);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Error al crear: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+        return ResponseEntity.ok(resultado);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Object> eliminar(@PathVariable Integer id) {
+    @PostMapping("/registrar")
+    public ResponseEntity<?> registrarMerma(
+            @RequestBody Map<String, Object> request,
+            HttpSession session) {
+
+        // ✅ CAMBIO: Devolver JSON en lugar de texto plano
+        Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+        if (usuario == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "No autenticado. Por favor inicia sesión nuevamente.");
+            error.put("redirect", "/login");
+            return ResponseEntity.status(401).body(error);
+        }
+
         try {
-            if (mermaService.buscarPorId(id).isEmpty()) {
-                return ResponseEntity.notFound().build();
+            Integer idProducto = Integer.parseInt(request.get("idProducto").toString());
+            Integer idTienda = usuario.getTienda() != null ? usuario.getTienda().getIdTienda() : null;
+            
+            if (idTienda == null) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "El usuario no tiene una tienda asignada.");
+                return ResponseEntity.badRequest().body(error);
             }
-            mermaService.eliminarFisico(id);  // ← CAMBIADO
-            Map<String, String> response = new HashMap<>();
-            response.put("mensaje", "Merma eliminada correctamente");
+            
+            Integer cantidad = Integer.parseInt(request.get("cantidad").toString());
+            Integer idMotivoMerma = Integer.parseInt(request.get("idMotivoMerma").toString());
+            String observaciones = request.get("observaciones") != null ? request.get("observaciones").toString() : "";
+
+            Merma merma = mermaService.registrarMermaDesdeFormulario(
+                    idProducto,
+                    idTienda,
+                    cantidad,
+                    idMotivoMerma,
+                    observaciones,
+                    usuario
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Merma registrada correctamente");
+            response.put("idMerma", merma.getIdMerma());
+
             return ResponseEntity.ok(response);
+
+        } catch (NumberFormatException e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Datos inválidos. Revisa los campos numéricos.");
+            return ResponseEntity.badRequest().body(error);
+            
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Error al eliminar: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+            e.printStackTrace();
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Error al registrar merma: " + e.getMessage());
+            return ResponseEntity.badRequest().body(error);
         }
     }
 }

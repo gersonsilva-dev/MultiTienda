@@ -2,6 +2,7 @@ package com.techventa.multitienda;
 
 import com.techventa.multitienda.admin.model.Usuario;
 import com.techventa.multitienda.admin.service.CajaService;
+import com.techventa.multitienda.admin.service.MermaService;
 import com.techventa.multitienda.admin.service.TiendaService;
 import com.techventa.multitienda.almacenero.service.InventarioService;
 import com.techventa.multitienda.almacenero.service.KardexService;
@@ -20,6 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/api/views")
 public class ViewFragmentController {
 
+	
+	@Autowired
+	private MermaService mermaService;
 	  @Autowired
 	    private KardexService kardexService;
 
@@ -133,6 +137,28 @@ public class ViewFragmentController {
                 model.addAttribute("inventario", java.util.Collections.emptyList());
             }
         }
+        
+        
+        // ✅ NUEVO: Mermas
+           if (viewName.equals("mermas")) {
+               Integer idTienda = usuario.getTienda() != null ? usuario.getTienda().getIdTienda() : 1;
+               
+               try {
+                   model.addAttribute("resumen", mermaService.obtenerResumenMermas(idTienda));
+                   model.addAttribute("mermasPorMotivo", mermaService.obtenerMermasPorMotivoMes(idTienda));
+                   model.addAttribute("ultimasMermas", mermaService.obtenerUltimasMermasRegistradas(idTienda));
+                   model.addAttribute("motivos", mermaService.listarMotivosActivosParaMerma());
+                   
+                   System.out.println("✅ Mermas cargadas para tienda: " + idTienda);
+               } catch (Exception e) {
+                   System.err.println("❌ Error al cargar mermas: " + e.getMessage());
+                   e.printStackTrace();
+                   model.addAttribute("resumen", new java.util.HashMap<>());
+                   model.addAttribute("mermasPorMotivo", java.util.Collections.emptyList());
+                   model.addAttribute("ultimasMermas", java.util.Collections.emptyList());
+                   model.addAttribute("motivos", java.util.Collections.emptyList());
+               }
+           }
         
 
         // ============================================================
