@@ -1,5 +1,6 @@
 package com.techventa.multitienda.admin.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.techventa.multitienda.admin.model.Oferta;
 import com.techventa.multitienda.admin.model.Producto;
 import jakarta.persistence.*;
@@ -15,6 +16,7 @@ public class DetalleOfertaProducto {
 
     @ManyToOne
     @JoinColumn(name = "id_oferta", nullable = false)
+    @JsonIgnore  // <-- Agregar esta línea
     private Oferta oferta;
 
     @ManyToOne
