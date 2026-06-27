@@ -1,5 +1,6 @@
 package com.techventa.multitienda.cajero.controller;
 
+import com.techventa.multitienda.cajero.dto.VentaDTO;
 import com.techventa.multitienda.cajero.model.DetalleVenta;
 import com.techventa.multitienda.cajero.model.Venta;
 import com.techventa.multitienda.cajero.service.VentaService;
@@ -28,9 +29,18 @@ public class VentaController {
         return ResponseEntity.ok(ventaService.listarActivas());
     }
 
+ // En VentaController.java
     @GetMapping("/cajero/{idCajero}")
-    public ResponseEntity<List<Venta>> listarPorCajero(@PathVariable Integer idCajero) {
-        return ResponseEntity.ok(ventaService.listarPorCajero(idCajero));
+    public ResponseEntity<List<Venta>> listarPorCajero(
+            @PathVariable Integer idCajero,
+            @RequestParam(required = false) Integer idTurnoCaja) {
+        List<Venta> ventas;
+        if (idTurnoCaja != null) {
+            ventas = ventaService.listarPorCajeroYTurno(idCajero, idTurnoCaja);
+        } else {
+            ventas = ventaService.listarPorCajero(idCajero);
+        }
+        return ResponseEntity.ok(ventas);
     }
 
     @GetMapping("/tienda/{idTienda}")
@@ -95,4 +105,10 @@ public class VentaController {
         public List<DetalleVenta> getDetalles() { return detalles; }
         public void setDetalles(List<DetalleVenta> detalles) { this.detalles = detalles; }
     }
+ // En VentaController.java - reemplazar el método detalles
+    @GetMapping("/cajero/{idCajero}/detalles")
+    public ResponseEntity<List<VentaDTO>> listarPorCajeroConDetalles(@PathVariable Integer idCajero) {
+        return ResponseEntity.ok(ventaService.listarPorCajeroConDetallesDTO(idCajero));
+    }
+    
 }

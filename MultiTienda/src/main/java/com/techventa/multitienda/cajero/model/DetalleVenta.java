@@ -2,6 +2,7 @@ package com.techventa.multitienda.cajero.model;
 
 import com.techventa.multitienda.admin.model.Producto;
 import com.techventa.multitienda.admin.model.Lote;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
@@ -16,6 +17,7 @@ public class DetalleVenta {
 
     @ManyToOne
     @JoinColumn(name = "id_venta", nullable = false)
+    @JsonIgnoreProperties("detalles")  // 🔥 Evita la recursión
     private Venta venta;
 
     @ManyToOne

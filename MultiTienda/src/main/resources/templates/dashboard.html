@@ -59,10 +59,16 @@
         <nav class="sidebar-nav" id="sidebarNav"></nav>
         <div class="sidebar-footer">
             <div class="sidebar-user" id="sidebarUser">
-                <div class="user-avatar ua-md" id="sidebarAvatar">AD</div>
+                <!-- 🔥 AVATAR DINÁMICO: Iniciales del usuario -->
+                <div class="user-avatar ua-md" id="sidebarAvatar"
+                     th:text="${usuario != null ? usuario.nombres.substring(0,1) + usuario.apellidos.substring(0,1) : 'U'}">AD</div>
                 <div class="sidebar-user-text">
-                    <div class="sidebar-user-name" id="sidebarUserName">Alan Díaz</div>
-                    <div class="sidebar-user-role" id="sidebarUserRole">Administrador</div>
+                    <!-- 🔥 NOMBRE DINÁMICO -->
+                    <div class="sidebar-user-name" id="sidebarUserName"
+                         th:text="${usuario != null ? usuario.nombres + ' ' + usuario.apellidos : 'Usuario'}">Alan Díaz</div>
+                    <!-- 🔥 ROL DINÁMICO -->
+                    <div class="sidebar-user-role" id="sidebarUserRole"
+                         th:text="${usuario != null ? usuario.rol.nombreRol : 'Rol'}">Administrador</div>
                 </div>
             </div>
             <div class="sidebar-version" id="sidebarVersion">TechVenta Pro · v2.0</div>
@@ -105,15 +111,20 @@
 
                 <!-- Perfil -->
                 <div class="topbar-profile" id="topbarProfile" onclick="toggleProfileDd(event)">
-                    <div class="user-avatar ua-sm" id="topbarAvatar">AD</div>
+                    <!-- 🔥 AVATAR DINÁMICO: Iniciales del usuario -->
+                    <div class="user-avatar ua-sm" id="topbarAvatar"
+                         th:text="${usuario != null ? usuario.nombres.substring(0,1) + usuario.apellidos.substring(0,1) : 'U'}">AD</div>
                     <div class="tp-text">
-                        <div class="tp-name" id="topbarName">Alan Díaz</div>
-                        <div class="tp-role" id="topbarRole">Administrador</div>
+                        <!-- 🔥 NOMBRE DINÁMICO -->
+                        <div class="tp-name" id="topbarName"
+                             th:text="${usuario != null ? usuario.nombres + ' ' + usuario.apellidos : 'Usuario'}">Alan Díaz</div>
+                        <!-- 🔥 ROL DINÁMICO -->
+                        <div class="tp-role" id="topbarRole"
+                             th:text="${usuario != null ? usuario.rol.nombreRol : 'Rol'}">Administrador</div>
                     </div>
                     <i class="fas fa-chevron-down tp-chevron"></i>
 
                     <div class="profile-dropdown" id="profileDd">
-                        <!-- ❌ ELIMINADO: Mi perfil y Configuración -->
                         <div class="dd-divider"></div>
                         <div class="dd-item danger" onclick="cerrarSesion()">
                             <i class="fas fa-sign-out-alt"></i> Cerrar sesión
@@ -175,6 +186,11 @@
     window.USER_NOMBRES = /*[[${usuario?.nombres}]]*/ 'Usuario';
     window.USER_APELLIDOS = /*[[${usuario?.apellidos}]]*/ '';
     window.USER_ROL = /*[[${usuario?.rol?.nombreRol}]]*/ 'CAJERO';
+    
+    function cerrarSesion() {
+        if (!confirm('¿Estás seguro de cerrar sesión?')) return;
+        window.location.href = '/login';
+    }
     /*]]>*/
 </script>
 <script th:src="@{/js/principal.js}"></script>

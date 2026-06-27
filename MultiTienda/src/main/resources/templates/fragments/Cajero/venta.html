@@ -1587,7 +1587,7 @@
             }
 
             renderizarCarrito();
-            mostrarToast('✅ ' + producto.nombreProducto + ' agregado', 'success');
+            //mostrarToast('✅ ' + producto.nombreProducto + ' agregado', 'success');
             ocultarResultados();
             var searchInp = document.getElementById('searchInp');
             if (searchInp) searchInp.value = '';
@@ -1654,94 +1654,149 @@
             if (btnTotal) btnTotal.textContent = 'S/ ' + total.toFixed(2);
         }
 
-        // ================================================================
-        // CALCULAR DESCUENTOS
-        // ================================================================
-        function calcularDescuentos(subtotal, items) {
-            var descuentoTotal = 0;
-            
-            if (!ofertasActivas || ofertasActivas.length === 0) {
-                return { descuento: 0 };
-            }
+		// ================================================================
+		// CALCULAR DESCUENTOS (VERSIÓN MEJORADA)
+		// ================================================================
+		function calcularDescuentos(subtotal, items) {
+		    var mejorDescuento = 0;
+		    var mejorOferta = null;
+		    
+		    if (!ofertasActivas || ofertasActivas.length === 0) {
+		        return { descuento: 0 };
+		    }
 
-            ofertasActivas.forEach(function(oferta) {
-                var tipo = oferta.tipoDescuento?.idTipoDescuento || 0;
-                var valor = oferta.valorDescuento || 0;
-                var montoMinimo = oferta.montoMinimo || 0;
-                var cantidadCompra = oferta.cantidadCompra || 2;
+		    ofertasActivas.forEach(function(oferta) {
+		        var tipo = oferta.tipoDescuento?.idTipoDescuento || 0;
+		        var valor = oferta.valorDescuento || 0;
+		        var montoMinimo = oferta.montoMinimo || 0;
+		        var cantidadCompra = oferta.cantidadCompra || 2;
+		        var descuentoOferta = 0;
 
-                if (tipo === 3) {
-                    items.forEach(function(item) {
-                        var gratis = Math.floor(item.cantidad / cantidadCompra);
-                        if (gratis > 0) {
-                            descuentoTotal += gratis * item.precio;
-                        }
-                    });
-                } else if (tipo === 1) {
-                    if (subtotal >= montoMinimo && valor > 0) {
-                        descuentoTotal += subtotal * (valor / 100);
-                    }
-                } else if (tipo === 2) {
-                    if (subtotal >= montoMinimo && valor > 0) {
-                        descuentoTotal += Math.min(valor, subtotal);
-                    }
-                }
-            });
+		        if (tipo === 3) { // 2x1
+		            items.forEach(function(item) {
+		                var gratis = Math.floor(item.cantidad / cantidadCompra);
+		                if (gratis > 0) {
+		                    descuentoOferta += gratis * item.precio;
+		                }
+		            });
+		        } else if (tipo === 1) { // Porcentaje
+		            if (subtotal >= montoMinimo && valor > 0) {
+		                descuentoOferta = subtotal * (valor / 100);
+		            }
+		        } else if (tipo === 2) { // Monto fijo
+		            if (subtotal >= montoMinimo && valor > 0) {
+		                descuentoOferta = Math.min(valor, subtotal);
+		            }
+		        }
 
-            if (descuentoTotal > subtotal) {
-                descuentoTotal = subtotal;
-            }
+		        // Seleccionar la mejor oferta (la que da mayor descuento)
+		        if (descuentoOferta > mejorDescuento) {
+		            mejorDescuento = descuentoOferta;
+		            mejorOferta = oferta;
+		        }
+		    });
 
-            if (descuentoTotal > 0) {
-                mostrarToast('🎯 Descuento aplicado: -S/ ' + descuentoTotal.toFixed(2), 'success');
-            }
+		    // Limitar descuento al subtotal
+		    if (mejorDescuento > subtotal) {
+		        mejorDescuento = subtotal;
+		    }
 
-            return { descuento: descuentoTotal };
-        }
+		    if (mejorDescuento > 0) {
+		        var nombreOferta = mejorOferta?.nombreOferta || 'Oferta aplicada';
+		        //mostrarToast('🎯 ' + nombreOferta + ' - S/ ' + mejorDescuento.toFixed(2), 'success');
+		    }
+
+		    return { descuento: mejorDescuento };
+		}
 
         // ================================================================
         // FUNCIONES DE CLIENTE
         // ================================================================
-        function buscarCliente() {
-            var dni = document.getElementById('clienteDni')?.value?.trim() || '';
-            if (dni.length < 8) {
-                mostrarToast('⚠️ Ingresa un DNI/RUC válido', 'warning');
-                return;
-            }
+		function buscarCliente() {
+		    var dni = document.getElementById('clienteDni')?.value?.trim() || '';
+		    if (dni.length < 8) {
+		        mostrarToast('⚠️ Ingresa un DNI/RUC válido', 'warning');
+		        return;
+		    }
 
-            fetch('/api/clientes/documento/' + encodeURIComponent(dni))
-                .then(function(response) {
-                    if (!response.ok) throw new Error('Cliente no encontrado');
-                    return response.json();
-                })
-                .then(function(cliente) {
-                    clienteData = cliente;
-                    var nombreEl = document.getElementById('clienteNombre');
-                    if (!nombreEl) return;
-                    if (cliente.tipoCliente === 'NATURAL') {
-                        nombreEl.value = cliente.nombres + ' ' + (cliente.apellidos || '');
-                    } else {
-                        nombreEl.value = cliente.razonSocial || cliente.nombres || '';
-                    }
-                    mostrarToast('✅ Cliente encontrado', 'success');
-                })
-                .catch(function() {
-                    fetch('/api/clientes/ruc/' + encodeURIComponent(dni))
-                        .then(function(response) {
-                            if (!response.ok) throw new Error('Cliente no encontrado');
-                            return response.json();
-                        })
-                        .then(function(cliente) {
-                            clienteData = cliente;
-                            var nombreEl = document.getElementById('clienteNombre');
-                            if (nombreEl) nombreEl.value = cliente.razonSocial || cliente.nombres || '';
-                            mostrarToast('✅ Cliente encontrado', 'success');
-                        })
-                        .catch(function() {
-                            mostrarToast('⚠️ Cliente no encontrado', 'warning');
-                        });
-                });
-        }
+		    // Primero buscar por DNI
+		    fetch('/api/clientes/documento/' + encodeURIComponent(dni))
+		        .then(function(response) {
+		            if (!response.ok) throw new Error('Cliente no encontrado');
+		            return response.json();
+		        })
+		        .then(function(cliente) {
+		            clienteData = cliente;
+		            var nombreEl = document.getElementById('clienteNombre');
+		            if (!nombreEl) return;
+		            if (cliente.tipoCliente === 'NATURAL') {
+		                nombreEl.value = cliente.nombres + ' ' + (cliente.apellidos || '');
+		            } else {
+		                nombreEl.value = cliente.razonSocial || cliente.nombres || '';
+		            }
+		            mostrarToast('✅ Cliente encontrado', 'success');
+		        })
+		        .catch(function() {
+		            // Si no existe, buscar por RUC
+		            fetch('/api/clientes/ruc/' + encodeURIComponent(dni))
+		                .then(function(response) {
+		                    if (!response.ok) throw new Error('Cliente no encontrado');
+		                    return response.json();
+		                })
+		                .then(function(cliente) {
+		                    clienteData = cliente;
+		                    var nombreEl = document.getElementById('clienteNombre');
+		                    if (nombreEl) nombreEl.value = cliente.razonSocial || cliente.nombres || '';
+		                    mostrarToast('✅ Cliente encontrado', 'success');
+		                })
+		                .catch(function() {
+		                    // Si no existe, crear cliente con los datos ingresados
+		                    var nombre = document.getElementById('clienteNombre')?.value?.trim() || '';
+		                    if (!nombre) {
+		                        mostrarToast('⚠️ Ingresa el nombre del cliente', 'warning');
+		                        return;
+		                    }
+		                    
+		                    var nuevoCliente = {
+		                        numeroDocumento: dni,
+		                        nombres: nombre,
+		                        tipoCliente: tipoComprobante === 'boleta' ? 'NATURAL' : 'JURIDICO',
+		                        razonSocial: tipoComprobante === 'factura' ? nombre : null,
+		                        activo: true
+		                    };
+		                    
+		                    // Usar el endpoint POST /api/clientes (ya existe)
+		                    fetch('/api/clientes', {
+		                        method: 'POST',
+		                        headers: { 'Content-Type': 'application/json' },
+		                        body: JSON.stringify(nuevoCliente)
+		                    })
+		                    .then(function(response) {
+		                        if (!response.ok) {
+		                            return response.json().then(function(err) {
+		                                throw new Error(err.error || 'Error al guardar cliente');
+		                            });
+		                        }
+		                        return response.json();
+		                    })
+		                    .then(function(cliente) {
+		                        clienteData = cliente;
+		                        mostrarToast('✅ Cliente registrado: ' + (cliente.razonSocial || cliente.nombres), 'success');
+		                    })
+		                    .catch(function(error) {
+		                        console.error('Error al guardar cliente:', error);
+		                        mostrarToast('⚠️ No se pudo registrar. Se usará como cliente general', 'warning');
+		                        // Usar los datos ingresados sin guardar
+		                        clienteData = {
+		                            idCliente: 0,
+		                            numeroDocumento: dni,
+		                            nombres: nombre,
+		                            tipoCliente: tipoComprobante === 'boleta' ? 'NATURAL' : 'JURIDICO'
+		                        };
+		                    });
+		                });
+		        });
+		}
 
         function limpiarCliente() {
             var dniEl = document.getElementById('clienteDni');
@@ -1807,7 +1862,7 @@
             document.querySelectorAll('.pay-card').forEach(function(c) { c.classList.remove('sel'); });
             if (el) el.classList.add('sel');
             metodoPago = metodo;
-            mostrarToast('💳 Método: ' + metodo.toUpperCase(), 'info');
+            //mostrarToast('💳 Método: ' + metodo.toUpperCase(), 'info');
         }
 
         // ================================================================
@@ -1949,54 +2004,69 @@
             vuelto = pago - total;
             montoRecibido = pago;
         }
+		
+		// ================================================================
+		// FUNCIÓN PARA OBTENER NOMBRE DEL CLIENTE
+		// ================================================================
+		function obtenerNombreCliente(cliente) {
+		    if (!cliente) return 'Cliente';
+		    if (cliente.tipoCliente === 'NATURAL') {
+		        return (cliente.nombres || '') + (cliente.apellidos ? ' ' + cliente.apellidos : '');
+		    } else {
+		        return cliente.razonSocial || cliente.nombres || 'Cliente';
+		    }
+		}
 
         // ================================================================
         // MOSTRAR VUELTO Y VISTA PREVIA
         // ================================================================
-        function mostrarVueltoYBoleta() {
-            var totalText = document.getElementById('modalTotal')?.textContent?.replace('S/ ', '') || '0';
-            var total = parseFloat(totalText) || 0;
-            var pago = parseFloat(document.getElementById('montoPago')?.value) || 0;
-            if (pago < total) {
-                mostrarToast('⚠️ El monto pagado es menor al total', 'warning');
-                return;
-            }
-            var vueltoCalc = pago - total;
-            document.getElementById('vueltoVal').textContent = 'S/ ' + (vueltoCalc > 0 ? vueltoCalc.toFixed(2) : '0.00');
-            document.getElementById('bpEfectivo').textContent = 'S/ ' + pago.toFixed(2);
-            document.getElementById('bpVuelto').textContent = 'S/ ' + (vueltoCalc > 0 ? vueltoCalc.toFixed(2) : '0.00');
+		function mostrarVueltoYBoleta() {
+		    var totalText = document.getElementById('modalTotal')?.textContent?.replace('S/ ', '') || '0';
+		    var total = parseFloat(totalText) || 0;
+		    var pago = parseFloat(document.getElementById('montoPago')?.value) || 0;
+		    if (pago < total) {
+		        mostrarToast('⚠️ El monto pagado es menor al total', 'warning');
+		        return;
+		    }
+		    var vueltoCalc = pago - total;
+		    document.getElementById('vueltoVal').textContent = 'S/ ' + (vueltoCalc > 0 ? vueltoCalc.toFixed(2) : '0.00');
+		    document.getElementById('bpEfectivo').textContent = 'S/ ' + pago.toFixed(2);
+		    document.getElementById('bpVuelto').textContent = 'S/ ' + (vueltoCalc > 0 ? vueltoCalc.toFixed(2) : '0.00');
 
-            var fecha = new Date();
-            document.getElementById('bpFecha').textContent = fecha.toLocaleDateString('es-PE') + ' ' + fecha.toLocaleTimeString('es-PE', {hour:'2-digit',minute:'2-digit'});
-            var isBoleta = tipoComprobante === 'boleta';
-            var dni = document.getElementById('clienteDni')?.value || '99999999';
-            var nombre = document.getElementById('clienteNombre')?.value || 'Cliente';
-            document.getElementById('bpComp').textContent = isBoleta ? 'BOLETA — DNI: ' + dni + ' · Cliente: ' + nombre : 'FACTURA — RUC: ' + dni;
+		    var fecha = new Date();
+		    document.getElementById('bpFecha').textContent = fecha.toLocaleDateString('es-PE') + ' ' + fecha.toLocaleTimeString('es-PE', {hour:'2-digit',minute:'2-digit'});
+		    var isBoleta = tipoComprobante === 'boleta';
+		    
+		    // ✅ USAR clienteData si existe
+		    var dni = clienteData?.numeroDocumento || document.getElementById('clienteDni')?.value || '99999999';
+		    var nombre = clienteData ? obtenerNombreCliente(clienteData) : document.getElementById('clienteNombre')?.value || 'Cliente';
+		    
+		    document.getElementById('bpComp').textContent = isBoleta ? 'BOLETA — DNI: ' + dni + ' · Cliente: ' + nombre : 'FACTURA — RUC: ' + dni;
 
-            var itemsHtml = '';
-            carrito.forEach(function(item) {
-                var totalItem = item.precio * item.cantidad;
-                itemsHtml += '<div class="bp-row"><span>' + item.nombre + ' ×' + item.cantidad + '</span><span>S/ ' + totalItem.toFixed(2) + '</span></div>';
-            });
-            document.getElementById('bpItems').innerHTML = itemsHtml;
+		    var itemsHtml = '';
+		    carrito.forEach(function(item) {
+		        var totalItem = item.precio * item.cantidad;
+		        itemsHtml += '<div class="bp-row"><span>' + item.nombre + ' ×' + item.cantidad + '</span><span>S/ ' + totalItem.toFixed(2) + '</span></div>';
+		    });
+		    document.getElementById('bpItems').innerHTML = itemsHtml;
 
-            var descuento = parseFloat(document.getElementById('descuento')?.textContent?.replace('-S/ ', '')) || 0;
-            if (descuento > 0) {
-                var descRow = document.createElement('div');
-                descRow.className = 'bp-row';
-                descRow.style.color = 'var(--color-text-success)';
-                descRow.innerHTML = '<span>Descuento aplicado</span><span>-S/ ' + descuento.toFixed(2) + '</span>';
-                document.getElementById('bpItems').appendChild(descRow);
-            }
+		    var descuento = parseFloat(document.getElementById('descuento')?.textContent?.replace('-S/ ', '')) || 0;
+		    if (descuento > 0) {
+		        var descRow = document.createElement('div');
+		        descRow.className = 'bp-row';
+		        descRow.style.color = 'var(--color-text-success)';
+		        descRow.innerHTML = '<span>Descuento aplicado</span><span>-S/ ' + descuento.toFixed(2) + '</span>';
+		        document.getElementById('bpItems').appendChild(descRow);
+		    }
 
-            var igv = parseFloat(document.getElementById('igv')?.textContent?.replace('S/ ', '')) || 0;
-            var totalFinal = parseFloat(document.getElementById('totalVenta')?.textContent?.replace('S/ ', '')) || 0;
-            document.getElementById('bpIgv').textContent = 'S/ ' + igv.toFixed(2);
-            document.getElementById('bpTotal').textContent = 'S/ ' + totalFinal.toFixed(2);
+		    var igv = parseFloat(document.getElementById('igv')?.textContent?.replace('S/ ', '')) || 0;
+		    var totalFinal = parseFloat(document.getElementById('totalVenta')?.textContent?.replace('S/ ', '')) || 0;
+		    document.getElementById('bpIgv').textContent = 'S/ ' + igv.toFixed(2);
+		    document.getElementById('bpTotal').textContent = 'S/ ' + totalFinal.toFixed(2);
 
-            document.getElementById('stepEfectivo1').style.display = 'none';
-            document.getElementById('stepEfectivo2').style.display = 'block';
-        }
+		    document.getElementById('stepEfectivo1').style.display = 'none';
+		    document.getElementById('stepEfectivo2').style.display = 'block';
+		}
 
         // ================================================================
         // YAPE TIMER
@@ -2054,179 +2124,190 @@
         // ================================================================
         // CONFIRMAR PAGO
         // ================================================================
-        function confirmarPago() {
-            var total = document.getElementById('totalVenta')?.textContent || 'S/ 0.00';
-            var totalNum = parseFloat(total.replace('S/ ', ''));
+		function confirmarPago() {
+		    var total = document.getElementById('totalVenta')?.textContent || 'S/ 0.00';
+		    var totalNum = parseFloat(total.replace('S/ ', ''));
 
-            var subtotalVal = parseFloat(document.getElementById('subtotal')?.textContent?.replace('S/ ', '')) || 0;
-            var descuentoVal = parseFloat(document.getElementById('descuento')?.textContent?.replace('-S/ ', '')) || 0;
-            var igvVal = parseFloat(document.getElementById('igv')?.textContent?.replace('S/ ', '')) || 0;
-            var totalVal = parseFloat(document.getElementById('totalVenta')?.textContent?.replace('S/ ', '')) || 0;
+		    var subtotalVal = parseFloat(document.getElementById('subtotal')?.textContent?.replace('S/ ', '')) || 0;
+		    var descuentoVal = parseFloat(document.getElementById('descuento')?.textContent?.replace('-S/ ', '')) || 0;
+		    var igvVal = parseFloat(document.getElementById('igv')?.textContent?.replace('S/ ', '')) || 0;
+		    var totalVal = parseFloat(document.getElementById('totalVenta')?.textContent?.replace('S/ ', '')) || 0;
 
-            var montoPagoVal = 0;
-            var vueltoCalc = 0;
+		    var montoPagoVal = 0;
+		    var vueltoCalc = 0;
 
-            if (metodoPago === 'efectivo') {
-                montoPagoVal = parseFloat(document.getElementById('montoPago')?.value) || 0;
-                if (montoPagoVal < totalNum) {
-                    mostrarToast('⚠️ El monto pagado es menor al total', 'warning');
-                    return;
-                }
-                vueltoCalc = montoPagoVal - totalNum;
-            }
+		    if (metodoPago === 'efectivo') {
+		        montoPagoVal = parseFloat(document.getElementById('montoPago')?.value) || 0;
+		        if (montoPagoVal < totalNum) {
+		            mostrarToast('⚠️ El monto pagado es menor al total', 'warning');
+		            return;
+		        }
+		        vueltoCalc = montoPagoVal - totalNum;
+		    }
 
-            var btn = document.querySelector('.btn-cobrar');
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Procesando...';
-            }
+		    var btn = document.querySelector('.btn-cobrar');
+		    if (btn) {
+		        btn.disabled = true;
+		        btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Procesando...';
+		    }
 
-            var idCajero = window.idUsuarioGlobal || 2;
-            var turno = obtenerTurnoActivo();
-            if (!turno) {
-                mostrarToast('⚠️ No hay turno activo', 'error');
-                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-cash-register"></i>Procesar Pago'; }
-                return;
-            }
+		    var idCajero = window.idUsuarioGlobal || 2;
+		    var turno = obtenerTurnoActivo();
+		    if (!turno) {
+		        mostrarToast('⚠️ No hay turno activo', 'error');
+		        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-cash-register"></i>Procesar Pago'; }
+		        return;
+		    }
 
-            var ventaData = {
-                venta: {
-                    cajero: { idUsuario: idCajero },
-                    cliente: clienteData ? { idCliente: clienteData.idCliente } : null,
-                    tienda: { idTienda: turno.tienda.idTienda },
-                    caja: { idCaja: turno.caja.idCaja },
-                    turnoCaja: { idTurnoCaja: turno.idTurnoCaja },
-                    tipoComprobante: { idTipoComprobante: tipoComprobante === 'boleta' ? 1 : 2 },
-                    subtotal: subtotalVal,
-                    descuentoAplicado: descuentoVal,
-                    igv: igvVal,
-                    total: totalVal,
-                    metodoPago: metodoPago,
-                    fechaVenta: new Date().toISOString()
-                },
-                detalles: carrito.map(function(item) {
-                    return {
-                        producto: { idProducto: item.id },
-                        cantidad: item.cantidad,
-                        precioUnitario: item.precio,
-                        descuentoLinea: 0,
-                        subtotalLinea: item.precio * item.cantidad
-                    };
-                })
-            };
+		    // ✅ GUARDAR DATOS DEL CLIENTE ANTES DE ENVIAR LA VENTA
+		    var clienteDni = clienteData?.numeroDocumento || document.getElementById('clienteDni')?.value || '99999999';
+		    var clienteNombre = clienteData ? obtenerNombreCliente(clienteData) : document.getElementById('clienteNombre')?.value || 'Cliente';
+		    var clienteId = clienteData?.idCliente || null;
 
-            fetch('/api/ventas', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(ventaData)
-            })
-            .then(function(response) {
-                if (!response.ok) {
-                    return response.json().then(function(err) {
-                        throw new Error(err.error || 'Error al registrar venta');
-                    });
-                }
-                return response.json();
-            })
-            .then(function(data) {
-                mostrarToast('✅ Venta registrada exitosamente', 'success');
-                
-                var numeroComprobante = data.codigoVenta || data.numeroComprobante || '4841';
-                
-                document.getElementById('stepEfectivo1').style.display = 'none';
-                document.getElementById('stepEfectivo2').style.display = 'none';
-                document.getElementById('stepTarjeta').style.display = 'none';
-                document.getElementById('stepYape').style.display = 'none';
-                document.getElementById('stepSuccess').style.display = 'block';
-                
-                document.getElementById('successNumero').textContent = numeroComprobante;
-                document.getElementById('successTotal').textContent = data.total || total.replace('S/ ', '');
-                document.getElementById('successMetodo').textContent = metodoPago.toUpperCase();
+		    var ventaData = {
+		        venta: {
+		            cajero: { idUsuario: idCajero },
+		            cliente: clienteId ? { idCliente: clienteId } : null,
+		            tienda: { idTienda: turno.tienda.idTienda },
+		            caja: { idCaja: turno.caja.idCaja },
+		            turnoCaja: { idTurnoCaja: turno.idTurnoCaja },
+		            tipoComprobante: { idTipoComprobante: tipoComprobante === 'boleta' ? 1 : 2 },
+		            subtotal: subtotalVal,
+		            descuentoAplicado: descuentoVal,
+		            igv: igvVal,
+		            total: totalVal,
+		            metodoPago: metodoPago,
+		            fechaVenta: new Date().toISOString()
+		        },
+		        detalles: carrito.map(function(item) {
+		            return {
+		                producto: { idProducto: item.id },
+		                cantidad: item.cantidad,
+		                precioUnitario: item.precio,
+		                descuentoLinea: 0,
+		                subtotalLinea: item.precio * item.cantidad
+		            };
+		        })
+		    };
 
-                var ventaDataPDF = {
-                    detalles: carrito.map(function(item) {
-                        return {
-                            producto: { nombreProducto: item.nombre },
-                            cantidad: item.cantidad,
-                            precioUnitario: item.precio,
-                            subtotalLinea: item.precio * item.cantidad
-                        };
-                    }),
-                    subtotal: subtotalVal,
-                    descuento: descuentoVal,
-                    igv: igvVal,
-                    total: totalVal
-                };
+		    fetch('/api/ventas', {
+		        method: 'POST',
+		        headers: { 'Content-Type': 'application/json' },
+		        body: JSON.stringify(ventaData)
+		    })
+		    .then(function(response) {
+		        if (!response.ok) {
+		            return response.json().then(function(err) {
+		                throw new Error(err.error || 'Error al registrar venta');
+		            });
+		        }
+		        return response.json();
+		    })
+		    .then(function(data) {
+		        mostrarToast('✅ Venta registrada exitosamente', 'success');
+		        
+		        var numeroComprobante = data.codigoVenta || data.numeroComprobante || '4841';
+		        
+		        document.getElementById('stepEfectivo1').style.display = 'none';
+		        document.getElementById('stepEfectivo2').style.display = 'none';
+		        document.getElementById('stepTarjeta').style.display = 'none';
+		        document.getElementById('stepYape').style.display = 'none';
+		        document.getElementById('stepSuccess').style.display = 'block';
+		        
+		        document.getElementById('successNumero').textContent = numeroComprobante;
+		        document.getElementById('successTotal').textContent = data.total || total.replace('S/ ', '');
+		        document.getElementById('successMetodo').textContent = metodoPago.toUpperCase();
 
-                window.ultimaVentaData = {
-                    ventaDataPDF: ventaDataPDF,
-                    metodoPago: metodoPago,
-                    montoRecibido: metodoPago === 'efectivo' ? montoPagoVal : 0,
-                    vuelto: metodoPago === 'efectivo' ? vueltoCalc : 0,
-                    numeroComprobante: numeroComprobante,
-                    total: totalVal
-                };
+		        var ventaDataPDF = {
+		            detalles: carrito.map(function(item) {
+		                return {
+		                    producto: { nombreProducto: item.nombre },
+		                    cantidad: item.cantidad,
+		                    precioUnitario: item.precio,
+		                    subtotalLinea: item.precio * item.cantidad
+		                };
+		            }),
+		            subtotal: subtotalVal,
+		            descuento: descuentoVal,
+		            igv: igvVal,
+		            total: totalVal
+		        };
 
-                setTimeout(function() {
-                    generarPDF(
-                        ventaDataPDF,
-                        metodoPago,
-                        metodoPago === 'efectivo' ? montoPagoVal : 0,
-                        metodoPago === 'efectivo' ? vueltoCalc : 0,
-                        numeroComprobante
-                    );
-                    mostrarToast('📄 PDF generado correctamente', 'success');
-                }, 1000);
+		        window.ultimaVentaData = {
+		            ventaDataPDF: ventaDataPDF,
+		            metodoPago: metodoPago,
+		            montoRecibido: metodoPago === 'efectivo' ? montoPagoVal : 0,
+		            vuelto: metodoPago === 'efectivo' ? vueltoCalc : 0,
+		            numeroComprobante: numeroComprobante,
+		            total: totalVal,
+		            clienteDni: clienteDni,
+		            clienteNombre: clienteNombre
+		        };
 
-                carrito = [];
-                clienteData = null;
-                var dniEl = document.getElementById('clienteDni');
-                var nombreEl = document.getElementById('clienteNombre');
-                if (tipoComprobante === 'boleta') {
-                    if (dniEl) dniEl.value = '99999999';
-                    if (nombreEl) nombreEl.value = 'Cliente General';
-                } else {
-                    if (dniEl) dniEl.value = '';
-                    if (nombreEl) nombreEl.value = '';
-                }
-                renderizarCarrito();
-            })
-            .catch(function(error) {
-                mostrarToast('❌ Error: ' + error.message, 'error');
-                console.error('Error:', error);
-            })
-            .finally(function() {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="ti ti-cash-register"></i>Procesar Pago <span id="btnTotal">' + total + '</span>';
-                }
-            });
-        }
+		        setTimeout(function() {
+		            generarPDFConCliente(
+		                ventaDataPDF,
+		                metodoPago,
+		                metodoPago === 'efectivo' ? montoPagoVal : 0,
+		                metodoPago === 'efectivo' ? vueltoCalc : 0,
+		                numeroComprobante,
+		                clienteDni,
+		                clienteNombre
+		            );
+		            mostrarToast('📄 PDF generado correctamente', 'success');
+		        }, 1000);
+
+		        carrito = [];
+		        clienteData = null;
+		        var dniEl = document.getElementById('clienteDni');
+		        var nombreEl = document.getElementById('clienteNombre');
+		        if (tipoComprobante === 'boleta') {
+		            if (dniEl) dniEl.value = '99999999';
+		            if (nombreEl) nombreEl.value = 'Cliente General';
+		        } else {
+		            if (dniEl) dniEl.value = '';
+		            if (nombreEl) nombreEl.value = '';
+		        }
+		        renderizarCarrito();
+		    })
+		    .catch(function(error) {
+		        mostrarToast('❌ Error: ' + error.message, 'error');
+		        console.error('Error:', error);
+		    })
+		    .finally(function() {
+		        if (btn) {
+		            btn.disabled = false;
+		            btn.innerHTML = '<i class="ti ti-cash-register"></i>Procesar Pago <span id="btnTotal">' + total + '</span>';
+		        }
+		    });
+		}
 
         // ================================================================
         // REIMPRIMIR COMPROBANTE
         // ================================================================
-        window.imprimirComprobante = function() {
-            if (!window.ultimaVentaData) {
-                mostrarToast('⚠️ No hay comprobante para imprimir', 'warning');
-                return;
-            }
-            
-            if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
-                mostrarToast('❌ Error: librería PDF no cargada. Recargue la página.', 'error');
-                return;
-            }
-            
-            const data = window.ultimaVentaData;
-            generarPDF(
-                data.ventaDataPDF,
-                data.metodoPago,
-                data.montoRecibido,
-                data.vuelto,
-                data.numeroComprobante
-            );
-            mostrarToast('📄 Reimprimiendo comprobante...', 'info');
-        };
+		window.imprimirComprobante = function() {
+		    if (!window.ultimaVentaData) {
+		        mostrarToast('⚠️ No hay comprobante para imprimir', 'warning');
+		        return;
+		    }
+		    
+		    if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+		        mostrarToast('❌ Error: librería PDF no cargada. Recargue la página.', 'error');
+		        return;
+		    }
+		    
+		    const data = window.ultimaVentaData;
+		    generarPDFConCliente(
+		        data.ventaDataPDF,
+		        data.metodoPago,
+		        data.montoRecibido,
+		        data.vuelto,
+		        data.numeroComprobante,
+		        data.clienteDni || '99999999',
+		        data.clienteNombre || 'Cliente'
+		    );
+		    mostrarToast('📄 Reimprimiendo comprobante...', 'info');
+		};
 
         // ================================================================
         // ACTUALIZAR ESTADO UI
@@ -2387,6 +2468,118 @@
             doc.save('comprobante_' + new Date().getTime() + '.pdf');
         }
 
+		function generarPDFConCliente(ventaData, metodoPago, montoRecibido, vuelto, numeroComprobante, dniCliente, nombreCliente) {
+		    if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+		        mostrarToast('❌ Error: librería PDF no cargada. Recargue la página.', 'error');
+		        return;
+		    }
+		    
+		    const { jsPDF } = window.jspdf;
+		    const doc = new jsPDF('p', 'mm', 'a4');
+		    const pageWidth = 210;
+		    const margin = 15;
+		    let y = 20;
+
+		    doc.setFontSize(14);
+		    doc.setFont('helvetica', 'bold');
+		    doc.text('TECHVENTA PRO', pageWidth / 2, y, { align: 'center' });
+		    y += 6;
+		    
+		    doc.setFontSize(9);
+		    doc.setFont('helvetica', 'normal');
+		    doc.text('TechVenta Pro SAC - RUC 20123456789', pageWidth / 2, y, { align: 'center' });
+		    y += 5;
+		    doc.text('Tienda Norte - Caja 1', pageWidth / 2, y, { align: 'center' });
+		    y += 5;
+		    
+		    var fecha = new Date().toLocaleDateString('es-PE') + ' ' + new Date().toLocaleTimeString('es-PE', {hour:'2-digit',minute:'2-digit'});
+		    doc.text('Fecha: ' + fecha, pageWidth / 2, y, { align: 'center' });
+		    y += 6;
+
+		    doc.setFontSize(11);
+		    doc.setFont('helvetica', 'bold');
+		    var tipoComp = tipoComprobante === 'boleta' ? 'BOLETA' : 'FACTURA';
+		    var numComprobante = numeroComprobante || 'N/A';
+		    doc.text(tipoComp + ' N°: ' + numComprobante, pageWidth / 2, y, { align: 'center' });
+		    y += 6;
+
+		    doc.setFontSize(9);
+		    doc.setFont('helvetica', 'normal');
+		    doc.text('DNI/RUC: ' + dniCliente, margin, y);
+		    y += 5;
+		    doc.text('Cliente: ' + nombreCliente, margin, y);
+		    y += 7;
+
+		    doc.setFontSize(9);
+		    doc.setFont('helvetica', 'bold');
+		    doc.text('Descripción', margin, y);
+		    doc.text('Cant.', 120, y);
+		    doc.text('P/U', 150, y);
+		    doc.text('Total', 175, y);
+		    y += 4;
+		    
+		    doc.setDrawColor(200, 200, 200);
+		    doc.line(margin, y, pageWidth - margin, y);
+		    y += 4;
+
+		    doc.setFont('helvetica', 'normal');
+		    ventaData.detalles.forEach(function(item, index) {
+		        var totalItem = item.cantidad * item.precioUnitario;
+		        doc.text(item.producto.nombreProducto || 'Producto', margin, y);
+		        doc.text(String(item.cantidad), 120, y);
+		        doc.text('S/ ' + item.precioUnitario.toFixed(2), 150, y);
+		        doc.text('S/ ' + totalItem.toFixed(2), 175, y);
+		        y += 6;
+		        if (y > 260) { doc.addPage(); y = 20; }
+		    });
+
+		    var descuento = ventaData.descuento || 0;
+		    if (descuento > 0) {
+		        doc.text('Descuento aplicado', margin, y);
+		        doc.text('-S/ ' + descuento.toFixed(2), 175, y, { align: 'right' });
+		        y += 6;
+		    }
+
+		    var igv = ventaData.igv || 0;
+		    var total = ventaData.total || 0;
+		    
+		    doc.setDrawColor(200, 200, 200);
+		    doc.line(margin, y, pageWidth - margin, y);
+		    y += 4;
+		    
+		    doc.text('IGV (18%)', margin, y);
+		    doc.text('S/ ' + igv.toFixed(2), 175, y, { align: 'right' });
+		    y += 6;
+		    
+		    doc.setFont('helvetica', 'bold');
+		    doc.setFontSize(11);
+		    doc.text('TOTAL', margin, y);
+		    doc.text('S/ ' + total.toFixed(2), 175, y, { align: 'right' });
+		    y += 8;
+
+		    doc.setFontSize(9);
+		    doc.setFont('helvetica', 'normal');
+		    doc.text('Método de pago: ' + metodoPago.toUpperCase(), margin, y);
+		    y += 5;
+		    
+		    if (metodoPago === 'efectivo') {
+		        doc.text('Efectivo recibido: S/ ' + montoRecibido.toFixed(2), margin, y);
+		        y += 5;
+		        doc.text('Vuelto: S/ ' + vuelto.toFixed(2), margin, y);
+		        y += 5;
+		    }
+
+		    y += 5;
+		    doc.setDrawColor(200, 200, 200);
+		    doc.line(margin, y, pageWidth - margin, y);
+		    y += 5;
+		    
+		    doc.setFontSize(10);
+		    doc.setFont('helvetica', 'bold');
+		    doc.text('¡Gracias por su compra!', pageWidth / 2, y, { align: 'center' });
+		    
+		    doc.save('comprobante_' + new Date().getTime() + '.pdf');
+		}
         // ================================================================
         // INICIALIZACIÓN
         // ================================================================
@@ -2402,7 +2595,7 @@
         } else {
             inicializarVenta();
         }
-
+		
         // ================================================================
         // EXPONER FUNCIONES GLOBALMENTE
         // ================================================================

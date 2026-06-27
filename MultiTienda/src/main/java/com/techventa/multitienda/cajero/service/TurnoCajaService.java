@@ -104,4 +104,8 @@ public class TurnoCajaService {
         }
         return null;
     }
+ // En TurnoCajaService.java
+    public TurnoCaja actualizarTurno(TurnoCaja turno) {
+        return turnoCajaRepository.save(turno);
+    }
 }

@@ -524,6 +524,29 @@
                 <span id="mvFecha">Cargando...</span>
             </div>
         </div>
+		
+		<!-- 🔥 ALERTA DE RETIRO DE CAJA (AQUÍ) -->
+		<div id="alertaRetiro" style="display:none;background:#FEF3C7;border:2px solid #F59E0B;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+		    <div style="display:flex;align-items:center;gap:10px;">
+		        <i class="ti ti-cash" style="font-size:28px;color:#D97706;"></i>
+		        <div>
+		            <div style="font-weight:600;color:#92400E;font-size:14px;">⚠️ Límite de efectivo excedido</div>
+		            <div style="font-size:12px;color:#78350F;">
+		                Tienes <strong id="efectivoActual">S/ 0.00</strong> en caja. 
+		                El límite máximo es <strong>S/ 500.00</strong>. 
+		                Debes retirar <strong id="montoRetiroRecomendado">S/ 200.00</strong>
+		            </div>
+		        </div>
+		    </div>
+		    <div style="display:flex;gap:8px;flex-shrink:0;">
+		        <button class="btn-retiro-alerta" onclick="realizarRetiroAlerta()" style="padding:8px 20px;background:#D97706;color:#fff;border:none;border-radius:99px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
+		            <i class="ti ti-arrow-right"></i> Retirar S/ <span id="btnMontoRetiro">200</span>
+		        </button>
+		        <button onclick="cerrarAlertaRetiro()" style="padding:8px 14px;border:1px solid #F59E0B;border-radius:99px;background:transparent;cursor:pointer;color:#78350F;">
+		            <i class="ti ti-x"></i>
+		        </button>
+		    </div>
+		</div>
 
         <!-- ===== TARJETAS DE RESUMEN ===== -->
         <div class="mv-grid" id="mvResumen">
@@ -608,11 +631,7 @@
                             <div class="value success" id="mvDiferencia">S/ 0.00</div>
                         </div>
                     </div>
-                    <div class="mv-caja-actions">
-                        <button class="btn-retiro" onclick="abrirModalRetiro()">
-                            <i class="ti ti-arrow-up-circle"></i> Solicitar retiro de caja
-                        </button>
-                    </div>
+
                 </div>
 
                 <!-- PAGOS RECIBIDOS -->
@@ -678,8 +697,10 @@
         // ================================================================
         // VARIABLES GLOBALES
         // ================================================================
-        var ventasDelDia = [];
-        var turnoActual = null;
+		var ventasDelDia = [];
+		var turnoActual = null;
+		var LIMITE_EFECTIVO = 500; // Límite máximo en caja
+		var MONTO_RETIRO_SUGERIDO = 200; // Monto sugerido para retirar
 
         // 🔥 OBTENER EL ID DEL USUARIO DE FORMA SEGURA Y ACTUALIZADA
         function obtenerUserId() {
@@ -698,21 +719,86 @@
         // ================================================================
         // CARGAR DATOS PRINCIPALES
         // ================================================================
-        function cargarMisVentas() {
-            var fecha = new Date();
-            var fechaEl = document.getElementById('mvFecha');
-            if (fechaEl) {
-                fechaEl.textContent = fecha.toLocaleDateString('es-PE', {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                });
-            }
-            cargarVentasDelDia();
-            cargarEstadoCaja();
-        }
+		function cargarMisVentas() {
+		    var fecha = new Date();
+		    var fechaEl = document.getElementById('mvFecha');
+		    if (fechaEl) {
+		        fechaEl.textContent = fecha.toLocaleDateString('es-PE', {
+		            weekday: 'long',
+		            day: 'numeric',
+		            month: 'long',
+		            year: 'numeric'
+		        });
+		    }
+		    // 🔥 SOLO cargar estado de caja (allí se cargarán las ventas después)
+		    cargarEstadoCaja();
+		}
+		// ================================================================
+		// 🔥 RETIRO DE CAJA - ALERTA AUTOMÁTICA
+		// ================================================================
 
+		function verificarLimiteEfectivo() {
+		    var efectivoTotal = 0;
+		    
+		    // 🔥 CORREGIDO: Usar el totalVentasEfectivo del turno actual (NO sumar todas las ventas)
+		    if (turnoActual) {
+		        // Fondo inicial + ventas en efectivo del turno
+		        efectivoTotal = (turnoActual.fondoInicial || 0) + (turnoActual.totalVentasEfectivo || 0);
+		        
+		        // Restar retiros (si hay)
+		        var retiros = parseFloat(document.getElementById('mvRetiros').textContent.replace('S/ ', '')) || 0;
+		        efectivoTotal = efectivoTotal - retiros;
+		    }
+		    
+		    console.log('💰 Efectivo en caja (desde turno): S/ ' + efectivoTotal.toFixed(2));
+		    
+		    // Verificar si excede el límite
+		    if (efectivoTotal > LIMITE_EFECTIVO) {
+		        var excedente = efectivoTotal - LIMITE_EFECTIVO;
+		        var montoRetiro = Math.min(MONTO_RETIRO_SUGERIDO, excedente);
+		        if (montoRetiro < 50) montoRetiro = excedente;
+		        
+		        mostrarAlertaRetiro(efectivoTotal, montoRetiro);
+		    } else {
+		        ocultarAlertaRetiro();
+		    }
+		}
+		
+		function mostrarAlertaRetiro(efectivoTotal, montoRetiro) {
+		    var alerta = document.getElementById('alertaRetiro');
+		    if (!alerta) return;
+		    
+		    alerta.style.display = 'flex';
+		    document.getElementById('efectivoActual').textContent = 'S/ ' + efectivoTotal.toFixed(2);
+		    document.getElementById('montoRetiroRecomendado').textContent = 'S/ ' + montoRetiro.toFixed(2);
+		    document.getElementById('btnMontoRetiro').textContent = montoRetiro.toFixed(2);
+		}
+
+		function ocultarAlertaRetiro() {
+		    var alerta = document.getElementById('alertaRetiro');
+		    if (alerta) alerta.style.display = 'none';
+		}
+
+		function cerrarAlertaRetiro() {
+		    ocultarAlertaRetiro();
+		}
+
+		function realizarRetiroAlerta() {
+		    var monto = parseFloat(document.getElementById('btnMontoRetiro').textContent);
+		    if (!monto || monto <= 0) {
+		        mostrarToast('⚠️ Monto inválido', 'warning');
+		        return;
+		    }
+		    
+		    // Abrir el modal de retiro con el monto sugerido
+		    document.getElementById('retiroMonto').value = monto.toFixed(2);
+		    document.getElementById('retiroMotivo').value = 'Retiro por límite de efectivo (máx S/500)';
+		    document.getElementById('modalRetiro').classList.add('active');
+		    
+		    // Cerrar la alerta automáticamente
+		    ocultarAlertaRetiro();
+		}
+		
 		// ================================================================
 		// CARGAR VENTAS DEL DÍA (CON FILTRO DE FECHA CORREGIDO)
 		// ================================================================
@@ -723,39 +809,28 @@
 		        return;
 		    }
 
-		    console.log('🔍 Buscando ventas para userId:', userId);
+		    // 🔥 Construir URL con filtro de turno si existe
+		    var url = '/api/ventas/cajero/' + userId;
+		    if (turnoActual && turnoActual.idTurnoCaja) {
+		        url += '?idTurnoCaja=' + turnoActual.idTurnoCaja;
+		    }
 
-		    // 🔥 Obtener fecha actual LOCAL (sin zona horaria)
-		    var hoy = new Date();
-		    var hoyStr = hoy.getFullYear() + '-' + 
-		                 String(hoy.getMonth() + 1).padStart(2, '0') + '-' + 
-		                 String(hoy.getDate()).padStart(2, '0');
-		    console.log('📅 Fecha de hoy (local):', hoyStr);
+		    console.log('🔍 Buscando ventas con URL:', url);
 
-		    fetch('/api/ventas/cajero/' + userId)
+		    fetch(url)
 		        .then(function(response) {
-		            console.log('📡 Respuesta del servidor:', response.status);
 		            if (!response.ok) throw new Error('Error al cargar ventas: ' + response.status);
 		            return response.json();
 		        })
 		        .then(function(data) {
-		            console.log('📦 Total de ventas recibidas:', data.length);
-
-		            // 🔥 FILTRAR comparando fecha LOCAL
-		            var ventasFiltradas = data.filter(function(v) {
-		                if (!v.fechaVenta) return false;
-		                // Convertir fecha de la venta a local y extraer YYYY-MM-DD
-		                var fechaVenta = new Date(v.fechaVenta);
-		                var fechaVentaStr = fechaVenta.getFullYear() + '-' + 
-		                                    String(fechaVenta.getMonth() + 1).padStart(2, '0') + '-' + 
-		                                    String(fechaVenta.getDate()).padStart(2, '0');
-		                return fechaVentaStr === hoyStr;
-		            });
-
-		            console.log('✅ Ventas de hoy:', ventasFiltradas.length);
-		            ventasDelDia = ventasFiltradas;
+		            // 🔥 Ya no necesitas filtrar por fecha porque el backend filtra por turno
+		            ventasDelDia = data;
 		            renderizarTabla(ventasDelDia);
 		            actualizarResumen(ventasDelDia);
+		            
+		            setTimeout(function() {
+		                verificarLimiteEfectivo();
+		            }, 500);
 		        })
 		        .catch(function(error) {
 		            console.error('❌ Error al cargar ventas:', error);
@@ -765,7 +840,6 @@
 		            }
 		        });
 		}
-
         // ================================================================
         // RENDERIZAR TABLA
         // ================================================================
@@ -847,7 +921,7 @@
             document.getElementById('mvDevoluciones').textContent = devoluciones;
             document.getElementById('mvMontoDevuelto').textContent = 'S/ ' + totalDevuelto.toFixed(2);
         }
-
+		
         // ================================================================
         // CARGAR ESTADO DE CAJA (TURNO)
         // ================================================================
@@ -881,48 +955,61 @@
                 });
         }
 
-        function mostrarCajaAbierta(turno) {
-            var badge = document.getElementById('mvEstadoCaja');
-            if (badge) {
-                badge.textContent = 'Abierta ' + (turno.horaApertura || '08:00');
-                badge.style.background = '#DCFCE7';
-                badge.style.color = '#15803D';
-            }
+		function mostrarCajaAbierta(turno) {
+		    var badge = document.getElementById('mvEstadoCaja');
+		    if (badge) {
+		        badge.textContent = 'Abierta ' + (turno.horaApertura || '08:00');
+		        badge.style.background = '#DCFCE7';
+		        badge.style.color = '#15803D';
+		    }
 
-            document.getElementById('mvFondoInicial').textContent = 'S/ ' + (turno.fondoInicial || 0).toFixed(2);
+		    document.getElementById('mvFondoInicial').textContent = 'S/ ' + (turno.fondoInicial || 0).toFixed(2);
 
-            var efectivoActual = (turno.fondoInicial || 0) + (turno.totalVentasEfectivo || 0);
-            document.getElementById('mvEfectivoActual').textContent = 'S/ ' + efectivoActual.toFixed(2);
+		    var retiros = parseFloat(document.getElementById('mvRetiros').textContent.replace('S/ ', '')) || 0;
+		    var efectivoActual = (turno.fondoInicial || 0) + (turno.totalVentasEfectivo || 0) - retiros;
+		    document.getElementById('mvEfectivoActual').textContent = 'S/ ' + efectivoActual.toFixed(2);
 
-            document.getElementById('mvRetiros').textContent = 'S/ 0.00';
-            document.getElementById('mvDiferencia').textContent = 'S/ 0.00';
+		    document.getElementById('mvDiferencia').textContent = 'S/ 0.00';
 
-            cargarPagos(turno);
-        }
+		    cargarPagos(turno);
+		    
+		    // 🔥 Ahora que turnoActual está listo, cargar ventas
+		    cargarVentasDelDia();
+		    
+		    setTimeout(function() {
+		        verificarLimiteEfectivo();
+		    }, 500);
+		}
 
-        function mostrarCajaCerrada() {
-            var badge = document.getElementById('mvEstadoCaja');
-            if (badge) {
-                badge.textContent = 'Cerrada';
-                badge.style.background = '#FEE2E2';
-                badge.style.color = '#DC2626';
-            }
+		function mostrarCajaCerrada() {
+		    var badge = document.getElementById('mvEstadoCaja');
+		    if (badge) {
+		        badge.textContent = 'Cerrada';
+		        badge.style.background = '#FEE2E2';
+		        badge.style.color = '#DC2626';
+		    }
 
-            var campos = ['mvFondoInicial', 'mvEfectivoActual', 'mvRetiros', 'mvDiferencia'];
-            campos.forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.textContent = 'S/ 0.00';
-            });
+		    var campos = ['mvFondoInicial', 'mvEfectivoActual', 'mvRetiros', 'mvDiferencia'];
+		    campos.forEach(function(id) {
+		        var el = document.getElementById(id);
+		        if (el) el.textContent = 'S/ 0.00';
+		    });
 
-            ['mvPagoEfectivo', 'mvPagoTarjeta', 'mvPagoDigital'].forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.textContent = 'S/ 0.00';
-            });
-            ['mvBarEfectivo', 'mvBarTarjeta', 'mvBarDigital'].forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.style.width = '0%';
-            });
-        }
+		    ['mvPagoEfectivo', 'mvPagoTarjeta', 'mvPagoDigital'].forEach(function(id) {
+		        var el = document.getElementById(id);
+		        if (el) el.textContent = 'S/ 0.00';
+		    });
+		    ['mvBarEfectivo', 'mvBarTarjeta', 'mvBarDigital'].forEach(function(id) {
+		        var el = document.getElementById(id);
+		        if (el) el.style.width = '0%';
+		    });
+		    
+		    // 🔥 Limpiar tabla y resumen si no hay turno
+		    ventasDelDia = [];
+		    renderizarTabla([]);
+		    actualizarResumen([]);
+		    ocultarAlertaRetiro();
+		}
 
         // ================================================================
         // CARGAR PAGOS RECIBIDOS
@@ -964,43 +1051,75 @@
         function cerrarModalRetiro() {
             document.getElementById('modalRetiro').classList.remove('active');
         }
+		
+		function confirmarRetiro() {
+		    var monto = parseFloat(document.getElementById('retiroMonto').value);
+		    var motivo = document.getElementById('retiroMotivo').value.trim();
+		    var observaciones = document.getElementById('retiroObservaciones').value.trim();
 
-        function confirmarRetiro() {
-            var monto = parseFloat(document.getElementById('retiroMonto').value);
-            var motivo = document.getElementById('retiroMotivo').value.trim();
-            var observaciones = document.getElementById('retiroObservaciones').value.trim();
+		    if (!monto || monto <= 0) {
+		        mostrarToast('⚠️ Ingresa un monto válido', 'warning');
+		        return;
+		    }
+		    if (!motivo) {
+		        mostrarToast('⚠️ Ingresa un motivo para el retiro', 'warning');
+		        return;
+		    }
 
-            if (!monto || monto <= 0) {
-                mostrarToast('⚠️ Ingresa un monto válido', 'warning');
-                return;
-            }
-            if (!motivo) {
-                mostrarToast('⚠️ Ingresa un motivo para el retiro', 'warning');
-                return;
-            }
+		    var btn = document.querySelector('.btn-retiro-confirmar');
+		    var originalText = btn.innerHTML;
+		    btn.disabled = true;
+		    btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Procesando...';
 
-            // Simular envío al backend (aquí puedes conectar con tu API)
-            // fetch('/api/retiros', { method: 'POST', ... })
-            
-            // Actualizar UI local
-            var efectivoActual = parseFloat(document.getElementById('mvEfectivoActual').textContent.replace('S/ ', '')) || 0;
-            var retirosActual = parseFloat(document.getElementById('mvRetiros').textContent.replace('S/ ', '')) || 0;
+		    // 🔥 DATOS A ENVIAR AL BACKEND
+		    var data = {
+		        monto: monto,
+		        motivo: motivo,
+		        observaciones: observaciones
+		    };
 
-            if (monto > efectivoActual) {
-                mostrarToast('⚠️ No hay suficiente efectivo en caja para retirar S/ ' + monto.toFixed(2), 'warning');
-                return;
-            }
-
-            var nuevoEfectivo = efectivoActual - monto;
-            var nuevoRetiro = retirosActual + monto;
-
-            document.getElementById('mvEfectivoActual').textContent = 'S/ ' + nuevoEfectivo.toFixed(2);
-            document.getElementById('mvRetiros').textContent = 'S/ ' + nuevoRetiro.toFixed(2);
-
-            mostrarToast('✅ Retiro de S/ ' + monto.toFixed(2) + ' registrado correctamente', 'success');
-
-            cerrarModalRetiro();
-        }
+			fetch('/api/retiros', {
+			        method: 'POST',
+			        headers: { 'Content-Type': 'application/json' },
+			        body: JSON.stringify(data)
+			    })
+			    .then(function(response) {
+			        if (!response.ok) {
+			            return response.json().then(function(err) {
+			                throw new Error(err.error || 'Error al registrar retiro');
+			            });
+			        }
+			        return response.json();
+			    })
+			    .then(function(result) {
+			        mostrarToast('✅ Retiro de S/ ' + monto.toFixed(2) + ' registrado correctamente', 'success');
+			        cerrarModalRetiro();
+			        
+			        // 🔥 ACTUALIZAR CORRECTAMENTE
+			        var efectivoActual = parseFloat(document.getElementById('mvEfectivoActual').textContent.replace('S/ ', '')) || 0;
+			        var retirosActual = parseFloat(document.getElementById('mvRetiros').textContent.replace('S/ ', '')) || 0;
+			        
+			        // Restar el monto retirado
+			        document.getElementById('mvEfectivoActual').textContent = 'S/ ' + (efectivoActual - monto).toFixed(2);
+			        document.getElementById('mvRetiros').textContent = 'S/ ' + (retirosActual + monto).toFixed(2);
+			        
+			        ocultarAlertaRetiro();
+			        
+			        setTimeout(function() {
+			            cargarEstadoCaja();
+			            cargarVentasDelDia();
+			        }, 500);
+			    })
+		    .catch(function(error) {
+		        mostrarToast('❌ Error: ' + error.message, 'error');
+		        console.error('Error:', error);
+		    })
+		    .finally(function() {
+		        btn.disabled = false;
+		        btn.innerHTML = originalText;
+		    });
+		}
+		
 
         // ================================================================
         // TOAST NOTIFICATIONS (USANDO CONTENEDOR GLOBAL)
