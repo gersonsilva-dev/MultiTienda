@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script th:src="@{/webjars/font-awesome/6.5.1/js/all.min.js}"></script>
+    
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --info: #06b6d4;
+            --info-light: #ecfeff;
+            --radius: 12px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --transition: all 0.2s ease;
+        }
+
+        .kardex-dashboard {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .summary-card {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+
+        .card-ingresos::before { background-color: var(--primary); }
+        .card-ingresos .icon-wrapper { color: var(--primary); background: var(--primary-light); }
+        .card-salidas::before { background-color: var(--danger); }
+        .card-salidas .icon-wrapper { color: var(--danger); background: var(--danger-light); }
+        .card-mermas::before { background-color: var(--warning); }
+        .card-mermas .icon-wrapper { color: var(--warning); background: var(--warning-light); }
+        .card-ajustes::before { background-color: var(--info); }
+        .card-ajustes .icon-wrapper { color: var(--info); background: var(--info-light); }
+
+        .card-info h6 {
+            margin: 0 0 0.4rem 0;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .card-info h2 {
+            margin: 0 0 0.2rem 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .card-info small {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .filter-section {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-form {
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            align-items: flex-end;
+        }
+
+        @media (min-width: 992px) {
+            .filter-form {
+                grid-template-columns: 2fr 1.5fr 1fr 1.2fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .form-control-custom {
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            font-size: 0.95rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: #fff;
+            color: var(--text-main);
+            outline: none;
+            transition: var(--transition);
+            box-sizing: border-box;
+        }
+
+        .form-control-custom:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+        
+        .search-wrapper .form-control-custom {
+            padding-left: 2.2rem;
+        }
+
+        .search-wrapper i {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .btn-submit {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.7rem 1.25rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+            height: 40px;
+        }
+
+        .btn-submit:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .table-section {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        .kardex-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .kardex-table th {
+            background-color: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+            border-bottom: 2px solid var(--border-color);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .kardex-table td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        .kardex-table tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .text-center { text-align: center; }
+        .fw-bold { font-weight: 600; }
+        .product-code {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .badge-custom {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        .bg-success { background-color: var(--primary-light); color: var(--primary); }
+        .bg-danger { background-color: var(--danger-light); color: var(--danger); }
+        .bg-warning { background-color: var(--warning-light); color: var(--warning); }
+        .bg-info { background-color: var(--info-light); color: var(--info); }
+
+        .qty-positive { color: #16a34a; font-weight: 700; }
+        .qty-negative { color: var(--danger); font-weight: 700; }
+
+        .text-truncate-custom {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .pagination-list {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            gap: 0.25rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--surface);
+            overflow: hidden;
+        }
+
+        .page-link-custom {
+            display: block;
+            padding: 0.5rem 1rem;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .page-link-custom:hover {
+            background-color: #f1f5f9;
+        }
+
+        .page-item-custom.active .page-link-custom {
+            background-color: var(--primary);
+            color: white;
+            cursor: default;
+        }
+
+        .page-item-custom.disabled .page-link-custom {
+            color: #cbd5e1;
+            pointer-events: none;
+            background-color: #f8fafc;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+		
+		.loading-overlay {
+		    position: fixed;
+		    top: 0;
+		    left: 0;
+		    width: 100%;
+		    height: 100%;
+		    background: rgba(255,255,255,0.7);
+		    display: none;
+		    justify-content: center;
+		    align-items: center;
+		    z-index: 9999;
+		}
+
+		.loading-overlay.active {
+		    display: flex;
+		}
+
+		.spinner {
+		    width: 50px;
+		    height: 50px;
+		    border: 5px solid #f3f3f3;
+		    border-top: 5px solid var(--primary);
+		    border-radius: 50%;
+		    animation: spin 1s linear infinite;
+		}
+
+		@keyframes spin {
+		    0% { transform: rotate(0deg); }
+		    100% { transform: rotate(360deg); }
+		}
+    </style>
+</head>
+
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
+
+<div class="kardex-dashboard" id="kardexContent">
+
+    <div class="summary-grid">
+        <div class="summary-card card-ingresos">
+            <div class="card-info">
+                <h6>Ingresos del mes</h6>
+                <h2 th:text="${resumen.ingresos}"></h2>
+                <small>Unidades entrantes</small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+        </div>
+        
+        <div class="summary-card card-salidas">
+            <div class="card-info">
+                <h6>Salidas por Venta</h6>
+                <h2 th:text="${resumen.salidas}"></h2>
+                <small>Unidades vendidas</small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-arrow-up"></i>
+            </div>
+        </div>
+        
+        <div class="summary-card card-mermas">
+            <div class="card-info">
+                <h6>Mermas del mes</h6>
+                <h2 th:text="${resumen.mermas}"></h2>
+                <small>Productos defectuosos</small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-trash"></i>
+            </div>
+        </div>
+        
+        <div class="summary-card card-ajustes">
+            <div class="card-info">
+                <h6>Ajustes</h6>
+                <h2 th:text="${resumen.ajustes}"></h2>
+                <small>Ajustes manuales</small>
+            </div>
+            <div class="icon-wrapper">
+                <i class="fas fa-balance-scale"></i>
+            </div>
+        </div>
+    </div>
+
+	<!-- FILTROS -->
+	<div class="filter-section">
+	    <h5 class="section-header">
+	        <i class="fas fa-search"></i> Filtros de Búsqueda
+	    </h5>
+	    <!-- ✅ IGUAL QUE STOCK: onsubmit simple -->
+	    <form onsubmit="filtrarKardex(event)" class="filter-form">
+	        
+	        <div class="form-group">
+	            <label>Buscar Producto</label>
+	            <div class="search-wrapper">
+	                <i class="fas fa-box-open"></i>
+	                <input type="text" 
+	                       id="searchInput"
+	                       name="search" 
+	                       class="form-control-custom" 
+	                       placeholder="Nombre o código del producto..."
+	                       th:value="${search}" />
+	            </div>
+	        </div>
+
+	        <div class="form-group">
+	            <label>Tipo de Movimiento</label>
+	            <select id="tipoMovSelect" class="form-control-custom" name="tipoMovId">
+	                <option value="">Todos los movimientos</option>
+	                <option th:each="tipo : ${tiposMovimiento}" 
+	                        th:value="${tipo.idTipoMovimiento}" 
+	                        th:text="${tipo.nombreMovimiento}"
+	                        th:selected="${tipo.idTipoMovimiento == tipoMovId}"></option>
+	            </select>
+	        </div>
+	        <div class="form-group">
+	            <label>Página</label>
+	            <input type="number" id="pageInput" name="page" class="form-control-custom" th:value="${currentPage}" min="0" />
+	        </div>
+	        <div class="form-group">
+	            <!-- ✅ CAMBIO CRÍTICO: type="button" en lugar de submit -->
+	            <button type="button" onclick="filtrarKardex(event)" class="btn-submit">
+	                <i class="fas fa-filter"></i> Aplicar Filtros
+	            </button>
+	        </div>
+	    </form>
+	</div>
+
+    <div class="table-section">
+        <h5 class="section-header">
+            <i class="fas fa-list-alt"></i> Historial de Movimientos del Kardex
+        </h5>
+        <div class="table-responsive">
+            <table class="kardex-table">
+                <thead>
+                    <tr>
+                        <th style="width: 140px;">Fecha y Hora</th>
+                        <th>Producto</th>
+                        <th style="width: 130px;">Tipo</th>
+                        <th class="text-center" style="width: 100px;">Cantidad</th>
+                        <th class="text-center" style="width: 100px;">Stock Anterior</th>
+                        <th class="text-center" style="width: 100px;">Stock Actual</th>
+                        <th>Usuario</th>
+                        <th>Referencia</th>
+                        <th style="width: 200px;">Observación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="mov : ${movimientos.content}">
+                        <td th:text="${#temporals.format(mov.fechaMovimiento, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td>
+                            <span class="fw-bold" th:text="${mov.producto.nombreProducto}"></span>
+                            <span class="product-code" th:text="${mov.producto.codigoBarras}"></span>
+                        </td>
+                        <td>
+                            <span class="badge-custom" 
+                                  th:classappend="${mov.tipoMovimiento.idTipoMovimiento == 1 ? 'bg-success' : 
+                                                   mov.tipoMovimiento.idTipoMovimiento == 2 ? 'bg-danger' : 
+                                                   mov.tipoMovimiento.idTipoMovimiento == 3 ? 'bg-warning' : 'bg-info'}"
+                                  th:text="${mov.tipoMovimiento.nombreMovimiento}"></span>
+                        </td>
+                        <td class="text-center fw-bold" 
+                            th:text="${mov.cantidad}"
+                            th:classappend="${mov.cantidad > 0 ? 'qty-positive' : 'qty-negative'}"></td>
+                        <td class="text-center" th:text="${mov.stockAntes}"></td>
+                        <td class="text-center fw-bold" th:text="${mov.stockDespues}"></td>
+                        <td th:text="${mov.usuarioCreacion != null ? mov.usuarioCreacion.nombres + ' ' + mov.usuarioCreacion.apellidos : 'Sistema'}"></td>
+                        <td th:text="${mov.documentoReferencia}"></td>
+                        <td class="text-truncate-custom" th:title="${mov.observacion}" th:text="${mov.observacion}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+	<!-- PAGINACIÓN -->
+	<div class="pagination-container" th:if="${movimientos.totalPages > 1}">
+	    <nav>
+	        <ul class="pagination-list">
+	            <li class="page-item-custom" th:classappend="${currentPage == 0} ? 'disabled'">
+	                <!-- ✅ CAMBIO: onclick directo, sin href -->
+	                <a class="page-link-custom" onclick="irAPagina(0)">« Primera</a>
+	            </li>
+	            <li th:each="i : ${#numbers.sequence(0, movimientos.totalPages - 1)}" 
+	                class="page-item-custom" 
+	                th:classappend="${i == currentPage} ? 'active'">
+	                <a class="page-link-custom" 
+	                   th:data-page="${i}"
+	                   onclick="irAPagina(this.dataset.page)"
+	                   th:text="${i + 1}"></a>
+	            </li>
+	            <li class="page-item-custom" th:classappend="${currentPage == movimientos.totalPages - 1} ? 'disabled'">
+	                <a class="page-link-custom" 
+	                   th:data-page="${movimientos.totalPages - 1}"
+	                   onclick="irAPagina(this.dataset.page)">Última »</a>
+	            </li>
+	        </ul>
+	    </nav>
+	</div>
+
+</div>
+
+
+
+</body>
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
+</html>

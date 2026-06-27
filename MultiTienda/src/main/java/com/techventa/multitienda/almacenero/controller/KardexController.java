@@ -1,35 +1,49 @@
 package com.techventa.multitienda.almacenero.controller;
 
-import com.techventa.multitienda.admin.model.MovimientoKardex;
 import com.techventa.multitienda.almacenero.service.KardexService;
+import com.techventa.multitienda.admin.model.Usuario;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.time.LocalDateTime;
-import java.util.List;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-@RestController
-@RequestMapping("/kardex")
+@Controller
+@RequestMapping("/almacenero")
 public class KardexController {
 
     @Autowired
     private KardexService kardexService;
 
-    @GetMapping("/producto/{idProducto}")
-    public ResponseEntity<List<MovimientoKardex>> listarPorProducto(@PathVariable Integer idProducto) {
-        return ResponseEntity.ok(kardexService.listarPorProducto(idProducto));
-    }
+    @GetMapping("/kardex")
+    public String mostrarKardex(
+            HttpSession session,
+            Model model,
+            @RequestParam(required = false) String search,           // ← Nuevo: texto de búsqueda
+            @RequestParam(required = false) Integer tipoMovId,
+            @RequestParam(defaultValue = "0") int page) {
 
-    @GetMapping("/tienda/{idTienda}")
-    public ResponseEntity<List<MovimientoKardex>> listarPorTienda(@PathVariable Integer idTienda) {
-        return ResponseEntity.ok(kardexService.listarPorTienda(idTienda));
-    }
+        Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+        if (usuario == null) return "redirect:/login";
 
-    @GetMapping("/fechas")
-    public ResponseEntity<List<MovimientoKardex>> listarPorFechas(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin) {
-        return ResponseEntity.ok(kardexService.listarPorFechas(inicio, fin));
+        String rol = usuario.getRol().getNombreRol().toLowerCase().trim();
+        if (!"almacenero".equals(rol) && !"supervisor".equals(rol) && !"administrador".equals(rol)) {
+            return "redirect:/dashboard";
+        }
+
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("userRole", rol);
+        model.addAttribute("resumen", kardexService.getResumenMensual());
+        model.addAttribute("tiposMovimiento", kardexService.listarTiposMovimiento());
+        model.addAttribute("search", search);        // ← Para mantener el valor en el input
+        model.addAttribute("tipoMovId", tipoMovId);
+        model.addAttribute("currentPage", page);
+
+        // Llamada al nuevo método de búsqueda
+        model.addAttribute("movimientos", kardexService.buscarMovimientos(search, tipoMovId, page, 50));
+
+        return "fragments/almacenero/kardex";
     }
 }
