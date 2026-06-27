@@ -1,13 +1,17 @@
 package com.techventa.multitienda.admin.model;
 
 import com.techventa.multitienda.admin.model.TipoDescuento;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.techventa.multitienda.admin.model.EstadoOferta;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "ofertas")
+@JsonIgnoreProperties({"detalleProductos", "detalleCategorias"})  // 🔥 Agregar esta línea
 public class Oferta {
 
     @Id
@@ -68,11 +72,17 @@ public class Oferta {
     @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
 
-    // Constructor vacío
+ // ========== RELACIONES CON DETALLES DE OFERTA ==========
+    @OneToMany(mappedBy = "oferta", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<DetalleOfertaProducto> detalleProductos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "oferta", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<DetalleOfertaCategoria> detalleCategorias = new ArrayList<>();
+
+    // ========== CONSTRUCTORES ==========
     public Oferta() {
     }
 
-    // Constructor básico
     public Oferta(String nombreOferta, TipoDescuento tipoDescuento, BigDecimal valorDescuento,
                   LocalDateTime fechaInicio, LocalDateTime fechaFin) {
         this.nombreOferta = nombreOferta;
@@ -83,7 +93,7 @@ public class Oferta {
         this.activo = true;
     }
 
-    // Getters y Setters
+    // ========== GETTERS Y SETTERS (EXISTENTES + NUEVOS) ==========
     public Integer getIdOferta() {
         return idOferta;
     }
@@ -227,6 +237,24 @@ public class Oferta {
     public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
         this.fechaActualizacion = fechaActualizacion;
     }
+
+    // 🔥 GETTERS Y SETTERS PARA LAS NUEVAS LISTAS
+    public List<DetalleOfertaProducto> getDetalleProductos() {
+        return detalleProductos;
+    }
+
+    public void setDetalleProductos(List<DetalleOfertaProducto> detalleProductos) {
+        this.detalleProductos = detalleProductos;
+    }
+
+    public List<DetalleOfertaCategoria> getDetalleCategorias() {
+        return detalleCategorias;
+    }
+
+    public void setDetalleCategorias(List<DetalleOfertaCategoria> detalleCategorias) {
+        this.detalleCategorias = detalleCategorias;
+    }
+    
 
     @Override
     public String toString() {

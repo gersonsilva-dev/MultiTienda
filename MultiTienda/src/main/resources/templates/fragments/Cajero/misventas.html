@@ -701,6 +701,10 @@
 		var turnoActual = null;
 		var LIMITE_EFECTIVO = 500; // Límite máximo en caja
 		var MONTO_RETIRO_SUGERIDO = 200; // Monto sugerido para retirar
+		
+		// 🔥 NUEVAS VARIABLES PARA DEVOLUCIONES
+		var devolucionesHoy = [];
+		var totalDevueltoGlobal = 0;
 
         // 🔥 OBTENER EL ID DEL USUARIO DE FORMA SEGURA Y ACTUALIZADA
         function obtenerUserId() {
@@ -715,6 +719,34 @@
             console.log('🆔 Usuario ID para Mis Ventas:', id);
             return id;
         }
+		
+		// ================================================================
+		// CARGAR DEVOLUCIONES APROBADAS (PARA RESTAR DEL TOTAL)
+		// ================================================================
+		function cargarDevolucionesAprobadas() {
+		    var userId = obtenerUserId();
+		    if (!userId) return;
+
+		    fetch('/devoluciones/cajero/' + userId)
+		        .then(function(response) {
+		            if (!response.ok) throw new Error('Error al cargar devoluciones');
+		            return response.json();
+		        })
+		        .then(function(data) {
+		            devolucionesHoy = data || [];
+		            var totalDevuelto = 0;
+		            devolucionesHoy.forEach(function(d) {
+		                if (d.estadoDevolucion?.nombreEstado === 'APROBADA' || d.estadoDevolucion?.nombreEstado === 'COMPLETADA') {
+		                    totalDevuelto += (d.montoDevolucion || 0);
+		                }
+		            });
+		            totalDevueltoGlobal = totalDevuelto;
+		            recalcularResumenConDevoluciones();
+		        })
+		        .catch(function(error) {
+		            console.error('❌ Error al cargar devoluciones:', error);
+		        });
+		}
 
         // ================================================================
         // CARGAR DATOS PRINCIPALES
@@ -892,35 +924,44 @@
             }).join('');
         }
 
-        // ================================================================
-        // ACTUALIZAR TARJETAS DE RESUMEN
-        // ================================================================
-        function actualizarResumen(ventas) {
-            var total = 0;
-            var totalDevuelto = 0;
-            var devoluciones = 0;
+		// ================================================================
+		// ACTUALIZAR RESUMEN (VENTAS + DEVOLUCIONES)
+		// ================================================================
+		function recalcularResumenConDevoluciones() {
+		    var total = 0;
+		    var devoluciones = 0;
 
-            ventas.forEach(function(v) {
-                var monto = v.total || 0;
-                var estadoNombre = v.estadoVenta?.nombreEstado || 'COMPLETADO';
+		    ventasDelDia.forEach(function(v) {
+		        var monto = v.total || 0;
+		        var estadoNombre = v.estadoVenta?.nombreEstado || 'COMPLETADO';
+		        if (estadoNombre === 'COMPLETADO' || estadoNombre === 'SUSPENDIDO' || estadoNombre === 'PENDIENTE_PAGO') {
+		            total += monto;
+		        }
+		        if (estadoNombre === 'REEMBOLSADO') {
+		            devoluciones++;
+		        }
+		    });
 
-                if (estadoNombre === 'COMPLETADO' || estadoNombre === 'SUSPENDIDO' || estadoNombre === 'PENDIENTE_PAGO') {
-                    total += monto;
-                }
-                if (estadoNombre === 'REEMBOLSADO') {
-                    devoluciones++;
-                    totalDevuelto += monto;
-                }
-            });
+		    // 🔥 RESTAR las devoluciones aprobadas del total
+		    total = total - totalDevueltoGlobal;
+		    if (total < 0) total = 0;
 
-            var promedio = ventas.length > 0 ? total / ventas.length : 0;
+		    var promedio = ventasDelDia.length > 0 ? (total + totalDevueltoGlobal) / ventasDelDia.length : 0;
 
-            document.getElementById('mvTotalVendido').textContent = 'S/ ' + total.toFixed(2);
-            document.getElementById('mvTransacciones').textContent = ventas.length;
-            document.getElementById('mvTicketPromedio').textContent = 'S/ ' + promedio.toFixed(2);
-            document.getElementById('mvDevoluciones').textContent = devoluciones;
-            document.getElementById('mvMontoDevuelto').textContent = 'S/ ' + totalDevuelto.toFixed(2);
-        }
+		    document.getElementById('mvTotalVendido').textContent = 'S/ ' + total.toFixed(2);
+		    document.getElementById('mvTransacciones').textContent = ventasDelDia.length;
+		    document.getElementById('mvTicketPromedio').textContent = 'S/ ' + promedio.toFixed(2);
+		    
+		    var totalDevoluciones = devoluciones + (devolucionesHoy.filter(d => d.estadoDevolucion?.nombreEstado === 'APROBADA').length || 0);
+		    document.getElementById('mvDevoluciones').textContent = totalDevoluciones;
+		    document.getElementById('mvMontoDevuelto').textContent = '-S/ ' + totalDevueltoGlobal.toFixed(2);
+		}
+
+		// Reemplazar la función actualizarResumen original por esta
+		function actualizarResumen(ventas) {
+		    ventasDelDia = ventas;
+		    cargarDevolucionesAprobadas(); // Esto llama a recalcularResumenConDevoluciones
+		}
 		
         // ================================================================
         // CARGAR ESTADO DE CAJA (TURNO)
@@ -971,14 +1012,14 @@
 
 		    document.getElementById('mvDiferencia').textContent = 'S/ 0.00';
 
-		    cargarPagos(turno);
-		    
-		    // 🔥 Ahora que turnoActual está listo, cargar ventas
-		    cargarVentasDelDia();
-		    
-		    setTimeout(function() {
-		        verificarLimiteEfectivo();
-		    }, 500);
+			cargarPagos(turno);
+			    
+			    // 🔥 Cargar ventas (esto ya llama a actualizarResumen, que ahora carga devoluciones)
+			    cargarVentasDelDia();
+			    
+			    setTimeout(function() {
+			        verificarLimiteEfectivo();
+			    }, 500);
 		}
 
 		function mostrarCajaCerrada() {

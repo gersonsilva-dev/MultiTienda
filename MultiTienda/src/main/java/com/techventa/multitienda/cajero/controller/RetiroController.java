@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpSession;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -31,25 +32,34 @@ public class RetiroController {
     private UsuarioService usuarioService;
 
     @PostMapping
-    public ResponseEntity<Object> registrarRetiro(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<Object> registrarRetiro(@RequestBody Map<String, Object> request,
+                                                   HttpSession session) {
         try {
             BigDecimal monto = new BigDecimal(request.get("monto").toString());
             String motivo = request.get("motivo").toString();
             String observaciones = request.get("observaciones") != null ? request.get("observaciones").toString() : "";
 
-            // Obtener usuario actual (ID 3 fijo)
-            Usuario usuario = usuarioService.buscarPorId(3).orElse(null);
+            // 🔥 OBTENER USUARIO DE LA SESIÓN (el que está logueado)
+            Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+            
+            // Si no hay sesión, usar el ID del request o fallback
             if (usuario == null) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "Usuario no encontrado");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+                Integer idUsuario = request.get("idUsuario") != null ? 
+                        Integer.valueOf(request.get("idUsuario").toString()) : 3;
+                Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(idUsuario);
+                if (usuarioOpt.isEmpty()) {
+                    Map<String, String> error = new HashMap<>();
+                    error.put("error", "Usuario no encontrado");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+                }
+                usuario = usuarioOpt.get();
             }
 
-            // Obtener turno activo del cajero
-            Optional<TurnoCaja> turnoOpt = turnoCajaService.buscarActivoPorUsuario(3);
+            // 🔥 BUSCAR TURNO ACTIVO PARA ESTE USUARIO (NO FIJAR ID 3)
+            Optional<TurnoCaja> turnoOpt = turnoCajaService.buscarActivoPorUsuario(usuario.getIdUsuario());
             if (turnoOpt.isEmpty()) {
                 Map<String, String> error = new HashMap<>();
-                error.put("error", "No hay turno de caja activo para este usuario");
+                error.put("error", "No hay turno de caja activo para el usuario: " + usuario.getNombres());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
             }
             
@@ -78,12 +88,12 @@ public class RetiroController {
 
             RetiroCaja guardado = retiroService.guardar(retiro);
 
-            // 🔥 SOLO RESTAR EL MONTO DEL totalVentasEfectivo - SIN CERRAR EL TURNO
+            // RESTAR EL MONTO DEL totalVentasEfectivo - SIN CERRAR EL TURNO
             BigDecimal nuevoTotalEfectivo = turno.getTotalVentasEfectivo()
                     .subtract(monto);
             turno.setTotalVentasEfectivo(nuevoTotalEfectivo);
             
-            // 🔥 GUARDAR EL TURNO ACTUALIZADO (sin cerrarlo)
+            // GUARDAR EL TURNO ACTUALIZADO (sin cerrarlo)
             turnoCajaService.actualizarTurno(turno);
 
             Map<String, Object> response = new HashMap<>();
@@ -101,12 +111,21 @@ public class RetiroController {
     }
 
     @GetMapping("/historial")
-    public ResponseEntity<Object> obtenerHistorialRetiros() {
+    public ResponseEntity<Object> obtenerHistorialRetiros(HttpSession session) {
         try {
-            Optional<TurnoCaja> turnoOpt = turnoCajaService.buscarActivoPorUsuario(3);
+            // 🔥 OBTENER USUARIO DE LA SESIÓN
+            Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+            
+            if (usuario == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Usuario no autenticado");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+
+            Optional<TurnoCaja> turnoOpt = turnoCajaService.buscarActivoPorUsuario(usuario.getIdUsuario());
             if (turnoOpt.isEmpty()) {
                 Map<String, String> error = new HashMap<>();
-                error.put("error", "No hay turno de caja activo");
+                error.put("error", "No hay turno de caja activo para este usuario");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
             }
 
