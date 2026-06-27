@@ -166,59 +166,20 @@
         </div>
     </div>
 
-    <!-- Lotes -->
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title">📦 Lotes</div>
-            <a href="#" onclick="cargarPagina('lotes')" style="font-size:0.7rem;">Ver todos</a>
-        </div>
-        <div class="card-body" style="padding:0;">
-            <div id="listaLotes" style="padding:8px 12px;">
-                <p style="color:var(--text-muted);font-size:0.75rem;">Cargando...</p>
-            </div>
-        </div>
-    </div>
+	<div class="card">
+	    <div class="card-header">
+	        <div class="card-title">⚠️ Últimas incidencias</div>
+	        <a href="#" onclick="cargarPagina('incidencias')" style="font-size:0.7rem;">Ver todas</a>
+	    </div>
+	    <div class="card-body" style="padding:0;">
+	        <div id="listaIncidencias" style="padding:8px 12px;">
+	            <p style="color:var(--text-muted);font-size:0.75rem;">Cargando...</p>
+	        </div>
+	    </div>
+	</div>
+	
 </div>
-
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:18px;">
-    <!-- Transferencias -->
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title">🔄 Transferencias</div>
-            <a href="#" onclick="cargarPagina('transferencias')" style="font-size:0.7rem;">Ver todas</a>
-        </div>
-        <div class="card-body" style="padding:0;">
-            <div id="listaTransferencias" style="padding:8px 12px;">
-                <p style="color:var(--text-muted);font-size:0.75rem;">Cargando...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Últimas incidencias -->
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title">⚠️ Últimas incidencias</div>
-            <a href="#" onclick="cargarPagina('incidencias')" style="font-size:0.7rem;">Ver todas</a>
-        </div>
-        <div class="card-body" style="padding:0;">
-            <div id="listaIncidencias" style="padding:8px 12px;">
-                <p style="color:var(--text-muted);font-size:0.75rem;">Cargando...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Proveedores -->
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title">📦 Proveedores</div>
-            <a href="#" onclick="cargarPagina('proveedores')" style="font-size:0.7rem;">Ver todos</a>
-        </div>
-        <div class="card-body" style="padding:0;">
-            <div id="listaProveedores" style="padding:8px 12px;">
-                <p style="color:var(--text-muted);font-size:0.75rem;">Cargando...</p>
-            </div>
-        </div>
-    </div>
+   
 </div>
 
 <script>
